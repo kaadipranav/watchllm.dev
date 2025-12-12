@@ -45,12 +45,15 @@ importers:
   worker:
     dependencies:
       hono:
-        specifier: ^4.0.0
+        specifier: ^4.6.0
         version: 4.10.8
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20240925.0
+        specifier: ^4.20241127.0
         version: 4.20251212.0
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.26
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
@@ -58,7 +61,7 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.26)
       wrangler:
-        specifier: ^3.78.0
+        specifier: ^3.91.0
         version: 3.114.15(@cloudflare/workers-types@4.20251212.0)
 
 packages:
