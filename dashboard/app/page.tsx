@@ -1,8 +1,21 @@
-export default function Home() {
+import { Navbar } from "@/components/landing/navbar";
+import { Hero } from "@/components/landing/hero";
+import { Features } from "@/components/landing/features";
+import { Pricing } from "@/components/landing/pricing";
+import { FAQ } from "@/components/landing/faq";
+import { Footer } from "@/components/landing/footer";
+
+export default function HomePage() {
   return (
-    <main>
-      <h1>WatchLLM Dashboard</h1>
-      <p>AI API Cost Optimization Platform</p>
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Hero />
+        <Features />
+        <Pricing />
+        <FAQ />
+      </main>
+      <Footer />
+    </div>
   );
 }
