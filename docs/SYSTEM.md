@@ -1,6 +1,6 @@
 # SYSTEM.md - Development Guidelines
 
-> **Purpose:** Coding standards, development workflow, and best practices for building LLMGateway.
+> **Purpose:** Coding standards, development workflow, and best practices for building WatchLLM.
 
 ---
 
@@ -39,8 +39,8 @@ brew install supabase/tap/supabase
 
 ```bash
 # Clone repo
-git clone https://github.com/yourusername/llmgateway.git
-cd llmgateway
+git clone https://github.com/yourusername/WatchLLM.git
+cd WatchLLM
 
 # Install dependencies for all packages
 pnpm install
@@ -68,7 +68,7 @@ This starts:
 ## 2. Project Structure
 
 ```
-llmgateway/
+WatchLLM/
 ├── worker/                      # Cloudflare Worker (proxy)
 │   ├── src/
 │   │   ├── index.ts             # Main entry point

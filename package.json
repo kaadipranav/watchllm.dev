@@ -1,0 +1,26 @@
+{
+  "name": "watchllm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WatchLLM - AI API cost optimization proxy with 40-70% savings through semantic caching",
+  "keywords": [
+    "ai",
+    "api-proxy",
+    "cost-optimization",
+    "caching",
+    "openai"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel --stream dev",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter worker build && pnpm --filter dashboard build",
+    "test": "pnpm --recursive test",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check",
+    "clean": "pnpm --recursive clean && rm -rf node_modules"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

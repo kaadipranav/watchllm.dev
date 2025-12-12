@@ -1,6 +1,87 @@
-# WatchLLM - AI API Cost Optimization Platform
+# WatchLLM 🚀
 
-> **Cut your OpenAI costs by 40-70% with semantic caching**
+**AI API Cost Optimization Platform**
+
+Reduce your OpenAI costs by 40-70% through semantic caching. Built for ChatGPT wrapper makers and AI agencies.
+
+## Features
+
+- 🔄 **Semantic Caching**: Intelligently cache similar requests
+- 💰 **40-70% Cost Savings**: Proven reduction in API costs
+- ⚡ **Fast**: Sub-100ms cache hits, global edge deployment
+- 🔌 **OpenAI Compatible**: Drop-in replacement for OpenAI API
+- 📊 **Real-time Dashboard**: Monitor usage, costs, and savings
+- 🔒 **Secure**: API key management, rate limiting, encryption
+
+## Architecture
+
+```
+WatchLLM/
+├── worker/          # Cloudflare Worker (API proxy)
+├── dashboard/       # Next.js 14 dashboard (frontend)
+└── packages/
+    └── shared/      # Shared TypeScript types
+```
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **Backend**: Cloudflare Workers, Hono
+- **Database**: Supabase (PostgreSQL)
+- **Cache**: Upstash Redis
+- **Payments**: Stripe
+- **Deployment**: Vercel (dashboard), Cloudflare (worker)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm 8+
+- GitHub Student Developer Pack (recommended)
+
+### Installation
+
+```bash
+# Install pnpm if needed
+npm install -g pnpm
+
+# Install dependencies
+pnpm install
+
+# Run development servers
+pnpm dev
+```
+
+### Build
+
+```bash
+# Build all packages
+pnpm build
+```
+
+## Documentation
+
+See the [docs/](./docs) folder for detailed documentation:
+
+- [Quick Start Guide](./docs/QUICK_START.md)
+- [API Reference](./docs/API.md)
+- [System Architecture](./docs/SYSTEM.md)
+- [Tech Stack](./docs/TECH_STACK.md)
+
+## Pricing
+
+- **Free**: $0/month - 50k requests
+- **Starter**: $29/month - 250k requests
+- **Pro**: $49/month - 1M requests
+
+## License
+
+MIT
+
+## Contributing
+
+See [TASKS.md](./TASKS.md) for development tasks and guidelines.
 
 [![Deploy Status](https://img.shields.io/badge/status-ready_to_deploy-green)]()
 [![Infrastructure Cost](https://img.shields.io/badge/infrastructure-$0/month-brightgreen)]()

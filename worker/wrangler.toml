@@ -1,0 +1,12 @@
+name = "watchllm-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "watchllm-worker-production"
+routes = [
+  { pattern = "proxy.watchllm.dev/*", zone_name = "watchllm.dev" }
+]
+
+[env.development]
+name = "watchllm-worker-dev"
