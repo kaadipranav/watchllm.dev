@@ -1,5 +1,6 @@
 import { stripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
+import { sendPaymentFailedEmail } from "@/lib/email";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -102,6 +103,24 @@ export async function POST(request: Request) {
           .from("subscriptions")
           .update({ status: "past_due" })
           .eq("stripe_customer_id", customerId);
+
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select("user_id, plan")
+          .eq("stripe_customer_id", customerId)
+          .maybeSingle();
+
+        if (subscription?.user_id) {
+          const { data: user } = await supabase.auth.admin.getUserById(subscription.user_id);
+          if (user?.email) {
+            await sendPaymentFailedEmail(user.email, {
+              name: user.user_metadata?.full_name ?? user.email.split("@")[0],
+              amount: ((invoice.amount_due ?? invoice.total ?? 0) as number) / 100,
+              plan: subscription.plan ?? "starter",
+              ctaUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/(dashboard)/billing`,
+            });
+          }
+        }
 
         break;
       }

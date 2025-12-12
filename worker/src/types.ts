@@ -11,6 +11,8 @@ export interface Env {
   OPENAI_API_KEY: string;
   ANTHROPIC_API_KEY?: string;
   GROQ_API_KEY?: string;
+  APP_URL?: string;
+  EMAIL_TRIGGER_SECRET?: string;
 }
 
 // API Key record from Supabase

@@ -40,6 +40,12 @@ function SignupForm() {
 
       if (error) throw error;
 
+      fetch("/api/auth/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: email.split("@")[0] }),
+      }).catch((error) => console.error("Welcome email error", error));
+
       setSuccess(true);
     } catch (error: any) {
       toast({

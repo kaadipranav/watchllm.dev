@@ -18,6 +18,7 @@ import { createRedisClient } from '../lib/redis';
 import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
 import { createProviderClient, getProviderForModel } from '../lib/providers';
+import { maybeSendUsageAlert } from '../lib/notifications';
 
 /**
  * Validate request body
@@ -200,6 +201,8 @@ export async function handleCompletions(
       cached: false,
       latency_ms: latency,
     });
+
+    await maybeSendUsageAlert(env, supabase, redis, project);
 
     return new Response(JSON.stringify(response), {
       status: 200,

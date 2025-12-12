@@ -91,13 +91,19 @@ COMMENT ON TABLE usage_logs IS 'Detailed logs of all API requests for analytics 
 
 -- ----------------------------------------------------------------------------
 -- Subscriptions Table
--- Tracks user subscriptions and Stripe billing
+-- Tracks user subscriptions supporting both Stripe and Whop payment providers
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    stripe_customer_id TEXT UNIQUE,
-    stripe_subscription_id TEXT UNIQUE,
+    
+    -- Stripe fields
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    
+    -- Whop fields
+    whop_membership_id TEXT,
+    
     plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'starter', 'pro')),
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due', 'trialing', 'incomplete', 'incomplete_expired', 'unpaid')),
     current_period_start TIMESTAMPTZ,
@@ -105,18 +111,26 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT subscriptions_unique_user UNIQUE (user_id)
+    CONSTRAINT subscriptions_unique_user UNIQUE (user_id),
+    CONSTRAINT subscriptions_stripe_unique UNIQUE (stripe_subscription_id),
+    CONSTRAINT subscriptions_whop_unique UNIQUE (whop_membership_id),
+    CONSTRAINT subscriptions_payment_provider_check CHECK (
+        (stripe_subscription_id IS NOT NULL AND whop_membership_id IS NULL) OR
+        (stripe_subscription_id IS NULL AND whop_membership_id IS NOT NULL) OR
+        (stripe_subscription_id IS NULL AND whop_membership_id IS NULL AND plan = 'free')
+    )
 );
 
 -- Add indexes for subscriptions
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer_id ON subscriptions(stripe_customer_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer_id ON subscriptions(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_subscriptions_whop_membership_id ON subscriptions(whop_membership_id) WHERE whop_membership_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_plan ON subscriptions(plan);
 
 -- Add comment
-COMMENT ON TABLE subscriptions IS 'User subscription information and Stripe integration';
+COMMENT ON TABLE subscriptions IS 'User subscription information supporting both Stripe and Whop payment providers';
 
 -- ============================================================================
 -- FUNCTIONS
