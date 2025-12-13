@@ -11,6 +11,9 @@ import { logger } from 'hono/logger';
 import * as Sentry from '@sentry/cloudflare';
 
 import type { Env, ValidatedAPIKey, APIError } from './types';
+import { securityHeaders, getCORSConfig, isOriginAllowed } from './lib/security';
+import { checkRequestSize, MAX_REQUEST_SIZE_BYTES } from './lib/validation';
+import { isValidAPIKeyFormat, maskAPIKey as maskKey } from './lib/crypto';
 import { createRedisClient } from './lib/redis';
 import { createSupabaseClient } from './lib/supabase';
 import { handleChatCompletions } from './handlers/chat';
@@ -25,39 +28,50 @@ const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey
 // Middleware
 // ============================================================================
 
-// CORS middleware
-app.use(
-  '*',
-  cors({
-    origin: '*', // Configure specific origins in production
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
-    exposeHeaders: [
-      'X-Cache',
-      'X-Cache-Age',
-      'X-Latency-Ms',
-      'X-Cost-USD',
-      'X-RateLimit-Limit',
-      'X-RateLimit-Remaining',
-      'X-RateLimit-Reset',
-    ],
-    maxAge: 86400,
-  })
-);
+// Dynamic CORS middleware based on environment
+app.use('*', async (c, next) => {
+  const config = getCORSConfig(c.env);
+  const origin = c.req.header('Origin');
+  
+  // For preflight requests
+  if (c.req.method === 'OPTIONS') {
+    const headers: Record<string, string> = {
+      'Access-Control-Allow-Methods': config.allowedMethods.join(', '),
+      'Access-Control-Allow-Headers': config.allowedHeaders.join(', '),
+      'Access-Control-Expose-Headers': config.exposedHeaders.join(', '),
+      'Access-Control-Max-Age': config.maxAge.toString(),
+    };
+    
+    if (config.allowedOrigins.includes('*')) {
+      headers['Access-Control-Allow-Origin'] = '*';
+    } else if (origin && isOriginAllowed(origin, config.allowedOrigins)) {
+      headers['Access-Control-Allow-Origin'] = origin;
+    }
+    
+    return new Response(null, { status: 204, headers });
+  }
+  
+  await next();
+  
+  // Add CORS headers to response
+  if (config.allowedOrigins.includes('*')) {
+    c.res.headers.set('Access-Control-Allow-Origin', '*');
+  } else if (origin && isOriginAllowed(origin, config.allowedOrigins)) {
+    c.res.headers.set('Access-Control-Allow-Origin', origin);
+  }
+  c.res.headers.set('Access-Control-Expose-Headers', config.exposedHeaders.join(', '));
+});
+
+// Security headers middleware
+app.use('*', securityHeaders());
 
 // Simple request logging
 app.use('*', logger());
 
-// Structured logging, Sentry init, and request timing
+// Structured logging and request timing
+// Note: Sentry for Cloudflare Workers uses withSentry wrapper pattern
+// See https://docs.sentry.io/platforms/javascript/guides/cloudflare/
 app.use('*', async (c, next) => {
-  if (c.env.SENTRY_DSN && !Sentry.isInitialized()) {
-    Sentry.init({
-      dsn: c.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-      environment: c.env.APP_URL?.includes('localhost') ? 'development' : 'production',
-    });
-  }
-
   const requestId = crypto.randomUUID();
   c.set('requestId', requestId);
   const start = performance.now();
@@ -104,6 +118,29 @@ function extractAPIKey(authHeader: string | undefined): string | null {
 }
 
 /**
+ * Request size validation middleware
+ */
+app.use('/v1/*', async (c, next) => {
+  const contentLength = c.req.header('Content-Length');
+  const sizeCheck = checkRequestSize(contentLength);
+  
+  if (!sizeCheck.allowed) {
+    return c.json(
+      {
+        error: {
+          message: sizeCheck.error || 'Request too large',
+          type: 'invalid_request_error',
+          code: 'request_too_large',
+        },
+      },
+      413
+    );
+  }
+  
+  await next();
+});
+
+/**
  * Authentication middleware for API endpoints
  */
 app.use('/v1/*', async (c, next) => {
@@ -116,6 +153,18 @@ app.use('/v1/*', async (c, next) => {
         message: 'Missing API key. Include it in the Authorization header as "Bearer <key>"',
         type: 'invalid_request_error',
         code: 'missing_api_key',
+      },
+    };
+    return c.json(error, 401);
+  }
+
+  // Validate API key format before database lookup
+  if (!isValidAPIKeyFormat(apiKey)) {
+    const error: APIError = {
+      error: {
+        message: 'Invalid API key format. Keys must start with lgw_proj_ or lgw_test_',
+        type: 'invalid_request_error',
+        code: 'invalid_api_key_format',
       },
     };
     return c.json(error, 401);

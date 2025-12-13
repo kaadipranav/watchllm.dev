@@ -157,7 +157,7 @@ describe("API proxy integration", () => {
 
   it("forwards to provider then serves cached response", async () => {
     const res1 = await app.fetch(makeRequest(), env as any);
-    const json1 = await res1.json();
+    const json1 = await res1.json() as { choices: Array<{ message: { content: string } }> };
 
     expect(res1.status).toBe(200);
     expect(res1.headers.get("X-Cache")).toBe("MISS");
@@ -165,7 +165,7 @@ describe("API proxy integration", () => {
     expect(fetchCounts.openai).toBe(1);
 
     const res2 = await app.fetch(makeRequest(), env as any);
-    const json2 = await res2.json();
+    const json2 = await res2.json() as { choices: Array<{ message: { content: string } }> };
 
     expect(res2.headers.get("X-Cache")).toBe("HIT");
     expect(json2.choices[0].message.content).toBe("Hello!");

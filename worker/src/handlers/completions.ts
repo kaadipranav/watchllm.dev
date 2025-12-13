@@ -12,7 +12,7 @@ import type {
 } from '../types';
 
 // Define app context type
-type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey } }>;
+type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>;
 import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
 import { createSupabaseClient } from '../lib/supabase';

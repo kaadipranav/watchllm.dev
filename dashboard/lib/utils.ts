@@ -48,13 +48,33 @@ export function formatRelativeTime(date: Date | string): string {
   return formatDate(date);
 }
 
+/**
+ * Generate a cryptographically secure API key
+ * Uses Web Crypto API for secure random bytes
+ */
 export function generateAPIKey(prefix: "proj" | "test" = "proj"): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let key = "";
-  for (let i = 0; i < 32; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `lgw_${prefix}_${key}`;
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  
+  // Convert to URL-safe base64
+  const base64 = btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  
+  return `lgw_${prefix}_${base64}`;
+}
+
+/**
+ * Hash an API key for secure storage using SHA-256
+ * Returns hex-encoded hash (async version for server-side)
+ */
+export async function hashAPIKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export function maskAPIKey(key: string): string {
