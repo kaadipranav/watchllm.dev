@@ -4,6 +4,29 @@
 
 Reduce your OpenAI costs by 40-70% through semantic caching. Built for ChatGPT wrapper makers and AI agencies.
 
+## Why WatchLLM
+
+- Drop-in compatible with OpenAI, Anthropic, and Groq—only change the `baseURL` and API key.
+- Caches semantically similar prompts at the edge to deliver `HIT` responses that cost $0.
+- Dashboard insights, alerts, and structured logs make cost optimization visible to the whole team.
+
+## Quick Start
+
+```bash
+git clone https://github.com/kaadipranav/WATCHLLM.git
+cd WATCHLLM
+pnpm install
+pnpm --filter @watchllm/worker dev    # Cloudflare Worker proxy
+pnpm --filter @watchllm/dashboard dev   # Next.js dashboard
+```
+
+1. Sign up at https://watchllm.dev/signup and create a project.
+2. Generate a key (`lgw_proj_...`) and store it securely.
+3. Point your OpenAI-compatible client to `https://proxy.watchllm.dev/v1` with the new key.
+4. Send the same request twice—verify the second response returns `x-WatchLLM-cached: HIT` and zero cost.
+
+You're live. Browse the dashboard and set up billing or emails when ready.
+
 ## Features
 
 - 🔄 **Semantic Caching**: Intelligently cache similar requests
@@ -85,12 +108,18 @@ EMAIL_TRIGGER_SECRET=secure-string
 
 ## Documentation
 
-See the [docs/](./docs) folder for detailed documentation:
+- **API Reference:** [dashboard/public/docs/api-reference.md](dashboard/public/docs/api-reference.md)
+- **Quick Start:** [dashboard/public/docs/quickstart.md](dashboard/public/docs/quickstart.md)
+- **Examples:** [dashboard/public/docs/examples.md](dashboard/public/docs/examples.md)
+- **Error Guide:** [dashboard/public/docs/errors.md](dashboard/public/docs/errors.md)
+- **User Guides:** [dashboard/public/docs/guides/getting-started.md](dashboard/public/docs/guides/getting-started.md) · [guides/creating-projects.md](dashboard/public/docs/guides/creating-projects.md) · [guides/managing-api-keys.md](dashboard/public/docs/guides/managing-api-keys.md) · [guides/understanding-caching.md](dashboard/public/docs/guides/understanding-caching.md) · [guides/upgrading-plans.md](dashboard/public/docs/guides/upgrading-plans.md)
+- **Existing docs:** [docs/TECH_STACK.md](docs/TECH_STACK.md), [docs/API.md](docs/API.md), [docs/QUICK_START.md](docs/QUICK_START.md) for historical reference.
 
-- [Quick Start Guide](./docs/QUICK_START.md)
-- [API Reference](./docs/API.md)
-- [System Architecture](./docs/SYSTEM.md)
-- [Tech Stack](./docs/TECH_STACK.md)
+## Developer Docs
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [DEPLOYMENT.md](DEPLOYMENT.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## Pricing
 
