@@ -20,6 +20,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
     "@types/node": "^20.0.0",
+    "msw": "^2.3.2",
     "typescript": "^5.3.3",
     "vitest": "^1.0.0",
     "wrangler": "^3.91.0"
