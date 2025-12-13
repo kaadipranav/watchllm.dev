@@ -8,6 +8,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import * as Sentry from '@sentry/cloudflare';
 
 import type { Env, ValidatedAPIKey, APIError } from './types';
 import { createRedisClient } from './lib/redis';
@@ -15,9 +16,10 @@ import { createSupabaseClient } from './lib/supabase';
 import { handleChatCompletions } from './handlers/chat';
 import { handleCompletions } from './handlers/completions';
 import { handleEmbeddings } from './handlers/embeddings';
+import { log, maskApiKey } from './lib/logger';
 
 // Create Hono app with environment bindings
-const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey } }>();
+const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
 
 // ============================================================================
 // Middleware
@@ -45,6 +47,43 @@ app.use(
 
 // Simple request logging
 app.use('*', logger());
+
+// Structured logging, Sentry init, and request timing
+app.use('*', async (c, next) => {
+  if (c.env.SENTRY_DSN && !Sentry.isInitialized()) {
+    Sentry.init({
+      dsn: c.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+      environment: c.env.APP_URL?.includes('localhost') ? 'development' : 'production',
+    });
+  }
+
+  const requestId = crypto.randomUUID();
+  c.set('requestId', requestId);
+  const start = performance.now();
+  const authHeader = c.req.header('Authorization');
+  const apiKey = maskApiKey(extractAPIKey(authHeader || ''));
+
+  try {
+    await next();
+  } catch (err) {
+    Sentry.captureException(err, {
+      extra: { requestId, path: c.req.path, method: c.req.method },
+    });
+    throw err;
+  } finally {
+    const duration = Math.round(performance.now() - start);
+    log('info', 'request.complete', {
+      requestId,
+      path: c.req.path,
+      method: c.req.method,
+      status: c.res?.status || 500,
+      latencyMs: duration,
+      apiKey,
+      cache: c.res?.headers?.get('X-Cache'),
+    });
+  }
+});
 
 // ============================================================================
 // API Key Authentication Middleware
@@ -247,6 +286,7 @@ app.notFound((c) => {
  * Global error handler
  */
 app.onError((err, c) => {
+  Sentry.captureException(err, { extra: { path: c.req.path, method: c.req.method, requestId: c.get('requestId') } });
   console.error('Unhandled error:', err);
 
   return c.json(

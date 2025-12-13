@@ -18,8 +18,8 @@ function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 
-export function renderWelcomeEmail(props: WelcomeEmailProps): EmailRenderResult {
-  const html = render(<WelcomeEmail {...props} />);
+export async function renderWelcomeEmail(props: WelcomeEmailProps): Promise<EmailRenderResult> {
+  const html = await render(<WelcomeEmail {...props} />);
   const preview = `Welcome to WatchLLM, ${props.name}!`;
   return {
     subject: `You’re live on the ${props.plan} plan`,
@@ -29,8 +29,8 @@ export function renderWelcomeEmail(props: WelcomeEmailProps): EmailRenderResult 
   };
 }
 
-export function renderUsageAlertEmail(props: UsageAlertEmailProps): EmailRenderResult {
-  const html = render(<UsageAlertEmail {...props} />);
+export async function renderUsageAlertEmail(props: UsageAlertEmailProps): Promise<EmailRenderResult> {
+  const html = await render(<UsageAlertEmail {...props} />);
   const preview = `${props.projectName} is ${props.percentage}% through the ${props.plan} plan.`;
   return {
     subject: `${props.projectName} is approaching ${props.plan} limits`,
@@ -40,8 +40,8 @@ export function renderUsageAlertEmail(props: UsageAlertEmailProps): EmailRenderR
   };
 }
 
-export function renderPaymentFailedEmail(props: PaymentFailedEmailProps): EmailRenderResult {
-  const html = render(<PaymentFailedEmail {...props} />);
+export async function renderPaymentFailedEmail(props: PaymentFailedEmailProps): Promise<EmailRenderResult> {
+  const html = await render(<PaymentFailedEmail {...props} />);
   const preview = `Payment failed for your ${props.plan} plan.`;
   return {
     subject: `Payment issue detected: ${props.plan} plan`,
@@ -51,8 +51,8 @@ export function renderPaymentFailedEmail(props: PaymentFailedEmailProps): EmailR
   };
 }
 
-export function renderWeeklyReportEmail(props: WeeklyReportEmailProps): EmailRenderResult {
-  const html = render(<WeeklyReportEmail {...props} />);
+export async function renderWeeklyReportEmail(props: WeeklyReportEmailProps): Promise<EmailRenderResult> {
+  const html = await render(<WeeklyReportEmail {...props} />);
   const preview = `${props.projectName} used ${props.totalRequests.toLocaleString()} requests this week.`;
   return {
     subject: `${props.projectName} weekly usage report`,
@@ -62,4 +62,4 @@ export function renderWeeklyReportEmail(props: WeeklyReportEmailProps): EmailRen
   };
 }
 
-export type { EmailRenderResult, WelcomeEmailProps, UsageAlertEmailProps, PaymentFailedEmailProps, WeeklyReportEmailProps };
+export type { WelcomeEmailProps, UsageAlertEmailProps, PaymentFailedEmailProps, WeeklyReportEmailProps };

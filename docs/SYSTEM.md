@@ -10,8 +10,9 @@
 3. [Coding Standards](#3-coding-standards)
 4. [Git Workflow](#4-git-workflow)
 5. [Testing Strategy](#5-testing-strategy)
-6. [Deployment Process](#6-deployment-process)
-7. [Troubleshooting](#7-troubleshooting)
+6. [Building & Compilation](#6-building--compilation)
+7. [Deployment Process](#7-deployment-process)
+8. [Troubleshooting](#8-troubleshooting)
 
 ---
 
@@ -541,9 +542,97 @@ Before deploying to production:
 
 ---
 
-## 6. Deployment Process
+## 6. Building & Compilation
 
-### 6.1 Cloudflare Worker
+### 6.1 Monorepo Build
+
+**Build all packages:**
+```bash
+pnpm build
+```
+
+This runs in sequence:
+1. Packages (TypeScript compilation)
+2. Worker (Cloudflare Wrangler build)
+3. Dashboard (Next.js production build)
+
+**Partial builds:**
+```bash
+# Build only email package
+pnpm --filter @watchllm/emails build
+
+# Build only dashboard
+pnpm --filter @watchllm/dashboard build
+
+# Build only worker
+pnpm --filter @watchllm/worker build
+```
+
+### 6.2 Email System
+
+**Package:** `packages/emails/`
+
+Handles all transactional emails using React Email + Mailgun.
+
+**Templates:**
+- `welcome.tsx` - Sent after signup
+- `usage-alert.tsx` - Sent when usage exceeds 80% of plan
+- `payment-failed.tsx` - Sent when payment fails
+- `weekly-report.tsx` - Sent weekly with usage statistics
+
+**Key Configuration:**
+```env
+MAILGUN_API_KEY=your_mailgun_api_key
+MAILGUN_DOMAIN=mg.watchllm.dev
+EMAIL_FROM_ADDRESS=WatchLLM <no-reply@watchllm.dev>
+EMAIL_TRIGGER_SECRET=random_secret_for_webhook_auth
+CRON_SECRET=random_secret_for_cron_jobs
+```
+
+**Triggering Emails:**
+- **Welcome:** Called in `/api/auth/welcome` after signup
+- **Usage Alert:** Called from worker when usage > 80% limit
+- **Payment Failed:** Called from `/api/webhooks/stripe` on `invoice.payment_failed`
+- **Weekly Report:** Called from `/api/cron/weekly-report` (scheduled)
+
+**Testing Emails Locally:**
+```bash
+# Install Mailhog or similar SMTP mock
+# Emails will log to console in development
+```
+
+### 6.3 Build Troubleshooting
+
+**TypeScript Errors in Email Package:**
+```bash
+# Ensure @types/react is installed
+pnpm add -D @types/react @types/react-dom
+
+# Clear cache and rebuild
+pnpm install
+pnpm build
+```
+
+**React Email Component Issues:**
+- Use only exported components from `@react-email/components`
+- Available: `Body`, `Button`, `Container`, `Head`, `Heading`, `Html`, `Link`, `Preview`, `Section`, `Text`
+- Not available: `Table`, `Row`, `Column` (use `Section` instead)
+- Style padding with `padding` prop in style object, not `pX`/`pY` attributes
+- Render functions are async: must `await render(<Component />)`
+
+**Mailgun Initialization:**
+```typescript
+// Correct: Pass FormData constructor to Mailgun
+const FormData = require("form-data");
+const mailgun = new Mailgun(FormData);
+const client = mailgun.client({ username: "api", key: apiKey });
+```
+
+---
+
+## 7. Deployment Process
+
+### 7.1 Cloudflare Worker
 
 **Deploy to production:**
 ```bash
@@ -561,7 +650,7 @@ wrangler deploy --env staging
 wrangler rollback --env production
 ```
 
-### 6.2 Next.js Dashboard
+### 7.2 Next.js Dashboard
 
 **Vercel auto-deploys:**
 - Push to `main` → Deploys to production
@@ -573,7 +662,7 @@ cd dashboard
 vercel --prod
 ```
 
-### 6.3 Database Migrations
+### 7.3 Database Migrations
 
 **Staging:**
 ```bash
@@ -589,7 +678,7 @@ pg_dump $PROD_DATABASE_URL > backup-$(date +%Y%m%d).sql
 supabase db push --db-url $PROD_DATABASE_URL
 ```
 
-### 6.4 Deployment Checklist
+### 7.4 Deployment Checklist
 
 Before deploying:
 - [ ] All tests pass
@@ -608,7 +697,7 @@ After deploying:
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 ### 7.1 Common Issues
 

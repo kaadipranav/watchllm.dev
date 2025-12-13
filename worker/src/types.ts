@@ -13,6 +13,7 @@ export interface Env {
   GROQ_API_KEY?: string;
   APP_URL?: string;
   EMAIL_TRIGGER_SECRET?: string;
+  SENTRY_DSN?: string;
 }
 
 // API Key record from Supabase

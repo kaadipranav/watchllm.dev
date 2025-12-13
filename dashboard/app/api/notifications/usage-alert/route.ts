@@ -31,12 +31,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  const { data: user, error: userError } = await supabase.auth.admin.getUserById(project.user_id);
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(project.user_id);
+  const user = userData?.user;
   if (userError || !user?.email) {
     return NextResponse.json({ error: "Unable to resolve user" }, { status: 404 });
   }
 
-  const limit = providedLimit > 0 ? providedLimit : PLAN_LIMITS[project.plan]?.requestsPerMonth || PLAN_LIMITS.free.requestsPerMonth;
+  const limit = providedLimit > 0 ? providedLimit : PLAN_LIMITS[(project.plan as keyof typeof PLAN_LIMITS) ?? "free"]?.requestsPerMonth || PLAN_LIMITS.free.requestsPerMonth;
   const percentage = Math.min(100, Math.round((usageCount / limit) * 100));
 
   await sendUsageAlertEmail(user.email, {

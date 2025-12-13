@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getPaymentProvider, getPaymentProviderType } from "@/lib/payments";
+import * as Sentry from "@sentry/nextjs";
+import { logEvent } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -35,6 +37,12 @@ export async function POST() {
         returnUrl: `${appUrl}/dashboard/billing`,
       });
 
+      logEvent("info", "billing.portal.opened", {
+        userId: user.id,
+        action: "portal",
+        result: "success",
+      });
+
       return NextResponse.json({ url });
     }
 
@@ -46,7 +54,12 @@ export async function POST() {
 
     return NextResponse.json({ url });
   } catch (error: any) {
-    console.error("Portal error:", error);
+    Sentry.captureException(error);
+    logEvent("error", "billing.portal.failed", {
+      action: "portal",
+      result: "failed",
+      error: error?.message,
+    });
     return NextResponse.json(
       { error: error.message || "Failed to create portal session" },
       { status: 500 }

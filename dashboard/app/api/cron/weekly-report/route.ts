@@ -37,7 +37,8 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const { data: user } = await supabase.auth.admin.getUserById(project.user_id);
+      const { data } = await supabase.auth.admin.getUserById(project.user_id);
+      const user = data.user;
       if (!user?.email) {
         continue;
       }
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
           Number(count ?? 0),
         ])
       ) as Record<string, number>;
-      const limit = PLAN_LIMITS[project.plan]?.requestsPerMonth || PLAN_LIMITS.free.requestsPerMonth;
+      const limit = PLAN_LIMITS[(project.plan as keyof typeof PLAN_LIMITS) ?? "free"]?.requestsPerMonth || PLAN_LIMITS.free.requestsPerMonth;
 
       await sendWeeklyReportEmail(user.email, {
         name: user.user_metadata?.full_name ?? user.email.split("@")[0],

@@ -2,19 +2,21 @@
   "name": "@watchllm/emails",
   "version": "0.1.0",
   "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
   "scripts": {
     "build": "tsc --emitDeclarationOnly",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-email/components": "workspace:*",
-    "@react-email/render": "workspace:*",
+    "@react-email/components": "latest",
+    "@react-email/render": "latest",
     "form-data": "latest",
-    "mailgun.js": "latest"
+    "mailgun.js": "latest",
+    "react": "^18.2.0"
   },
   "devDependencies": {
-    "typescript": "workspace:*"
+    "typescript": "^5.3.3",
+    "@types/react": "^18.2.0"
   }
 }

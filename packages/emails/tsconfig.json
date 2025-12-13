@@ -4,14 +4,16 @@
     "module": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "moduleResolution": "bundler",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": "src",
     "skipLibCheck": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"]
 }

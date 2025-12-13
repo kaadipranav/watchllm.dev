@@ -1,6 +1,8 @@
+import * as Sentry from "@sentry/nextjs";
+import { logEvent, captureError } from "@/lib/logger";
+import { sendPaymentFailedEmail } from "@/lib/email";
 import { stripe } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendPaymentFailedEmail } from "@/lib/email";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -15,7 +17,8 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (error: any) {
-    console.error("Webhook signature verification failed:", error.message);
+    captureError(error, { action: "stripe.webhook", result: "invalid_signature" });
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: "Invalid signature" },
       { status: 400 }
@@ -31,7 +34,21 @@ export async function POST(request: Request) {
         const userId = session.metadata?.user_id;
         const plan = session.metadata?.plan;
 
-        if (!userId) break;
+        if (!userId) {
+          logEvent("warn", "checkout.completed missing userId", {
+            action: "stripe.webhook",
+            eventType: event.type,
+          });
+          break;
+        }
+
+        logEvent("info", "checkout.completed", {
+          action: "stripe.webhook",
+          eventType: event.type,
+          userId,
+          plan,
+          sessionId: session.id,
+        });
 
         // Update or create subscription
         await supabase.from("subscriptions").upsert({
@@ -45,7 +62,6 @@ export async function POST(request: Request) {
             Date.now() + 30 * 24 * 60 * 60 * 1000
           ).toISOString(),
         });
-
         break;
       }
 
@@ -61,6 +77,15 @@ export async function POST(request: Request) {
           .single();
 
         if (!existingSub) break;
+
+        logEvent("info", "subscription.updated", {
+          action: "stripe.webhook",
+          eventType: event.type,
+          userId: existingSub.user_id,
+          customerId,
+          plan: subscription.metadata?.plan,
+          status: subscription.status,
+        });
 
         await supabase
           .from("subscriptions")
@@ -83,6 +108,12 @@ export async function POST(request: Request) {
         const subscription = event.data.object;
         const customerId = subscription.customer as string;
 
+        logEvent("info", "subscription.deleted", {
+          action: "stripe.webhook",
+          eventType: event.type,
+          customerId,
+        });
+
         // Downgrade to free plan
         await supabase
           .from("subscriptions")
@@ -99,6 +130,13 @@ export async function POST(request: Request) {
         const invoice = event.data.object;
         const customerId = invoice.customer as string;
 
+        logEvent("warn", "invoice.payment_failed", {
+          action: "stripe.webhook",
+          eventType: event.type,
+          invoiceId: invoice.id,
+          customerId,
+        });
+
         await supabase
           .from("subscriptions")
           .update({ status: "past_due" })
@@ -111,13 +149,21 @@ export async function POST(request: Request) {
           .maybeSingle();
 
         if (subscription?.user_id) {
-          const { data: user } = await supabase.auth.admin.getUserById(subscription.user_id);
+          const { data: userData } = await supabase.auth.admin.getUserById(subscription.user_id);
+          const user = userData?.user;
           if (user?.email) {
             await sendPaymentFailedEmail(user.email, {
               name: user.user_metadata?.full_name ?? user.email.split("@")[0],
               amount: ((invoice.amount_due ?? invoice.total ?? 0) as number) / 100,
               plan: subscription.plan ?? "starter",
               ctaUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/(dashboard)/billing`,
+            });
+            logEvent("info", "payment_failed_email_sent", {
+              action: "stripe.webhook",
+              eventType: event.type,
+              invoiceId: invoice.id,
+              customerId,
+              userId: subscription.user_id,
             });
           }
         }
@@ -126,12 +172,19 @@ export async function POST(request: Request) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logEvent("debug", "unhandled_stripe_event", {
+          action: "stripe.webhook",
+          eventType: event.type,
+        });
     }
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
-    console.error("Webhook handler error:", error);
+    captureError(error, {
+      action: "stripe.webhook",
+      eventType: event?.type,
+    });
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: error.message || "Webhook handler failed" },
       { status: 500 }

@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getPaymentProvider } from "@/lib/payments";
 import type { Plan } from "@/lib/payments/types";
+import * as Sentry from "@sentry/nextjs";
+import { logEvent } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +33,21 @@ export async function POST(request: Request) {
       cancelUrl: `${appUrl}/dashboard/billing?canceled=true`,
     });
 
+    logEvent("info", "checkout.session.created", {
+      userId: user.id,
+      action: "upgrade",
+      result: "success",
+      plan,
+    });
+
     return NextResponse.json({ url });
   } catch (error: any) {
-    console.error("Checkout error:", error);
+    Sentry.captureException(error);
+    logEvent("error", "checkout.session.failed", {
+      action: "upgrade",
+      result: "failed",
+      error: error?.message,
+    });
     return NextResponse.json(
       { error: error.message || "Failed to create checkout session" },
       { status: 500 }

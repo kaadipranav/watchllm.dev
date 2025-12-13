@@ -10,6 +10,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import type { ReactElement } from "react";
 
 export interface WelcomeEmailProps {
   name: string;
@@ -17,7 +18,7 @@ export interface WelcomeEmailProps {
   ctaUrl: string;
 }
 
-export function WelcomeEmail({ name, plan, ctaUrl }: WelcomeEmailProps) {
+export function WelcomeEmail({ name, plan, ctaUrl }: WelcomeEmailProps): ReactElement {
   const friendlyName = name?.trim() ? name : "Creator";
   return (
     <Html>
@@ -34,8 +35,6 @@ export function WelcomeEmail({ name, plan, ctaUrl }: WelcomeEmailProps) {
               Your {plan.charAt(0).toUpperCase() + plan.slice(1)} plan keeps your AI costs predictable while flushing redundant requests straight to the cache.
             </Text>
             <Button
-              pX={24}
-              pY={12}
               style={{
                 backgroundColor: "#2563eb",
                 color: "#f8fafc",
@@ -43,6 +42,7 @@ export function WelcomeEmail({ name, plan, ctaUrl }: WelcomeEmailProps) {
                 fontWeight: 600,
                 textDecoration: "none",
                 display: "inline-flex",
+                padding: "12px 24px",
               }}
               href={ctaUrl}
             >

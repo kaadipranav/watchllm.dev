@@ -130,7 +130,7 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>API Keys</CardTitle>
-          <Button onClick={() => setShowDialog(true)} size="sm">
+          <Button onClick={() => setShowDialog(true)} size="sm" data-sa-event="api-key-new">
             <Plus className="h-4 w-4 mr-2" />
             New Key
           </Button>
@@ -260,7 +260,7 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
                 <Button variant="outline" onClick={handleCloseDialog}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreate} disabled={loading || !newKeyName.trim()}>
+                <Button onClick={handleCreate} disabled={loading || !newKeyName.trim()} data-sa-event="api-key-create">
                   {loading ? "Creating..." : "Create Key"}
                 </Button>
               </DialogFooter>

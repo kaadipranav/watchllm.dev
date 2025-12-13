@@ -1,4 +1,3 @@
-import formData from "form-data";
 import Mailgun from "mailgun.js";
 import {
   EmailRenderResult,
@@ -21,7 +20,9 @@ if (!mailgunApiKey || !mailgunDomain) {
   console.warn("Mailgun is not fully configured. Emails will not be sent.");
 }
 
-const mailgun = new Mailgun(formData);
+// Import FormData appropriately for Node.js environment
+const FormData = require("form-data");
+const mailgun = new Mailgun(FormData);
 let mgClient: ReturnType<Mailgun["client"]> | null = null;
 
 function getClient() {
@@ -63,18 +64,22 @@ export async function sendWelcomeEmail(email: string, name: string, plan: string
     plan,
     ctaUrl: `${appUrl}/(dashboard)`,
   };
-  await sendEmail(email, renderWelcomeEmail(props));
+  const renderResult = await renderWelcomeEmail(props);
+  await sendEmail(email, renderResult);
 }
 
 export async function sendUsageAlertEmail(email: string, payload: UsageAlertEmailProps) {
   const props = buildUsageAlertProps(payload);
-  await sendEmail(email, renderUsageAlertEmail(props));
+  const renderResult = await renderUsageAlertEmail(props);
+  await sendEmail(email, renderResult);
 }
 
 export async function sendPaymentFailedEmail(email: string, props: PaymentFailedEmailProps) {
-  await sendEmail(email, renderPaymentFailedEmail(props));
+  const renderResult = await renderPaymentFailedEmail(props);
+  await sendEmail(email, renderResult);
 }
 
 export async function sendWeeklyReportEmail(email: string, props: WeeklyReportEmailProps) {
-  await sendEmail(email, renderWeeklyReportEmail(props));
+  const renderResult = await renderWeeklyReportEmail(props);
+  await sendEmail(email, renderResult);
 }

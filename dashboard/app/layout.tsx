@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,6 +35,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" defer />
+        <noscript>
+          <img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerPolicy="no-referrer-when-downgrade" />
+        </noscript>
         {children}
         <Toaster />
       </body>

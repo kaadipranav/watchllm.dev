@@ -10,6 +10,7 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+import type { ReactElement } from "react";
 
 export interface PaymentFailedEmailProps {
   name: string;
@@ -25,7 +26,7 @@ export function PaymentFailedEmail({
   currency = "USD",
   plan,
   ctaUrl,
-}: PaymentFailedEmailProps) {
+}: PaymentFailedEmailProps): ReactElement {
   return (
     <Html>
       <Head />
@@ -47,8 +48,6 @@ export function PaymentFailedEmail({
             </Section>
             <Section style={{ textAlign: "center", marginTop: 24 }}>
               <Button
-                pX={24}
-                pY={12}
                 href={ctaUrl}
                 style={{
                   backgroundColor: "#dc2626",
@@ -57,6 +56,7 @@ export function PaymentFailedEmail({
                   fontWeight: 600,
                   textDecoration: "none",
                   display: "inline-flex",
+                  padding: "12px 24px",
                 }}
               >
                 Update billing

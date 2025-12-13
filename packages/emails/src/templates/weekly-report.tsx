@@ -7,9 +7,9 @@ import {
   Link,
   Preview,
   Section,
-  Table,
   Text,
 } from "@react-email/components";
+import type { ReactElement } from "react";
 
 export interface WeeklyReportEmailProps {
   name: string;
@@ -41,7 +41,7 @@ export function WeeklyReportEmail({
   limit,
   plan,
   ctaUrl,
-}: WeeklyReportEmailProps) {
+}: WeeklyReportEmailProps): ReactElement {
   return (
     <Html>
       <Head />
@@ -56,34 +56,45 @@ export function WeeklyReportEmail({
             <Text style={{ color: "#cbd5f5", margin: "16px 0 28px" }}>
               Covers {new Date(periodStart).toLocaleDateString()} – {new Date(periodEnd).toLocaleDateString()} / {plan.charAt(0).toUpperCase() + plan.slice(1)} tier ({limit.toLocaleString()} requests).
             </Text>
-            <Table style={{ width: "100%", borderCollapse: "collapse", borderRadius: 12, backgroundColor: "#020617", padding: 16, color: "#e2e8f0" }}>
-              <tbody>
-                {[
-                  ["Total requests", totalRequests.toLocaleString()],
-                  ["Cached hits", cachedRequests.toLocaleString()],
-                  ["Cache hit rate", `${cacheHitRate.toFixed(1)}%`],
-                  ["Avg latency", `${avgLatency.toFixed(0)} ms`],
-                  ["Cost", `$${totalCost.toFixed(2)}`],
-                ].map(([label, value]) => (
-                  <tr key={label}>
-                    <td style={{ padding: "8px 0", color: "#94a3b8", fontSize: 14 }}>{label}</td>
-                    <td style={{ padding: "8px 0", textAlign: "right", fontWeight: 600 }}>{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <Section style={{ backgroundColor: "#020617", borderRadius: 12, padding: "16px", marginBottom: 24 }}>
+              <Section style={{ marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid #1e293b" }}>
+                <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>Total requests</Text>
+                <Text style={{ margin: 0, marginTop: 4, color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{totalRequests.toLocaleString()}</Text>
+              </Section>
+              <Section style={{ marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid #1e293b" }}>
+                <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>Cached hits</Text>
+                <Text style={{ margin: 0, marginTop: 4, color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{cachedRequests.toLocaleString()}</Text>
+              </Section>
+              <Section style={{ marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid #1e293b" }}>
+                <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>Cache hit rate</Text>
+                <Text style={{ margin: 0, marginTop: 4, color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{cacheHitRate.toFixed(1)}%</Text>
+              </Section>
+              <Section style={{ marginBottom: 12, paddingBottom: 8, borderBottom: "1px solid #1e293b" }}>
+                <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>Avg latency</Text>
+                <Text style={{ margin: 0, marginTop: 4, color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{avgLatency.toFixed(0)} ms</Text>
+              </Section>
+              <Section style={{ marginBottom: 0 }}>
+                <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>Cost</Text>
+                <Text style={{ margin: 0, marginTop: 4, color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>${totalCost.toFixed(2)}</Text>
+              </Section>
+            </Section>
             <Section style={{ marginTop: 24 }}>
               <Text style={{ color: "#f8fafc", fontSize: 14, marginBottom: 8 }}>Top providers this week</Text>
-              <Table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  {Object.entries(requestsByProvider).map(([provider, count]) => (
-                    <tr key={provider}>
-                      <td style={{ color: "#94a3b8", fontSize: 14 }}>{provider}</td>
-                      <td style={{ textAlign: "right", fontWeight: 600, color: "#f8fafc" }}>{count.toLocaleString()} requests</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+              <Section style={{ backgroundColor: "#020617", borderRadius: 8, padding: "12px 16px" }}>
+                {Object.entries(requestsByProvider).map(([provider, count], index) => (
+                  <Section
+                    key={provider}
+                    style={{
+                      marginBottom: index < Object.keys(requestsByProvider).length - 1 ? 8 : 0,
+                      paddingBottom: index < Object.keys(requestsByProvider).length - 1 ? 8 : 0,
+                      borderBottom: index < Object.keys(requestsByProvider).length - 1 ? "1px solid #1e293b" : undefined,
+                    }}
+                  >
+                    <Text style={{ margin: 0, color: "#94a3b8", fontSize: 14 }}>{provider}</Text>
+                    <Text style={{ margin: 0, marginTop: 4, color: "#f8fafc", fontWeight: 600, fontSize: 14 }}>{count.toLocaleString()} requests</Text>
+                  </Section>
+                ))}
+              </Section>
             </Section>
             <Section style={{ textAlign: "center", marginTop: 32 }}>
               <Link

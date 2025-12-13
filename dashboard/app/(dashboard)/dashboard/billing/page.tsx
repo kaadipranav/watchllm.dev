@@ -256,6 +256,8 @@ function BillingContent() {
                       className="w-full"
                       onClick={() => handleUpgrade(plan.name)}
                       disabled={loading}
+                      data-sa-event="upgrade"
+                      data-sa-plan={plan.name}
                     >
                       Upgrade
                       <ArrowRight className="h-4 w-4 ml-2" />
