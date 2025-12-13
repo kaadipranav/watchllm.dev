@@ -316,3 +316,12 @@ export class ProviderClient {
 export function createProviderClient(env: Env): ProviderClient {
   return new ProviderClient(env);
 }
+
+let sharedProviderClient: ProviderClient | null = null;
+
+export function getSharedProviderClient(env: Env): ProviderClient {
+  if (!sharedProviderClient) {
+    sharedProviderClient = new ProviderClient(env);
+  }
+  return sharedProviderClient;
+}

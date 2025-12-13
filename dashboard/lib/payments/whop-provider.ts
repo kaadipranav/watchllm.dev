@@ -1,5 +1,6 @@
 import Whop from "@whop/sdk";
 import { createServiceClient } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/logger";
 import type {
   IPaymentProvider,
   CheckoutSessionParams,
@@ -179,6 +180,6 @@ export class WhopProvider implements IPaymentProvider {
     const payment = event.data;
     
     // You can add additional logic here, like sending confirmation emails
-    console.log(`Payment succeeded: ${payment.id}`);
+    logEvent("info", "Payment succeeded", { paymentId: payment.id });
   }
 }

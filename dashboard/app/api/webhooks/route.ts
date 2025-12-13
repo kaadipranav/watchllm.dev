@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getPaymentProvider, getPaymentProviderType } from "@/lib/payments";
+import { logEvent } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -48,11 +49,11 @@ export async function POST(request: Request) {
 
         case "invoice.payment_failed":
           // Handle payment failure - could send email or mark subscription as past_due
-          console.log("Payment failed:", event.data);
+          logEvent("warn", "Payment failed", { data: event.data });
           break;
 
         default:
-          console.log(`Unhandled Stripe event type: ${event.type}`);
+          logEvent("info", "Unhandled Stripe event type", { type: event.type });
       }
     } else if (providerType === "whop") {
       switch (event.type) {
@@ -74,17 +75,17 @@ export async function POST(request: Request) {
 
         case "payment.failed":
           // Handle payment failure
-          console.log("Payment failed:", event.data);
+          logEvent("warn", "Payment failed", { data: event.data });
           break;
 
         default:
-          console.log(`Unhandled Whop event type: ${event.type}`);
+          logEvent("info", "Unhandled Whop event type", { type: event.type });
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (error: any) {
-    console.error("Webhook error:", error);
+    logEvent("error", "Webhook error", { error: error.message });
     return NextResponse.json(
       { error: error.message || "Webhook handler failed" },
       { status: 400 }

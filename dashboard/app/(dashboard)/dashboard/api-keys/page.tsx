@@ -3,14 +3,18 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { APIKeyList } from "@/components/dashboard/api-key-list";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Key, FolderOpen } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FolderOpen, Plus, RefreshCw } from "lucide-react";
 
 interface Project {
   id: string;
@@ -34,7 +38,6 @@ export default function APIKeysPage() {
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
-  const { toast } = useToast();
 
   const fetchData = async () => {
     try {
@@ -75,7 +78,7 @@ export default function APIKeysPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-8">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
@@ -84,147 +87,146 @@ export default function APIKeysPage() {
 
   if (projects.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">API Keys</h1>
-          <p className="text-muted-foreground">
-            Manage your API keys for authentication
+      <div className="space-y-8 p-8">
+        <header className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+            Access Control
           </p>
+          <h1 className="text-4xl font-bold text-premium-text-primary">API Keys</h1>
+          <p className="text-lg text-premium-text-secondary">
+            Manage your keys once you add a project
+          </p>
+        </header>
+        <div className="card-premium space-y-4 text-center">
+          <FolderOpen className="mx-auto h-12 w-12 text-premium-text-muted" />
+          <h3 className="text-xl font-semibold text-premium-text-primary">
+            No Projects Yet
+          </h3>
+          <p className="text-sm text-premium-text-secondary">
+            Create a project before generating API keys.
+          </p>
+          <Button asChild className="mx-auto bg-premium-accent text-white shadow-glow-accent">
+            <a href="/dashboard/projects" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Project
+            </a>
+          </Button>
         </div>
-
-        <Card className="py-12">
-          <CardContent className="text-center">
-            <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Projects Yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Create a project first to generate API keys.
-            </p>
-            <Button asChild>
-              <a href="/dashboard/projects">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Project
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">API Keys</h1>
-          <p className="text-muted-foreground">
-            Manage your API keys for authentication
-          </p>
-        </div>
-      </div>
+    <div className="space-y-10 p-8">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+          Access Controls
+        </p>
+        <h1 className="text-4xl font-bold text-premium-text-primary">API Keys</h1>
+        <p className="text-lg text-premium-text-secondary">
+          Manage keys, monitor activity, and revoke what you don&apos;t need.
+        </p>
+      </header>
 
-      {/* Project Filter */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground">Filter by project:</span>
-        <Select value={selectedProject} onValueChange={setSelectedProject}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Projects" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Projects</SelectItem>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Keys</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{filteredKeys.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Keys</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeKeys.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Revoked Keys</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-muted-foreground">{revokedKeys.length}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Keys by Project */}
-      <Tabs defaultValue="active">
-        <TabsList>
-          <TabsTrigger value="active">
-            Active <Badge variant="secondary" className="ml-2">{activeKeys.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="revoked">
-            Revoked <Badge variant="secondary" className="ml-2">{revokedKeys.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active" className="mt-4">
-          {selectedProject === "all" ? (
-            // Group by project
-            projects.map((project) => {
-              const projectKeys = activeKeys.filter((k) => k.project_id === project.id);
-              if (projectKeys.length === 0) return null;
-              return (
-                <div key={project.id} className="mb-6">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4" />
+      <section className="space-y-5">
+        <div className="flex flex-col gap-4 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-4 shadow-premium-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-premium-text-secondary">
+            <span className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+              Filter
+            </span>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-[220px] rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary focus:border-premium-accent/60 focus:ring-0">
+                <SelectValue placeholder="All Projects" />
+              </SelectTrigger>
+              <SelectContent className="rounded-premium-lg border border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary shadow-premium-lg">
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
                     {project.name}
-                  </h3>
-                  <APIKeyList
-                    projectId={project.id}
-                    keys={projectKeys}
-                    onRefresh={fetchData}
-                  />
-                </div>
-              );
-            })
-          ) : (
-            <APIKeyList
-              projectId={selectedProject}
-              keys={activeKeys}
-              onRefresh={fetchData}
-            />
-          )}
-        </TabsContent>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={fetchData}
+            className="flex items-center gap-2 rounded-premium-md bg-premium-accent px-4 py-2 text-sm font-semibold text-white shadow-glow-accent transition duration-base hover:bg-premium-accent/90"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
 
-        <TabsContent value="revoked" className="mt-4">
-          {revokedKeys.length === 0 ? (
-            <Card>
-              <CardContent className="py-6 text-center text-muted-foreground">
-                No revoked keys.
-              </CardContent>
-            </Card>
-          ) : (
-            <APIKeyList
-              projectId={selectedProject}
-              keys={revokedKeys}
-              onRefresh={fetchData}
-            />
-          )}
-        </TabsContent>
-      </Tabs>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="card-premium space-y-1 bg-premium-bg-primary border border-premium-border-subtle p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Total Keys</p>
+            <p className="text-3xl font-bold text-premium-text-primary">{filteredKeys.length}</p>
+          </div>
+          <div className="card-premium space-y-1 bg-premium-bg-primary border border-premium-border-subtle p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Active Keys</p>
+            <p className="text-3xl font-bold text-premium-success">{activeKeys.length}</p>
+          </div>
+          <div className="card-premium space-y-1 bg-premium-bg-primary border border-premium-border-subtle p-5">
+            <p className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Revoked Keys</p>
+            <p className="text-3xl font-bold text-premium-danger">{revokedKeys.length}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <Tabs defaultValue="active">
+          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-1 text-sm">
+            <TabsTrigger
+              value="active"
+              className="rounded-[10px] bg-transparent px-4 py-2 font-semibold text-premium-text-secondary transition duration-base data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
+            >
+              Active <Badge className="ml-2 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">{activeKeys.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger
+              value="revoked"
+              className="rounded-[10px] bg-transparent px-4 py-2 font-semibold text-premium-text-secondary transition duration-base data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
+            >
+              Revoked <Badge className="ml-2 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">{revokedKeys.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value="active"
+            className="space-y-6 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-6 shadow-premium-sm"
+          >
+            {selectedProject === "all" ? (
+              projects.map((project) => {
+                const projectKeys = activeKeys.filter((k) => k.project_id === project.id);
+                if (projectKeys.length === 0) return null;
+                return (
+                  <div key={project.id} className="space-y-3 card-premium border border-premium-border-subtle bg-premium-bg-primary p-5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-premium-text-secondary">
+                      <FolderOpen className="h-4 w-4 text-premium-text-muted" />
+                      <span>{project.name}</span>
+                    </div>
+                    <APIKeyList projectId={project.id} keys={projectKeys} onRefresh={fetchData} />
+                  </div>
+                );
+              })
+            ) : (
+              <APIKeyList projectId={selectedProject} keys={activeKeys} onRefresh={fetchData} />
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="revoked"
+            className="space-y-6 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-6 shadow-premium-sm"
+          >
+            {revokedKeys.length === 0 ? (
+              <div className="card-premium border border-premium-border-subtle bg-premium-bg-primary p-6 text-center text-sm text-premium-text-secondary">
+                No revoked keys yet.
+              </div>
+            ) : (
+              <APIKeyList projectId={selectedProject} keys={revokedKeys} onRefresh={fetchData} />
+            )}
+          </TabsContent>
+        </Tabs>
+      </section>
     </div>
   );
 }

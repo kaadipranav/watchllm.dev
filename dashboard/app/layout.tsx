@@ -12,6 +12,21 @@ export const metadata: Metadata = {
     "WatchLLM is a drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
   keywords: ["AI", "OpenAI", "API", "proxy", "caching", "cost reduction", "LLM"],
   authors: [{ name: "WatchLLM" }],
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      { rel: "android-chrome-192x192", url: "/android-chrome-192x192.png" },
+      { rel: "android-chrome-512x512", url: "/android-chrome-512x512.png" },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "WatchLLM - Cut Your AI API Costs by 40-70%",
     description:

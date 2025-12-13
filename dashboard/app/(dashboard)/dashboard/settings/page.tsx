@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
@@ -108,33 +108,49 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
-      </div>
+    <div className="space-y-10 p-8">
+      <header className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Account</p>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-premium-text-primary">Settings</h1>
+            <p className="max-w-2xl text-lg text-premium-text-secondary">
+              Keep your profile, security, and notification preferences aligned with your premium workspace.
+            </p>
+          </div>
+          <Button
+            className="rounded-premium-md px-4 py-2 text-sm font-semibold text-white shadow-glow-accent bg-gradient-to-r from-premium-accent to-premium-accent/80"
+          >
+            View audit logs
+          </Button>
+        </div>
+      </header>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="danger">Danger Zone</TabsTrigger>
-        </TabsList>
+      <div className="space-y-6 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-xl">
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-4">
+            {[
+              { value: "profile", label: "Profile" },
+              { value: "security", label: "Security" },
+              { value: "notifications", label: "Notifications" },
+              { value: "danger", label: "Danger" },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="rounded-premium-md border border-transparent bg-transparent px-3 py-2 text-premium-text-muted transition duration-200 hover:border-premium-border-subtle data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {/* Profile Tab */}
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your personal information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <TabsContent value="profile" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Profile Info</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Update your personal details</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -142,6 +158,7 @@ export default function SettingsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
+                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary focus:border-premium-accent/70 focus:ring-0"
                 />
               </div>
               <div className="space-y-2">
@@ -151,143 +168,153 @@ export default function SettingsPage() {
                   type="email"
                   value={email}
                   disabled
-                  className="bg-muted"
+                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-muted"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Contact support to change your email address.
+                <p className="text-xs text-premium-text-muted">
+                  Contact support to change the email address associated with your account.
                 </p>
               </div>
-              <Button onClick={handleUpdateProfile} disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
+            </div>
+            <Button
+              onClick={handleUpdateProfile}
+              disabled={loading}
+              className="w-full rounded-premium-md bg-premium-accent px-5 py-2 text-sm font-semibold text-white shadow-glow-accent hover:bg-premium-accent/90 sm:w-auto"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Security</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Keep your account secure</h2>
+            </div>
+            <form onSubmit={handleChangePassword} className="space-y-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-6 shadow-premium-sm">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  minLength={8}
+                  required
+                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary focus:border-premium-accent/70 focus:ring-0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  minLength={8}
+                  required
+                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary focus:border-premium-accent/70 focus:ring-0"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="rounded-premium-md bg-premium-accent px-4 py-2 text-sm font-semibold text-white shadow-glow-accent hover:bg-premium-accent/90"
+              >
+                {loading ? "Updating..." : "Update Password"}
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </form>
 
-        {/* Security Tab */}
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>
-                Update your password to keep your account secure
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    name="newPassword"
-                    type="password"
-                    minLength={8}
-                    required
-                  />
+            <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-secondary p-6 shadow-premium-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-lg font-semibold text-premium-text-primary">Two-Factor Authentication</p>
+                  <p className="text-sm text-premium-text-secondary">
+                    Add an extra layer of security to your workspace
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    minLength={8}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Updating..." : "Update Password"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>
-                Add an extra layer of security to your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
+                <Badge className="rounded-full bg-premium-bg-elevated px-3 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
+                  Coming Soon
+                </Badge>
+              </div>
+              <p className="mt-4 text-sm text-premium-text-secondary">
                 Two-factor authentication is not enabled yet.
               </p>
-              <Button variant="outline" disabled>
+              <Button
+                variant="outline"
+                disabled
+                className="mt-4 rounded-premium-md border border-dashed border-premium-border-subtle text-premium-text-muted"
+              >
                 Enable 2FA (Coming Soon)
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </TabsContent>
 
-        {/* Notifications Tab */}
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Notifications</CardTitle>
-              <CardDescription>
-                Choose what emails you want to receive
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Usage Alerts</p>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified when you reach 80% of your monthly limit
-                  </p>
+          <TabsContent value="notifications" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Notifications</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Manage your inbox</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                {
+                  title: "Usage Alerts",
+                  description: "Get notified when you reach 80% of your monthly limit",
+                  state: "Enabled",
+                },
+                {
+                  title: "Weekly Reports",
+                  description: "Receive curated insights on usage and spend",
+                  state: "Disabled",
+                },
+                {
+                  title: "Product Updates",
+                  description: "Learn about new features and improvements",
+                  state: "Enabled",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="flex flex-col justify-between gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
+                >
+                  <div>
+                    <p className="text-base font-semibold text-premium-text-primary">{item.title}</p>
+                    <p className="text-sm text-premium-text-secondary">{item.description}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-premium-md border border-premium-border-subtle text-premium-text-muted"
+                  >
+                    {item.state}
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm">
-                  Enabled
-                </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Weekly Reports</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive weekly usage and savings reports
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Disabled
-                </Button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Product Updates</p>
-                  <p className="text-sm text-muted-foreground">
-                    Learn about new features and improvements
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Enabled
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              ))}
+            </div>
+          </TabsContent>
 
-        {/* Danger Zone Tab */}
-        <TabsContent value="danger">
-          <Card className="border-destructive">
-            <CardHeader>
-              <CardTitle className="text-destructive">Delete Account</CardTitle>
-              <CardDescription>
-                Permanently delete your account and all associated data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                This action cannot be undone. All your projects, API keys, and
-                usage data will be permanently deleted.
-              </p>
-              <Button variant="destructive" onClick={handleDeleteAccount}>
+          <TabsContent value="danger" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Danger Zone</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Delete your account</h2>
+            </div>
+            <div className="rounded-premium-xl border border-destructive/40 bg-gradient-to-br from-destructive/30 via-transparent to-transparent p-6 shadow-premium-sm">
+              <div className="space-y-3">
+                <p className="text-sm text-premium-text-secondary">
+                  Permanently delete your account and all associated data.
+                  This includes projects, API keys, and usage history.
+                </p>
+                <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+                  This action cannot be undone
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                className="mt-4 rounded-premium-md px-4 py-2 text-sm font-semibold"
+              >
                 Delete Account
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

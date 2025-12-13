@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Zap, 
   Database, 
@@ -63,33 +62,41 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-24">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Everything You Need to Cut AI Costs
+    <section
+      id="features"
+      className="relative overflow-hidden bg-gradient-to-b from-premium-bg-elevated/40 to-transparent py-24"
+    >
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute -z-10 right-0 top-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(59,130,246,0.3),_transparent)] blur-3xl" />
+      </div>
+
+      <div className="relative container mx-auto px-4">
+        <div className="mx-auto max-w-3xl text-center mb-16 space-y-3">
+          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Capabilities</p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Everything you need to cut AI costs
           </h2>
-          <p className="text-lg text-muted-foreground">
-            WatchLLM provides powerful tools to optimize your AI spending 
-            without sacrificing quality or performance.
+          <p className="text-lg text-premium-text-secondary">
+            WatchLLM combines semantic caching, analytics, and enterprise controls so you can scale safely and save aggressively.
           </p>
         </div>
 
-        {/* Features Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature) => (
-            <Card key={feature.title} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
-                  <feature.icon className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={feature.title}
+              className="card-premium p-6 transition duration-base hover:-translate-y-1"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-premium-bg-secondary">
+                <feature.icon className="h-6 w-6 text-premium-accent" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-premium-text-primary">
+                {feature.title}
+              </h3>
+              <p className="mt-2 text-sm text-premium-text-secondary">
+                {feature.description}
+              </p>
+            </div>
           ))}
         </div>
       </div>

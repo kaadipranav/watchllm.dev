@@ -14,6 +14,6 @@
 ### Troubleshooting tips
 - **Cache hot paths:** Cache hit rate < 30%? Inspect payload normalization and ensure prompts are deterministic.
 - **Stripe webhooks:** Duplicate events may be reprocessed; the worker dedupes via Supabase logs.
-- **Email failures:** Verify Mailgun domain + trigger secret; check `emails` logs under `packages/emails` if needed.
+- **Email failures:** Verify Resend API key + trigger secret; check `emails` logs under `packages/emails` if needed.
 
 Every runtime exception is captured by Sentry, so you can filter by release, environment, and request ID before investigating the stack trace.

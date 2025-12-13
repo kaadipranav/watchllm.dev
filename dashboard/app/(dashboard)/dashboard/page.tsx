@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
+
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { ProjectCard } from "@/components/dashboard/project-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Activity, 
@@ -14,8 +13,9 @@ import {
   ArrowRight
 } from "lucide-react";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Mock data for demo
 const mockUsageData = [
@@ -51,27 +51,43 @@ const mockProjects = [
   },
 ];
 
-export default async function DashboardPage() {
+export default function DashboardPage() {
+  const router = useRouter();
   const supabase = createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    redirect("/login");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+      } else {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, [router, supabase.auth]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="shimmer w-96 h-96 rounded-premium-lg bg-premium-bg-elevated" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
+    <div className="space-y-8 p-8">
+      {/* Page Header with Premium Styling */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold tracking-tight text-premium-text-primary">Dashboard</h1>
+          <p className="text-base text-premium-text-secondary">
             Overview of your API usage and savings
           </p>
         </div>
         <Link href="/dashboard/projects/new">
-          <Button>
+          <Button className="bg-premium-accent hover:bg-premium-accent/90 text-white shadow-glow-accent hover:shadow-glow-accent transition-all duration-base hover:scale-105">
             <Plus className="h-4 w-4 mr-2" />
             New Project
           </Button>
@@ -114,65 +130,94 @@ export default async function DashboardPage() {
       <UsageChart data={mockUsageData} type="requests" />
 
       {/* Projects Section */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Your Projects</h2>
-          <Link href="/dashboard/projects" className="text-sm text-primary hover:underline flex items-center">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-premium-text-primary">Your Projects</h2>
+          <Link 
+            href="/dashboard/projects" 
+            className="text-sm font-medium text-premium-accent hover:text-premium-accent/80 flex items-center gap-1 transition-colors duration-base group"
+          >
             View all
-            <ArrowRight className="h-4 w-4 ml-1" />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-base" />
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           {mockProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       </div>
 
-      {/* Quick Start Guide */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Start Guide</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+      {/* Quick Start Guide with Premium Styling */}
+      <div className="group relative overflow-hidden bg-premium-bg-elevated border border-premium-border-subtle rounded-premium-lg shadow-premium-sm p-6">
+        {/* Gradient backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-premium-accent/5 via-transparent to-premium-success/5 opacity-50 pointer-events-none" />
+        
+        <div className="relative space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-premium-md bg-premium-accent/10 border border-premium-accent/20">
+              <Zap className="h-5 w-5 text-premium-accent" />
+            </div>
+            <h3 className="text-xl font-semibold text-premium-text-primary">Quick Start Guide</h3>
+          </div>
+          
+          <div className="space-y-5">
+            {/* Step 1 */}
+            <div className="flex items-start gap-4 group/step">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-premium-md bg-premium-accent text-white text-sm font-bold shadow-glow-accent">
                 1
               </div>
-              <div>
-                <h4 className="font-medium">Create a Project</h4>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 pt-1">
+                <h4 className="font-semibold text-premium-text-primary mb-1 group-hover/step:text-premium-accent transition-colors duration-base">
+                  Create a Project
+                </h4>
+                <p className="text-sm text-premium-text-secondary">
                   Organize your API keys and usage by project
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+            
+            {/* Step 2 */}
+            <div className="flex items-start gap-4 group/step">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-premium-md bg-premium-accent text-white text-sm font-bold shadow-glow-accent">
                 2
               </div>
-              <div>
-                <h4 className="font-medium">Generate an API Key</h4>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 pt-1">
+                <h4 className="font-semibold text-premium-text-primary mb-1 group-hover/step:text-premium-accent transition-colors duration-base">
+                  Generate an API Key
+                </h4>
+                <p className="text-sm text-premium-text-secondary">
                   Create a key to authenticate your requests
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-medium">
+            
+            {/* Step 3 */}
+            <div className="flex items-start gap-4 group/step">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-premium-md bg-premium-accent text-white text-sm font-bold shadow-glow-accent">
                 3
               </div>
-              <div>
-                <h4 className="font-medium">Update Your Base URL</h4>
-                <p className="text-sm text-muted-foreground">
-                  Change <code className="text-xs bg-muted px-1 py-0.5 rounded">api.openai.com</code> to{" "}
-                  <code className="text-xs bg-muted px-1 py-0.5 rounded">api.watchllm.com</code>
+              <div className="flex-1 pt-1">
+                <h4 className="font-semibold text-premium-text-primary mb-1 group-hover/step:text-premium-accent transition-colors duration-base">
+                  Update Your Base URL
+                </h4>
+                <p className="text-sm text-premium-text-secondary mb-2">
+                  Replace your OpenAI base URL with WatchLLM&apos;s caching proxy:
                 </p>
+                <div className="flex items-center gap-2 text-xs">
+                  <code className="px-3 py-1.5 rounded-premium-md bg-premium-bg-primary border border-premium-border-subtle text-premium-text-muted font-mono">
+                    api.openai.com
+                  </code>
+                  <ArrowRight className="h-3 w-3 text-premium-accent" />
+                  <code className="px-3 py-1.5 rounded-premium-md bg-premium-accent/10 border border-premium-accent/20 text-premium-accent font-mono font-semibold">
+                    api.watchllm.com
+                  </code>
+                </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

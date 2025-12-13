@@ -18,7 +18,7 @@ import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
 import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
-import { createProviderClient, getProviderForModel } from '../lib/providers';
+import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
 
 /**
@@ -103,7 +103,7 @@ export async function handleChatCompletions(
   const redis = createRedisClient(env);
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
-  const provider = createProviderClient(env);
+  const provider = getSharedProviderClient(env);
 
   try {
     // Parse and validate request body
@@ -241,7 +241,7 @@ async function handleStreamingRequest(
   c: AppContext,
   request: ChatCompletionRequest,
   validatedKey: ValidatedAPIKey,
-  providerClient: ReturnType<typeof createProviderClient>,
+  providerClient: ReturnType<typeof getSharedProviderClient>,
   supabase: ReturnType<typeof createSupabaseClient>,
   startTime: number
 ): Promise<Response> {

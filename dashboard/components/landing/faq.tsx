@@ -51,33 +51,38 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-24">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Frequently Asked Questions
+    <section id="faq" className="relative py-24">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute -top-10 right-8 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(139,92,246,0.25),_transparent)] blur-3xl" />
+      </div>
+      <div className="container relative mx-auto px-4">
+        <div className="mx-auto max-w-2xl text-center mb-16 space-y-3">
+          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">FAQ</p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Frequently asked questions
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Everything you need to know about WatchLLM
+          <p className="text-lg text-premium-text-secondary">
+            Everything you need to know about WatchLLM before you ship.
           </p>
         </div>
 
-        {/* FAQ List */}
         <div className="mx-auto max-w-3xl space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="rounded-lg border bg-card"
+              className="glass border border-premium-border-subtle bg-premium-bg-elevated/80 shadow-premium-lg"
             >
               <button
-                className="flex w-full items-center justify-between p-4 text-left"
+                className={cn(
+                  "flex w-full items-center justify-between p-4 text-left text-sm font-semibold text-premium-text-primary transition",
+                  openIndex === index ? "border-b border-premium-border-subtle" : ""
+                )}
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <span className="font-medium">{faq.question}</span>
+                <span>{faq.question}</span>
                 <ChevronDown
                   className={cn(
-                    "h-5 w-5 text-muted-foreground transition-transform",
+                    "h-5 w-5 text-premium-text-muted transition-transform",
                     openIndex === index && "rotate-180"
                   )}
                 />
@@ -88,7 +93,7 @@ export function FAQ() {
                   openIndex === index ? "max-h-96" : "max-h-0"
                 )}
               >
-                <p className="px-4 pb-4 text-muted-foreground">{faq.answer}</p>
+                <p className="px-4 pb-4 text-sm text-premium-text-secondary">{faq.answer}</p>
               </div>
             </div>
           ))}

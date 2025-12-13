@@ -7,6 +7,7 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { compress } from 'hono/compress';
 import { logger } from 'hono/logger';
 import * as Sentry from '@sentry/cloudflare';
 
@@ -16,6 +17,7 @@ import { checkRequestSize, MAX_REQUEST_SIZE_BYTES } from './lib/validation';
 import { isValidAPIKeyFormat, maskAPIKey as maskKey } from './lib/crypto';
 import { createRedisClient } from './lib/redis';
 import { createSupabaseClient } from './lib/supabase';
+import { getSharedProviderClient } from './lib/providers';
 import { handleChatCompletions } from './handlers/chat';
 import { handleCompletions } from './handlers/completions';
 import { handleEmbeddings } from './handlers/embeddings';
@@ -23,6 +25,9 @@ import { log, maskApiKey } from './lib/logger';
 
 // Create Hono app with environment bindings
 const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
+
+// Response compression for text/JSON payloads
+app.use('*', compress());
 
 // ============================================================================
 // Middleware
@@ -87,6 +92,10 @@ app.use('*', async (c, next) => {
     throw err;
   } finally {
     const duration = Math.round(performance.now() - start);
+    if (c.res) {
+      c.res.headers.set('X-Request-Id', requestId);
+      c.res.headers.set('Server-Timing', `total;dur=${duration}`);
+    }
     log('info', 'request.complete', {
       requestId,
       path: c.req.path,

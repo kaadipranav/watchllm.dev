@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { UsageChart } from "@/components/dashboard/usage-chart";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,6 +16,20 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatNumber, formatRelativeTime } from "@/lib/utils";
+
+const LazyUsageChart = dynamic(() => import("@/components/dashboard/usage-chart").then(mod => mod.UsageChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+          <CardTitle>Loading chart...</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px] animate-pulse rounded-md bg-muted" />
+      </CardContent>
+    </Card>
+  ),
+});
 
 // Mock data
 const mockDailyData = [
@@ -89,109 +104,145 @@ const mockModelBreakdown = [
 
 export default function UsagePage() {
   const [timeRange, setTimeRange] = useState("7d");
+  const chartData = useMemo(() => mockDailyData, []);
+
+  const overviewStats = [
+    {
+      label: "Total Requests",
+      value: formatNumber(22200),
+      meta: "+12% from last period",
+    },
+    {
+      label: "Cache Hit Rate",
+      value: "72.4%",
+      meta: "+3.2% from last period",
+      accent: "text-emerald-400",
+    },
+    {
+      label: "Total Cost",
+      value: formatCurrency(44.4),
+      meta: `vs ${formatCurrency(77.2)} without caching`,
+    },
+    {
+      label: "Total Savings",
+      value: formatCurrency(32.8),
+      meta: "42.5% cost reduction",
+      accent: "text-emerald-400",
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Usage Analytics</h1>
-          <p className="text-muted-foreground">
-            Monitor your API usage, costs, and savings
-          </p>
+    <div className="space-y-10 p-8">
+      <header className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Usage</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-premium-text-primary">Usage Analytics</h1>
+            <p className="max-w-2xl text-lg text-premium-text-secondary">
+              Monitor requests, cost, and savings with actionable, premium-ready insights.
+            </p>
+          </div>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[160px] rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-sm font-semibold text-premium-text-primary">
+              <SelectValue placeholder="Time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24h">Last 24 hours</SelectItem>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Time range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="24h">Last 24 hours</SelectItem>
-            <SelectItem value="7d">Last 7 days</SelectItem>
-            <SelectItem value="30d">Last 30 days</SelectItem>
-            <SelectItem value="90d">Last 90 days</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      </header>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(22200)}</div>
-            <p className="text-xs text-muted-foreground">+12% from last period</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Cache Hit Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">72.4%</div>
-            <p className="text-xs text-muted-foreground">+3.2% from last period</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(44.4)}</div>
-            <p className="text-xs text-muted-foreground">vs {formatCurrency(77.2)} without caching</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(32.8)}</div>
-            <p className="text-xs text-muted-foreground">42.5% cost reduction</p>
-          </CardContent>
-        </Card>
-      </div>
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {overviewStats.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
+          >
+            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">{stat.label}</p>
+            <p className={`mt-2 text-2xl font-semibold ${stat.accent || "text-premium-text-primary"}`}>
+              {stat.value}
+            </p>
+            <p className="text-xs text-premium-text-secondary">{stat.meta}</p>
+          </div>
+        ))}
+      </section>
 
-      {/* Charts */}
-      <Tabs defaultValue="requests">
-        <TabsList>
-          <TabsTrigger value="requests">Requests</TabsTrigger>
-          <TabsTrigger value="cost">Cost</TabsTrigger>
-          <TabsTrigger value="savings">Savings</TabsTrigger>
-        </TabsList>
-        <TabsContent value="requests" className="mt-4">
-          <UsageChart data={mockDailyData} type="requests" />
-        </TabsContent>
-        <TabsContent value="cost" className="mt-4">
-          <UsageChart data={mockDailyData} type="cost" />
-        </TabsContent>
-        <TabsContent value="savings" className="mt-4">
-          <UsageChart data={mockDailyData} type="savings" />
-        </TabsContent>
-      </Tabs>
+      <section className="space-y-4">
+        <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Traffic</p>
+              <h2 className="text-lg font-semibold text-premium-text-primary">Regional trends</h2>
+            </div>
+            <div className="flex items-center gap-2 rounded-premium-md bg-premium-bg-secondary px-3 py-1 text-xs font-semibold text-premium-text-muted">
+              <span className="h-2 w-2 rounded-full bg-premium-accent" />
+              Live
+            </div>
+          </div>
+          <Tabs defaultValue="requests" className="space-y-4">
+            <TabsList className="grid grid-cols-3 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
+              <TabsTrigger
+                value="requests"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+              >
+                Requests
+              </TabsTrigger>
+              <TabsTrigger
+                value="cost"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+              >
+                Cost
+              </TabsTrigger>
+              <TabsTrigger
+                value="savings"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+              >
+                Savings
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="requests">
+              <LazyUsageChart data={chartData} type="requests" />
+            </TabsContent>
+            <TabsContent value="cost">
+              <LazyUsageChart data={chartData} type="cost" />
+            </TabsContent>
+            <TabsContent value="savings">
+              <LazyUsageChart data={chartData} type="savings" />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
 
-      {/* Model Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage by Model</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <section className="space-y-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Model Breakdown</p>
+            <h2 className="text-lg font-semibold text-premium-text-primary">Usage by model</h2>
+          </div>
+          <Button variant="outline" className="rounded-premium-md border border-premium-border-subtle text-premium-text-muted">
+            Export CSV
+          </Button>
+        </div>
+        <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-4 shadow-premium-sm">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Model</TableHead>
-                <TableHead className="text-right">Requests</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="text-right">Cache Hit Rate</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Model</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Requests</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Cost</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Cache Hit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {mockModelBreakdown.map((row) => (
-                <TableRow key={row.model}>
-                  <TableCell className="font-medium">{row.model}</TableCell>
-                  <TableCell className="text-right">{formatNumber(row.requests)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(row.cost)}</TableCell>
+                <TableRow key={row.model} className="border-b border-premium-border-subtle last:border-0">
+                  <TableCell className="font-medium text-premium-text-primary">{row.model}</TableCell>
+                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(row.requests)}</TableCell>
+                  <TableCell className="text-right text-premium-text-secondary">{formatCurrency(row.cost)}</TableCell>
                   <TableCell className="text-right">
                     <Badge variant={row.cached_percent > 60 ? "success" : "secondary"}>
                       {row.cached_percent}%
@@ -201,49 +252,52 @@ export default function UsagePage() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      {/* Recent Requests */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <section className="space-y-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Recent Activity</p>
+            <h2 className="text-lg font-semibold text-premium-text-primary">Recent requests</h2>
+          </div>
+          <div className="text-sm text-premium-text-muted">Last 5 calls</div>
+        </div>
+        <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-4 shadow-premium-sm">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Model</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Tokens In</TableHead>
-                <TableHead className="text-right">Tokens Out</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="text-right">Latency</TableHead>
-                <TableHead className="text-right">Time</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Model</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">Status</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Tokens In</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Tokens Out</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Cost</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Latency</TableHead>
+                <TableHead className="text-xs uppercase tracking-[0.3em] text-premium-text-muted text-right">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {mockRecentLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.model}</TableCell>
+                <TableRow key={log.id} className="border-b border-premium-border-subtle last:border-0">
+                  <TableCell className="font-medium text-premium-text-primary">{log.model}</TableCell>
                   <TableCell>
                     <Badge variant={log.cached ? "success" : "secondary"}>
                       {log.cached ? "Cached" : "API"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{formatNumber(log.tokens_in)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(log.tokens_out)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(log.cost)}</TableCell>
-                  <TableCell className="text-right">{log.latency}ms</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
+                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_in)}</TableCell>
+                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_out)}</TableCell>
+                  <TableCell className="text-right text-premium-text-secondary">{formatCurrency(log.cost)}</TableCell>
+                  <TableCell className="text-right text-premium-text-secondary">{log.latency}ms</TableCell>
+                  <TableCell className="text-right text-premium-text-muted">
                     {formatRelativeTime(log.created_at)}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

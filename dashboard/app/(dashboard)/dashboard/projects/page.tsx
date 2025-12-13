@@ -134,27 +134,32 @@ export default function ProjectsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground">
-            Manage your projects and their API keys
-          </p>
+    <div className="space-y-10 p-8">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Projects</p>
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-bold text-premium-text-primary">Projects</h1>
+            <p className="text-lg text-premium-text-secondary">
+              Manage your projects and their API keys
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowDialog(true)}
+            className="flex items-center gap-2 rounded-premium-md bg-premium-accent px-5 py-2 text-sm font-semibold text-white shadow-glow-accent transition duration-base hover:bg-premium-accent/90"
+          >
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
         </div>
-        <Button onClick={() => setShowDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
-        </Button>
-      </div>
+      </header>
 
       {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-text-muted" />
         <Input
           placeholder="Search projects..."
-          className="pl-10"
+          className="pl-10 rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary focus:border-premium-accent/60 focus:ring-0"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -164,7 +169,7 @@ export default function ProjectsPage() {
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-6 border rounded-lg space-y-4">
+            <div key={i} className="card-premium border border-premium-border-subtle bg-premium-bg-primary p-6 space-y-4 shadow-premium-sm">
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-20 w-full" />
@@ -172,13 +177,16 @@ export default function ProjectsPage() {
           ))}
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
+        <div className="card-premium border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center shadow-premium-sm">
+          <p className="mb-4 text-lg text-premium-text-secondary">
             {search ? "No projects match your search." : "No projects yet. Create one to get started."}
           </p>
           {!search && (
-            <Button onClick={() => setShowDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => setShowDialog(true)}
+              className="flex items-center justify-center gap-2 rounded-premium-md bg-premium-accent px-4 py-2 text-sm font-semibold text-white shadow-glow-accent"
+            >
+              <Plus className="h-4 w-4" />
               Create Your First Project
             </Button>
           )}
@@ -197,7 +205,7 @@ export default function ProjectsPage() {
 
       {/* Create Project Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated shadow-premium-lg">
           <DialogHeader>
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
@@ -210,16 +218,25 @@ export default function ProjectsPage() {
               <Input
                 id="name"
                 placeholder="e.g., My Production App"
+                className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary focus:border-premium-accent/60 focus:ring-0"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDialog(false)}
+              className="rounded-premium-md border border-premium-border-subtle text-premium-text-secondary transition hover:border-premium-accent/60 hover:text-premium-text-primary"
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={creating || !newProjectName.trim()}>
+            <Button
+              onClick={handleCreate}
+              disabled={creating || !newProjectName.trim()}
+              className="rounded-premium-md bg-premium-accent text-white shadow-glow-accent hover:bg-premium-accent/90"
+            >
               {creating ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>

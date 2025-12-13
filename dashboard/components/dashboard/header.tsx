@@ -40,50 +40,77 @@ export function Header() {
     : "U";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-card px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-premium-border-subtle bg-premium-bg-elevated/80 backdrop-blur-md px-8">
       {/* Search */}
       <div className="relative w-96">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search..." className="pl-10" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-text-muted" />
+        <Input 
+          placeholder="Search projects, keys..." 
+          className="pl-10 bg-premium-bg-primary border-premium-border-subtle text-premium-text-primary placeholder:text-premium-text-muted focus:border-premium-accent/50 focus:ring-premium-accent/20 transition-all duration-base"
+        />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Notifications */}
-        <Button variant="ghost" size="icon">
-          <Bell className="h-5 w-5" />
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="relative h-10 w-10 hover:bg-premium-bg-elevated-hover transition-colors duration-base"
+        >
+          <Bell className="h-5 w-5 text-premium-text-secondary" />
+          {/* Notification badge */}
+          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-premium-accent shadow-glow-accent" />
         </Button>
 
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button 
+              variant="ghost" 
+              className="relative h-10 w-10 rounded-full p-0 hover:bg-premium-bg-elevated-hover transition-colors duration-base"
+            >
+              <Avatar className="h-9 w-9 border-2 border-premium-border-subtle hover:border-premium-accent/50 transition-colors duration-base">
                 <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || ""} />
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback className="bg-premium-accent text-white text-sm font-semibold">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuContent 
+            className="w-56 bg-premium-bg-elevated border-premium-border-subtle shadow-premium-lg" 
+            align="end" 
+            forceMount
+          >
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
+                <p className="text-sm font-semibold text-premium-text-primary">
                   {user?.user_metadata?.full_name || "User"}
                 </p>
-                <p className="text-xs leading-none text-muted-foreground">
+                <p className="text-xs text-premium-text-muted">
                   {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+            <DropdownMenuSeparator className="bg-premium-border-subtle" />
+            <DropdownMenuItem 
+              onClick={() => router.push("/dashboard/settings")}
+              className="cursor-pointer text-premium-text-secondary hover:text-premium-text-primary hover:bg-premium-bg-elevated-hover focus:bg-premium-bg-elevated-hover"
+            >
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/dashboard/billing")}>
+            <DropdownMenuItem 
+              onClick={() => router.push("/dashboard/billing")}
+              className="cursor-pointer text-premium-text-secondary hover:text-premium-text-primary hover:bg-premium-bg-elevated-hover focus:bg-premium-bg-elevated-hover"
+            >
               Billing
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuSeparator className="bg-premium-border-subtle" />
+            <DropdownMenuItem 
+              onClick={handleSignOut}
+              className="cursor-pointer text-premium-danger hover:bg-premium-danger/10 focus:bg-premium-danger/10"
+            >
               Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

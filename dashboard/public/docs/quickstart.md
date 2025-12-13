@@ -27,4 +27,4 @@
 5. **Verify cache hit**
     - Send the same prompt twice. Second response returns with `x-WatchLLM-cached: HIT` and zero cost.
 
-Make it production-ready by connecting Supabase, Stripe, and Mailgun (see [Architecture](../../ARCHITECTURE.md)).
+Make it production-ready by connecting Supabase, Stripe, and Resend (see [Architecture](../../ARCHITECTURE.md)).

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
@@ -66,76 +65,67 @@ const plans = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-24 bg-muted/30">
+    <section id="pricing" className="py-24">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Simple, Transparent Pricing
+        <div className="mx-auto max-w-3xl text-center space-y-3 mb-16">
+          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Pricing</p>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Transparent plans built for premium teams
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Start free, upgrade when you need more. All plans include a 14-day free trial.
+          <p className="text-lg text-premium-text-secondary">
+            Start free, upgrade when you need more, and get the full power of semantic caching with predictable pricing.
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="mx-auto max-w-5xl grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3">
           {plans.map((plan) => (
-            <Card 
-              key={plan.name} 
-              className={`relative ${plan.popular ? "border-primary shadow-lg scale-105" : ""}`}
+            <div
+              key={plan.name}
+              className={`relative flex flex-col gap-6 rounded-premium-2xl border border-premium-border-subtle bg-premium-bg-elevated/80 p-6 shadow-premium-lg transition duration-base ${
+                plan.popular ? "ring-1 ring-premium-accent/60" : ""
+              }`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-premium-bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em]">
                   Most Popular
                 </Badge>
               )}
-              <CardHeader>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Price */}
-                <div>
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
-                </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-semibold text-premium-text-primary">{plan.name}</h3>
+                <p className="text-sm text-premium-text-secondary">{plan.description}</p>
+              </div>
 
-                {/* Features */}
-                <ul className="space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Link href={plan.href} className="w-full">
-                  <Button 
-                    className="w-full" 
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
+              <div className="space-y-0">
+                <span className="text-4xl font-bold text-premium-text-primary">{plan.price}</span>
+                <p className="text-xs uppercase tracking-[0.3em] text-premium-text-muted">{plan.period}</p>
+              </div>
+
+              <ul className="flex-1 space-y-3 text-sm text-premium-text-secondary">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 text-premium-success" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href={plan.href} className="mt-auto">
+                <Button
+                  className={`w-full rounded-premium-xl px-4 py-3 text-sm font-semibold ${
+                    plan.popular
+                      ? "bg-gradient-to-r from-premium-accent to-premium-accent/80 text-white shadow-glow-accent"
+                      : "border border-premium-border-subtle text-premium-text-primary"
+                  }`}
+                >
+                  {plan.cta}
+                </Button>
+              </Link>
+            </div>
           ))}
         </div>
 
-        {/* FAQ Link */}
-        <p className="text-center mt-12 text-muted-foreground">
-          Have questions? Check out our{" "}
-          <Link href="#faq" className="text-primary hover:underline">
-            FAQ
-          </Link>{" "}
-          or{" "}
-          <Link href="mailto:support@watchllm.com" className="text-primary hover:underline">
-            contact us
-          </Link>
-          .
+        <p className="mt-12 text-center text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+          Need a custom plan? Email <Link href="mailto:support@watchllm.com" className="text-premium-accent">support@watchllm.com</Link>
         </p>
       </div>
     </section>

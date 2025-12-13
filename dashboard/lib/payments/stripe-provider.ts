@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { createServiceClient } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/logger";
 import type {
   IPaymentProvider,
   CheckoutSessionParams,
@@ -152,6 +153,6 @@ export class StripeProvider implements IPaymentProvider {
     const invoice = event.data as Stripe.Invoice;
     
     // You can add additional logic here, like sending confirmation emails
-    console.log(`Payment succeeded for invoice: ${invoice.id}`);
+    logEvent("info", "Payment succeeded", { invoiceId: invoice.id });
   }
 }

@@ -1,4 +1,4 @@
-import Mailgun from "mailgun.js";
+import { Resend } from "resend";
 import {
   EmailRenderResult,
   PaymentFailedEmailProps,
@@ -11,40 +11,38 @@ import {
   WelcomeEmailProps,
 } from "@watchllm/emails";
 
-const mailgunApiKey = process.env.MAILGUN_API_KEY;
-const mailgunDomain = process.env.MAILGUN_DOMAIN;
+const resendApiKey = process.env.RESEND_API_KEY;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const fromAddress = process.env.EMAIL_FROM_ADDRESS || `WatchLLM <no-reply@${mailgunDomain ?? "watchllm.dev"}>`;
+const fromAddress = process.env.EMAIL_FROM_ADDRESS || "WatchLLM <no-reply@watchllm.dev>";
 
-if (!mailgunApiKey || !mailgunDomain) {
-  console.warn("Mailgun is not fully configured. Emails will not be sent.");
+if (!resendApiKey) {
+  console.warn("Resend is not configured. Emails will not be sent.");
 }
 
-// Import FormData appropriately for Node.js environment
-const FormData = require("form-data");
-const mailgun = new Mailgun(FormData);
-let mgClient: ReturnType<Mailgun["client"]> | null = null;
+let resendClient: Resend | null = null;
 
-function getClient() {
-  if (!mailgunApiKey || !mailgunDomain) {
-    throw new Error("Missing Mailgun credentials");
+function getClient(): Resend {
+  if (!resendApiKey) {
+    throw new Error("Missing Resend API key");
   }
-  if (!mgClient) {
-    mgClient = mailgun.client({ username: "api", key: mailgunApiKey });
+  if (!resendClient) {
+    resendClient = new Resend(resendApiKey);
   }
-  return mgClient;
+  return resendClient;
 }
 
 async function sendEmail(to: string, renderResult: EmailRenderResult) {
   try {
     const client = getClient();
-    await client.messages.create(mailgunDomain!, {
+    await client.emails.send({
       from: fromAddress,
       to,
       subject: renderResult.subject,
       html: renderResult.html,
       text: renderResult.text || renderResult.preview,
-      "h:List-Unsubscribe": `<${appUrl}/settings/notifications>`,
+      headers: {
+        "List-Unsubscribe": `<${appUrl}/settings/notifications>`,
+      },
     });
   } catch (error) {
     console.error("Unable to send email", { to, error });

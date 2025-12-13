@@ -107,7 +107,7 @@ function SignupForm() {
           </div>
           <CardTitle className="text-2xl">Check your email</CardTitle>
           <CardDescription>
-            We've sent a confirmation link to <strong>{email}</strong>
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">

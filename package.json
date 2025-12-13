@@ -18,11 +18,27 @@
     "test:e2e": "pnpm --filter @watchllm/dashboard test:e2e",
     "lint": "pnpm --recursive lint",
     "type-check": "pnpm --recursive type-check",
-    "clean": "pnpm --recursive clean && rm -rf node_modules"
+    "clean": "pnpm --recursive clean && rm -rf node_modules",
+    "prepare": "husky",
+    "release": "standard-version"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "standard-version": "^9.5.0"
+  }
 }

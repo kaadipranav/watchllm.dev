@@ -1,91 +1,103 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Zap, CheckCircle } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
-      
-      <div className="container relative mx-auto px-4 py-24 sm:py-32">
-        <div className="mx-auto max-w-4xl text-center">
-          {/* Badge */}
-          <div className="mb-8 inline-flex items-center rounded-full border bg-muted px-4 py-1.5 text-sm">
-            <Zap className="mr-2 h-4 w-4 text-yellow-500" />
-            <span>Save 40-70% on AI API costs</span>
+    <section className="relative overflow-hidden bg-premium-bg-primary/80 px-4 pb-24 pt-20">
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -right-32 top-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(139,92,246,0.35),_transparent)] blur-3xl" />
+        <div className="absolute left-0 top-32 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(16,185,129,0.25),_transparent)] blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-premium-bg-primary/0 via-premium-bg-primary to-premium-bg-primary" />
+      </div>
+
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-12 lg:flex-row">
+        <div className="space-y-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-premium-border-subtle bg-premium-bg-secondary/40 px-4 py-1 text-xs uppercase tracking-[0.5em] text-premium-text-muted">
+            <Zap className="h-4 w-4 text-premium-accent" />
+            Save 40-70% on AI costs
           </div>
 
-          {/* Headline */}
-          <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-            Cut Your{" "}
-            <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              AI Costs
-            </span>{" "}
-            Without Changing Code
-          </h1>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold leading-tight text-premium-text-primary sm:text-5xl lg:text-6xl">
+              Slash your AI spend with premium semantic caching
+            </h1>
+            <p className="text-lg text-premium-text-secondary sm:text-xl">
+              WatchLLM proxies your OpenAI, Claude, and Groq requests across a secure, globally cached
+              edge network—no SDK changes required.
+            </p>
+          </div>
 
-          {/* Subheadline */}
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            WatchLLM is a drop-in proxy that reduces your OpenAI, Claude, and Groq API costs 
-            through intelligent semantic caching. Just change your base URL.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="flex flex-wrap gap-4">
             <Link href="/signup">
-              <Button size="lg" className="text-lg px-8">
+              <Button className="rounded-premium-xl bg-gradient-to-r from-premium-accent to-premium-accent/80 px-6 py-3 text-lg font-semibold text-white shadow-glow-accent">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="#pricing">
-              <Button size="lg" variant="outline" className="text-lg px-8">
+              <Button
+                variant="outline"
+                className="rounded-premium-xl border border-premium-border-subtle px-6 py-3 text-lg font-semibold text-premium-text-primary"
+              >
                 View Pricing
               </Button>
             </Link>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              50K free requests/month
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              No credit card required
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              OpenAI-compatible API
-            </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Free Requests", value: "50K" },
+              { label: "Latency", value: "< 50ms" },
+              { label: "Providers", value: "OpenAI +" },
+            ].map((metric) => (
+              <div
+                key={metric.label}
+                className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated px-4 py-3 text-center shadow-premium-sm"
+              >
+                <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+                  {metric.label}
+                </p>
+                <p className="text-xl font-semibold text-premium-text-primary">{metric.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-4 pt-4 text-sm text-premium-text-secondary sm:flex-row sm:items-center sm:gap-10">
+            {["50K free requests", "No credit card", "OpenAI-compatible"].map((badge) => (
+              <div key={badge} className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-premium-success" />
+                {badge}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Code Example */}
-        <div className="mx-auto mt-16 max-w-2xl">
-          <div className="rounded-lg border bg-card p-1">
-            <div className="flex items-center gap-2 border-b px-4 py-2">
-              <div className="h-3 w-3 rounded-full bg-red-500" />
-              <div className="h-3 w-3 rounded-full bg-yellow-500" />
-              <div className="h-3 w-3 rounded-full bg-green-500" />
-              <span className="ml-4 text-sm text-muted-foreground">Quick Integration</span>
+        <div className="glass relative rounded-premium-2xl border border-premium-border-subtle bg-premium-bg-elevated/80 p-6 shadow-premium-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Drop-in Proxy</p>
+              <h3 className="text-xl font-semibold text-premium-text-primary">Zero code changes</h3>
             </div>
-            <pre className="overflow-x-auto p-4 text-sm">
-              <code className="text-muted-foreground">
-                <span className="text-blue-500">const</span>{" "}
-                <span className="text-green-500">client</span> ={" "}
-                <span className="text-blue-500">new</span>{" "}
-                <span className="text-yellow-500">OpenAI</span>({"{"}
-                {"\n"}
-                {"  "}apiKey: <span className="text-orange-500">process.env.OPENAI_API_KEY</span>,
-                {"\n"}
-                {"  "}baseURL: <span className="text-green-400">"https://api.watchllm.com/v1"</span>
-                {"\n"}
-                {"}"});
-              </code>
+            <Badge className="rounded-full bg-premium-bg-secondary px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
+              Live
+            </Badge>
+          </div>
+
+          <div className="mt-6 overflow-hidden rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary/80 p-4">
+            <pre className="text-sm text-premium-text-secondary">
+{`const client = new WatchLLM({
+  apiKey: process.env.WATCHLLM_KEY,
+  provider: "openai",
+  baseURL: "https://api.watchllm.com/v1",
+});`}
             </pre>
+          </div>
+
+          <div className="mt-6 flex items-center justify-between text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+            <span>OpenAI compatible</span>
+            <span>Global edge</span>
           </div>
         </div>
       </div>
