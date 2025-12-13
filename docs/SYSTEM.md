@@ -572,7 +572,7 @@ pnpm --filter @watchllm/worker build
 
 **Package:** `packages/emails/`
 
-Handles all transactional emails using React Email + Mailgun.
+Handles all transactional emails using React Email + Resend.
 
 **Templates:**
 - `welcome.tsx` - Sent after signup
@@ -582,8 +582,7 @@ Handles all transactional emails using React Email + Mailgun.
 
 **Key Configuration:**
 ```env
-MAILGUN_API_KEY=your_mailgun_api_key
-MAILGUN_DOMAIN=mg.watchllm.dev
+RESEND_API_KEY=re_your_resend_api_key
 EMAIL_FROM_ADDRESS=WatchLLM <no-reply@watchllm.dev>
 EMAIL_TRIGGER_SECRET=random_secret_for_webhook_auth
 CRON_SECRET=random_secret_for_cron_jobs
@@ -597,8 +596,8 @@ CRON_SECRET=random_secret_for_cron_jobs
 
 **Testing Emails Locally:**
 ```bash
-# Install Mailhog or similar SMTP mock
-# Emails will log to console in development
+# Resend provides test mode - emails log to console in development
+# Set RESEND_API_KEY to your test key
 ```
 
 ### 6.3 Build Troubleshooting
@@ -620,12 +619,17 @@ pnpm build
 - Style padding with `padding` prop in style object, not `pX`/`pY` attributes
 - Render functions are async: must `await render(<Component />)`
 
-**Mailgun Initialization:**
+**Resend Initialization:**
 ```typescript
-// Correct: Pass FormData constructor to Mailgun
-const FormData = require("form-data");
-const mailgun = new Mailgun(FormData);
-const client = mailgun.client({ username: "api", key: apiKey });
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+await resend.emails.send({
+  from: "WatchLLM <no-reply@watchllm.dev>",
+  to: email,
+  subject: "Welcome to WatchLLM",
+  html: "<p>Welcome!</p>",
+});
 ```
 
 ---

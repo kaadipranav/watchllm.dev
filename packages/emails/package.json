@@ -11,12 +11,10 @@
   "dependencies": {
     "@react-email/components": "latest",
     "@react-email/render": "latest",
-    "form-data": "latest",
-    "mailgun.js": "latest",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/react": "^18.2.0"
+    "@types/react": "^18.2.0",
+    "typescript": "^5.3.3"
   }
 }

@@ -35,7 +35,7 @@
    - [ ] JetBrains: Download WebStorm/PyCharm
    - [ ] GitKraken: Install Git client
    - [ ] 1Password: Set up password manager
-   - [ ] Mailgun: Set up email (20k free/month)
+   - [ ] Resend: Set up email (100k free/month)
 
 **End of Hour 1: All accounts created, Student Pack benefits claimed**
 
@@ -258,8 +258,8 @@
    Sentry.init({ dsn: 'your-dsn' });
    ```
 
-3. **Mailgun** (FREE 20k emails/month with Student Pack)
-   - Sign up: https://signup.mailgun.com/
+3. **Resend** (FREE 100k emails/month)
+   - Sign up: https://resend.com/signup
    - Verify domain: `mg.watchllm.dev`
    - Get API key
    - Configure for transactional emails

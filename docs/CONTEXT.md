@@ -220,7 +220,7 @@
 | **Frontend** | Next.js 14 + Shadcn UI | N/A (open source) | - | **$0** |
 | **Hosting** | Vercel | Free hobby plan | ~$20 | **$0** |
 | **Payments** | Stripe | Waived fees on first $1k | ~$30 | **$0** |
-| **Email** | Mailgun | 20k emails/mo for 12 months | ~$35 | **$0** |
+| **Email** | Resend | 100k emails/mo free tier | ~$20 | **$0** |
 | **Domain** | Name.com | Free .dev/.app domain | ~$15 | **$0** |
 | **Monitoring** | Datadog + Sentry | Free for 2 years | ~$335 | **$0** |
 | **IDE** | JetBrains WebStorm | Free annual license | ~$500 | **$0** |

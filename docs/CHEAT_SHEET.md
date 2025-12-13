@@ -233,7 +233,7 @@ Key benefits:
 - Name.com domain (Free .dev)
 - Datadog (Free 2 years)
 - JetBrains IDE (Free annual)
-- Mailgun (Free 20k emails/mo)
+- Resend (Free 100k emails/mo)
 
 **You're profitable from dollar one.**
 

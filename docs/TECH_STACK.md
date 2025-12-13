@@ -82,7 +82,7 @@ You have access to ~$10,000/year in free services. We're going to use EVERY SING
 ### Communication & Support
 | Component | Tool | Student Pack Benefit | Why | Monthly Cost |
 |-----------|------|---------------------|-----|--------------|
-| **Transactional Email** | Mailgun | 20k emails/month for 12 months | Reliable delivery, webhooks | $0 |
+| **Transactional Email** | Resend | 100k emails/month free tier | Simple API, excellent DX | $0 |
 | **Email Templates** | React Email | N/A | JSX-based email templates | $0 |
 | **Support** | Plain (alt: Crisp) | Free tier | Simple support inbox | $0 |
 | **Docs** | Mintlify (alt: Bump.sh) | Bump.sh: Free for students | Beautiful API docs | $0 ($149 value) |
@@ -134,7 +134,7 @@ You have access to ~$10,000/year in free services. We're going to use EVERY SING
 | **Backend & Database** | Cloudflare Workers, Supabase | ~$50 | $0 |
 | **DevOps & Tools** | GitHub Pro, JetBrains, GitKraken | ~$600 | $0 |
 | **Monitoring** | Datadog, Sentry, SimpleAnalytics | ~$335 | $0 |
-| **Communication** | Mailgun, Bump.sh | ~$150 | $0 |
+| **Communication** | Resend, Bump.sh | ~$150 | $0 |
 | **Security** | 1Password, Cloudflare | ~$40 | $0 |
 | **Testing** | BrowserStack | ~$30 | $0 |
 | **Collaboration** | Notion | ~$10 | $0 |
@@ -340,7 +340,7 @@ Margin: 98.3%
 
 ### Hour 4: Polish
 - [ ] Set up Stripe
-- [ ] Configure Mailgun
+- [ ] Configure Resend
 - [ ] Add Sentry error tracking
 - [ ] Deploy to production
 
@@ -609,7 +609,7 @@ export default async function DashboardPage() {
 
 ### Day 3 (2 hours):
 13. ✅ Add Sentry error tracking
-14. ✅ Configure Mailgun for emails
+14. ✅ Configure Resend for emails
 15. ✅ Test end-to-end
 16. ✅ Launch free tier
 
@@ -677,7 +677,7 @@ Total: $0/month = $0/year
 4. **Frontend:** Next.js 14 + Vercel
 5. **Payments:** Stripe
 6. **Monitoring:** Datadog + Sentry
-7. **Email:** Mailgun
+7. **Email:** Resend
 8. **Docs:** Bump.sh
 9. **Domain:** Name.com (.dev)
 

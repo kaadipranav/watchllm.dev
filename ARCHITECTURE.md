@@ -20,7 +20,7 @@ WatchLLM is purpose-built for semantic caching at the edge. The architecture spl
    - **Supabase** holds `projects`, `api_keys`, `usage_logs`, and forms the source of truth for plan limits.
    - **Upstash Redis** stores cache entries with TTLs (1h for completions, 24h for embeddings) and rate-limiting counters.
    - **Stripe** manages products (Free, Starter, Pro) and notifies the dashboard via secure webhooks.
-   - **Mailgun** sends transactional emails (payment failed, usage alerts) through the shared `@watchllm/emails` package.
+   - **Resend** sends transactional emails (payment failed, usage alerts) through the shared `@watchllm/emails` package.
 
 ### Workflow diagram
 ```

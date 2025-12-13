@@ -106,7 +106,7 @@ The GitHub Student Developer Pack provides students with free access to professi
 
 ## Communication & Collaboration
 
-- **Mailgun** - 20,000 free emails per month for 12 months
+- **Resend** - 100,000 free emails per month
 - **StreamYard** - Free Basic plan
 - **Typeform** - Free Professional plan for 1 year
 
@@ -139,7 +139,7 @@ Below is how **WatchLLM** will utilize EVERY applicable benefit:
 | **Stripe** | Payment processing | ✅ Critical |
 | **Bump.sh** | API documentation | ✅ Critical |
 | **ConfigCat** | Feature flags | ✅ Using |
-| **Mailgun** | Transactional emails | ✅ Critical |
+| **Resend** | Transactional emails | ✅ Critical |
 | **Notion** | Documentation + planning | ✅ Using |
 | **FrontendMasters** | Learning advanced patterns | ✅ Growth |
 | **Educative** | System design learning | ✅ Growth |

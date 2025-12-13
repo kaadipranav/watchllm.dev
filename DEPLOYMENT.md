@@ -11,7 +11,7 @@ Deploying WatchLLM involves a Cloudflare Worker proxy and a Next.js dashboard. B
 6. Verify health: `curl https://proxy.watchllm.dev/health` returns `status: ok`.
 
 ## Dashboard (Next.js)
-1. Copy `.env.example` to `.env.local` and fill in Supabase, Stripe, Mailgun, Sentry, and `NEXT_PUBLIC_APP_URL`.
+1. Copy `.env.example` to `.env.local` and fill in Supabase, Stripe, Resend, Sentry, and `NEXT_PUBLIC_APP_URL`.
 2. Build locally for sanity: `pnpm --filter @watchllm/dashboard build`.
 3. Deploy via Vercel: connect the repo, set Environment Variables, and run `pnpm --filter @watchllm/dashboard build`.
 4. Populate Stripe webhook secrets under `dashboard/app/api/webhooks/stripe/route.ts` and verify in Stripe dashboard.

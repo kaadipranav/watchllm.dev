@@ -49,7 +49,7 @@
 | **Frontend** | Next.js + Vercel | Free hosting | $20/mo |
 | **Domain** | Name.com | Free .dev/.app | $15/mo |
 | **Monitoring** | Datadog + Sentry | Free for 2 years | $335/mo |
-| **Email** | Mailgun | Free 20k/month | $35/mo |
+| **Email** | Resend | Free 100k/month | $20/mo |
 | **IDE** | JetBrains | Free annual license | $500/mo |
 | **Other Tools** | GitKraken, 1Password, etc. | Various | $245/mo |
 

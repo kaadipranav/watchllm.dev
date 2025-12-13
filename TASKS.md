@@ -69,10 +69,10 @@
    - Get: `watchllm.dev` or similar
    - Save domain name
 
-8. **Mailgun** (Optional - for emails)
-   - Sign up: https://signup.mailgun.com/
-   - Verify domain
-   - Save: `MAILGUN_API_KEY`
+8. **Resend** (Optional - for emails)
+   - Sign up: https://resend.com/signup
+   - Create API key
+   - Save: `RESEND_API_KEY`
 
 **SAVE ALL THESE VALUES IN A SECURE PLACE (1Password, .env file)**
 
@@ -571,7 +571,7 @@ pnpm build
 ### Prompt for AI Agent:
 
 ```
-Add email notifications to WatchLLM using Mailgun:
+Add email notifications to WatchLLM using Resend:
 
 REQUIREMENTS:
 
@@ -588,7 +588,7 @@ REQUIREMENTS:
      - sendUsageAlert(email, project, usage, limit)
      - sendPaymentFailed(email, amount)
      - sendWeeklyReport(email, stats)
-   - Use Mailgun API
+   - Use Resend API
 
 3. Triggers:
    - Welcome email: After signup (in signup API route)
@@ -603,10 +603,9 @@ REQUIREMENTS:
    - Unsubscribe link
 
 ENVIRONMENT VARIABLES (I'll set):
-- MAILGUN_API_KEY
-- MAILGUN_DOMAIN
+- RESEND_API_KEY
 
-Install @react-email/components and mailgun.js dependencies.
+Install @react-email/components and resend dependencies.
 ```
 
 ### Verification Commands:

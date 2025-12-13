@@ -35,7 +35,7 @@ You're live. Browse the dashboard and set up billing or emails when ready.
 - 🔌 **OpenAI Compatible**: Drop-in replacement for OpenAI API
 - 📊 **Real-time Dashboard**: Monitor usage, costs, and savings
 - 🔒 **Secure**: API key management, rate limiting, encryption
-- 📧 **Email Alerts**: Mailgun-powered notifications for onboarding, usage, billing, and weekly health checks
+- 📧 **Email Alerts**: Resend-powered notifications for onboarding, usage, billing, and weekly health checks
 
 ## Architecture
 
@@ -86,13 +86,12 @@ pnpm build
 
 ## 📧 Email Notifications
 
-WatchLLM can send Mailgun-powered emails for onboarding, usage alerts, billing retries, and weekly reports.
+WatchLLM can send Resend-powered emails for onboarding, usage alerts, billing retries, and weekly reports.
 
 Set the following environment variables inside `dashboard/.env` (see `.env.example`):
 
 ```
-MAILGUN_API_KEY=
-MAILGUN_DOMAIN=
+RESEND_API_KEY=re_your_resend_api_key
 EMAIL_FROM_ADDRESS=WatchLLM <no-reply@your-domain.com>
 EMAIL_TRIGGER_SECRET=secure-string
 CRON_SECRET=another-secure-string
