@@ -62,7 +62,7 @@ export function maskAPIKey(key: string | null | undefined): string {
  */
 export function isValidAPIKeyFormat(key: string): boolean {
   // Must start with lgw_proj_ or lgw_test_ and have sufficient length
-  const pattern = /^lgw_(proj|test)_[A-Za-z0-9_-]{32,}$/;
+  const pattern = /^lgw_(proj|test)_[A-Za-z0-9]{32,}$/;
   return pattern.test(key);
 }
 

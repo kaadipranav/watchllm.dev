@@ -57,14 +57,10 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
     setLoading(true);
     try {
       const fullKey = generateAPIKey("proj");
-      const keyPrefix = fullKey.slice(0, 12);
-      const keyHash = await hashKey(fullKey);
-
       const { error } = await supabase.from("api_keys").insert({
         project_id: projectId,
         name: newKeyName,
-        key_prefix: keyPrefix,
-        key_hash: keyHash,
+        key: fullKey,
       });
 
       if (error) throw error;
@@ -270,13 +266,4 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
       </Dialog>
     </>
   );
-}
-
-// Simple hash function for demo (use proper hashing in production)
-async function hashKey(key: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(key);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }

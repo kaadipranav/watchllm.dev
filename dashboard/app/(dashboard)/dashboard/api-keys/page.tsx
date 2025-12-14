@@ -53,11 +53,20 @@ export default function APIKeysPage() {
       // Fetch all API keys
       const { data: keysData, error: keysError } = await supabase
         .from("api_keys")
-        .select("*")
+        .select("id, name, key, last_used_at, created_at, is_active, project_id")
         .order("created_at", { ascending: false });
 
       if (keysError) throw keysError;
-      setKeys(keysData || []);
+      const normalized = (keysData || []).map((k: any) => ({
+        id: k.id,
+        name: k.name,
+        key_prefix: (k.key ?? "").slice(0, 12),
+        last_used_at: k.last_used_at,
+        created_at: k.created_at,
+        is_active: k.is_active,
+        project_id: k.project_id,
+      }));
+      setKeys(normalized);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {

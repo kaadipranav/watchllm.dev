@@ -55,14 +55,8 @@ export function formatRelativeTime(date: Date | string): string {
 export function generateAPIKey(prefix: "proj" | "test" = "proj"): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  
-  // Convert to URL-safe base64
-  const base64 = btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-  
-  return `lgw_${prefix}_${base64}`;
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `lgw_${prefix}_${hex}`;
 }
 
 /**

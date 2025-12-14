@@ -196,7 +196,7 @@ export function Hero() {
       <AmbientBackground />
         <div className="pointer-events-none absolute top-12 right-6 hidden w-72 flex-col gap-3 lg:flex">
           {highlightStats.map((stat) => (
-            <HighlightCard key={stat.label} stat={stat} reduceMotion={reduceMotion} />
+            <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
           ))}
         </div>
 
@@ -333,7 +333,7 @@ export function Hero() {
                   {"  "}
                   <span className="text-premium-text-muted">baseURL</span>
                   {": "}
-                  <span className="text-amber-400">"https://api.watchllm.com/v1"</span>
+                  <span className="text-amber-400">&quot;https://api.watchllm.com/v1&quot;</span>
                   {",\n"}
                   {"});"}
                 </code>
