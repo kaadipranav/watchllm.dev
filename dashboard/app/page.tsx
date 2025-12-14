@@ -4,6 +4,7 @@ import { Features } from "@/components/landing/features";
 import { Pricing } from "@/components/landing/pricing";
 import { FAQ } from "@/components/landing/faq";
 import { Footer } from "@/components/landing/footer";
+import { LiveFlow } from "@/components/landing/live-flow";
 
 export default function HomePage() {
   return (
@@ -11,6 +12,7 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         <Hero />
+        <LiveFlow />
         <Features />
         <Pricing />
         <FAQ />

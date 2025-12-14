@@ -186,4 +186,25 @@
   .glass {
     @apply bg-[hsl(var(--bg-glass))] backdrop-blur-xl border border-[hsl(0_0%_100%/0.06)];
   }
+
+  /* Flow bars animation for landing pulse */
+  .flow-wave {
+    background-size: 200% 100%;
+    animation: flow-sweep 3s linear infinite;
+  }
+
+  @keyframes flow-sweep {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flow-wave {
+      animation: none;
+    }
+  }
 }

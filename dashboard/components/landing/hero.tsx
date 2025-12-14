@@ -121,10 +121,85 @@ function LiveIndicator() {
   );
 }
 
+const highlightStats = [
+  {
+    label: "Cache hit",
+    valueText: "78%",
+    width: 78,
+    accent: "from-emerald-400 via-cyan-400 to-blue-500",
+    delay: 0,
+  },
+  {
+    label: "Requests/s",
+    valueText: "1.2K",
+    width: 68,
+    accent: "from-purple-500 via-blue-500 to-cyan-400",
+    delay: 0.08,
+  },
+  {
+    label: "Savings",
+    valueText: "$34K",
+    width: 82,
+    accent: "from-amber-400 via-orange-400 to-red-500",
+    delay: 0.16,
+  },
+];
+
+function HighlightCard({
+  stat,
+  reduceMotion,
+}: {
+  stat: (typeof highlightStats)[0];
+  reduceMotion: boolean;
+}) {
+  const width = `${stat.width}%`;
+
+  return (
+      <motion.div
+        className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3"
+
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: stat.delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <p className="text-[0.55rem] font-medium uppercase tracking-[0.2em] text-white/50">
+          {stat.label}
+        </p>
+        <div className="mt-2 flex items-center justify-between text-base font-semibold text-white">
+          <span>{stat.valueText}</span>
+          <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-white/40">Live</span>
+        </div>
+        <div className="mt-3 h-1 rounded-full bg-white/[0.08]">
+          <motion.div
+            className={`h-full rounded-full bg-gradient-to-r ${stat.accent}`}
+            animate={
+              reduceMotion
+                ? { width }
+                : { width: ["40%", width, "58%", width] }
+            }
+            transition={{
+              duration: 2.4,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
+          />
+        </div>
+      </motion.div>
+    );
+}
+
 export function Hero() {
+  const reduceMotion = useReducedMotion();
   return (
     <section className="relative overflow-hidden bg-premium-bg-primary px-4 pb-24 pt-24 sm:pb-28 sm:pt-28">
       <AmbientBackground />
+        <div className="pointer-events-none absolute top-12 right-6 hidden w-72 flex-col gap-3 lg:flex">
+          {highlightStats.map((stat) => (
+            <HighlightCard key={stat.label} stat={stat} reduceMotion={reduceMotion} />
+          ))}
+        </div>
+
 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-16 lg:flex-row lg:items-center">
         {/* Left content */}
