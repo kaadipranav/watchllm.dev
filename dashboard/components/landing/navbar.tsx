@@ -1,52 +1,75 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-premium-border-subtle bg-premium-bg-primary/80 backdrop-blur-3xl">
+    <header 
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-200",
+        scrolled 
+          ? "border-b border-white/[0.06] bg-premium-bg-primary/80 backdrop-blur-xl" 
+          : "bg-transparent"
+      )}
+    >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-premium-text-primary">
+        <Link href="/" className="flex items-center gap-2.5 text-premium-text-primary">
           <Image
             src="/watchllm_logo.png"
             alt="WatchLLM Logo"
-            width={32}
-            height={32}
-            className="h-8 w-8"
+            width={28}
+            height={28}
+            className="h-7 w-7"
           />
-          <span className="text-xl font-bold">WatchLLM</span>
+          <span className="text-lg font-semibold tracking-tight">WatchLLM</span>
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link href="#features" className="text-premium-text-secondary transition hover:text-premium-text-primary">
-            Features
-          </Link>
-          <Link href="#pricing" className="text-premium-text-secondary transition hover:text-premium-text-primary">
-            Pricing
-          </Link>
-          <Link href="#faq" className="text-premium-text-secondary transition hover:text-premium-text-primary">
-            FAQ
-          </Link>
-          <Link href="/docs" className="text-premium-text-secondary transition hover:text-premium-text-primary">
-            Docs
-          </Link>
+        {/* Navigation - anchored feel, fast transitions */}
+        <nav className="hidden md:flex items-center gap-1">
+          {[
+            { href: "#features", label: "Features" },
+            { href: "#pricing", label: "Pricing" },
+            { href: "#faq", label: "FAQ" },
+            { href: "/docs", label: "Docs" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="relative px-3 py-2 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Auth Buttons - stable, confident */}
+        <div className="flex items-center gap-2">
           <Link href="/login">
             <Button
               variant="ghost"
-              className="text-premium-text-secondary hover:text-premium-text-primary"
+              className="h-9 px-3 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary hover:bg-transparent"
             >
               Log in
             </Button>
           </Link>
           <Link href="/signup">
             <Button
-              className="rounded-premium-md bg-gradient-to-r from-premium-accent to-premium-accent/70 text-white shadow-glow-accent"
+              className="h-9 rounded-lg bg-premium-accent px-4 text-sm font-semibold text-white transition-all duration-150 hover:bg-premium-accent/90 active:scale-[0.98]"
             >
               Get Started
             </Button>

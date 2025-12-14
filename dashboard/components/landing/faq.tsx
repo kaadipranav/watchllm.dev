@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
   {
@@ -47,55 +48,108 @@ const faqs = [
   },
 ];
 
+function FAQItem({ 
+  faq, 
+  isOpen, 
+  onToggle,
+  index 
+}: { 
+  faq: typeof faqs[0]; 
+  isOpen: boolean;
+  onToggle: () => void;
+  index: number;
+}) {
+  return (
+    <motion.div
+      className="group relative"
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ 
+        duration: 0.3, 
+        delay: index * 0.05,
+        ease: [0.25, 0.46, 0.45, 0.94] 
+      }}
+    >
+      {/* Gradient border on hover */}
+      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.06] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      
+      <div className="relative rounded-xl border border-white/[0.06] bg-premium-bg-elevated/60 overflow-hidden">
+        {/* Inner highlight */}
+        <div className="absolute inset-0 rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]" />
+        
+        <button
+          className="relative flex w-full items-center justify-between px-5 py-4 text-left"
+          onClick={onToggle}
+        >
+          <span className="pr-4 text-sm font-medium text-premium-text-primary">
+            {faq.question}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-premium-text-muted transition-transform duration-200",
+              isOpen && "rotate-180"
+            )}
+          />
+        </button>
+        
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-white/[0.04] px-5 py-4">
+                <p className="text-sm leading-relaxed text-premium-text-muted">
+                  {faq.answer}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
 export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section id="faq" className="relative py-24">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -top-10 right-8 h-64 w-64 rounded-full bg-[radial-gradient(circle,_rgba(139,92,246,0.25),_transparent)] blur-3xl" />
-      </div>
       <div className="container relative mx-auto px-4">
-        <div className="mx-auto max-w-2xl text-center mb-16 space-y-3">
-          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">FAQ</p>
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        {/* Section header */}
+        <motion.div 
+          className="mx-auto max-w-2xl text-center mb-12"
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
+            FAQ
+          </p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-premium-text-primary sm:text-4xl">
             Frequently asked questions
           </h2>
-          <p className="text-lg text-premium-text-secondary">
-            Everything you need to know about WatchLLM before you ship.
+          <p className="mt-4 text-base text-premium-text-secondary">
+            Everything you need to know about WatchLLM.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mx-auto max-w-3xl space-y-4">
+        {/* FAQ items */}
+        <div className="mx-auto max-w-3xl space-y-3">
           {faqs.map((faq, index) => (
-            <div
+            <FAQItem
               key={index}
-              className="glass border border-premium-border-subtle bg-premium-bg-elevated/80 shadow-premium-lg"
-            >
-              <button
-                className={cn(
-                  "flex w-full items-center justify-between p-4 text-left text-sm font-semibold text-premium-text-primary transition",
-                  openIndex === index ? "border-b border-premium-border-subtle" : ""
-                )}
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              >
-                <span>{faq.question}</span>
-                <ChevronDown
-                  className={cn(
-                    "h-5 w-5 text-premium-text-muted transition-transform",
-                    openIndex === index && "rotate-180"
-                  )}
-                />
-              </button>
-              <div
-                className={cn(
-                  "overflow-hidden transition-all",
-                  openIndex === index ? "max-h-96" : "max-h-0"
-                )}
-              >
-                <p className="px-4 pb-4 text-sm text-premium-text-secondary">{faq.answer}</p>
-              </div>
-            </div>
+              faq={faq}
+              index={index}
+              isOpen={openIndex === index}
+              onToggle={() => setOpenIndex(openIndex === index ? null : index)}
+            />
           ))}
         </div>
       </div>

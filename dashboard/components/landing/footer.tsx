@@ -29,8 +29,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative border-t border-premium-border-subtle bg-premium-bg-elevated/90 text-premium-text-secondary">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-premium-bg-elevated/60 via-transparent to-transparent" />
+    <footer className="relative border-t border-white/[0.06] bg-premium-bg-primary">
       <div className="container relative mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-4">
           {/* Logo & Description */}
@@ -39,25 +38,27 @@ export function Footer() {
               <Image
                 src="/watchllm_logo.png"
                 alt="WatchLLM Logo"
-                width={32}
-                height={32}
-                className="h-8 w-8"
+                width={24}
+                height={24}
+                className="h-6 w-6"
               />
-              <span className="text-xl font-bold">WatchLLM</span>
+              <span className="text-base font-semibold">WatchLLM</span>
             </Link>
-            <p className="text-sm text-premium-text-secondary">
-              Reduce your AI API costs by 40-70% with intelligent semantic caching.
+            <p className="text-sm text-premium-text-muted">
+              Reduce AI API costs by 40-70% with intelligent semantic caching.
             </p>
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Product</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.15em] text-premium-text-muted">
+              Product
+            </p>
+            <ul className="mt-4 space-y-2.5">
               {productLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-premium-text-secondary transition hover:text-premium-text-primary"
+                    className="text-sm text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
                   >
                     {link.label}
                   </Link>
@@ -67,13 +68,15 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Company</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.15em] text-premium-text-muted">
+              Company
+            </p>
+            <ul className="mt-4 space-y-2.5">
               {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-premium-text-secondary transition hover:text-premium-text-primary"
+                    className="text-sm text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
                   >
                     {link.label}
                   </Link>
@@ -84,13 +87,15 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Legal</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.15em] text-premium-text-muted">
+              Legal
+            </p>
+            <ul className="mt-4 space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-premium-text-secondary transition hover:text-premium-text-primary"
+                    className="text-sm text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
                   >
                     {link.label}
                   </Link>
@@ -101,14 +106,14 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-premium-border-subtle flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-premium-text-muted">
+        <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-premium-text-muted">
           <p>© {new Date().getFullYear()} WatchLLM. All rights reserved.</p>
           <div className="flex gap-4">
             {socialLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-premium-text-secondary transition hover:text-premium-text-primary"
+                className="text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
                 target="_blank"
                 rel="noreferrer"
               >

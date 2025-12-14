@@ -1,9 +1,7 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,23 +23,21 @@ interface UsageChartProps {
   type?: "requests" | "cost" | "savings";
 }
 
-// Premium tooltip component
+// Minimal tooltip - instant feel
 const CustomTooltip = ({ active, payload, label, type }: any) => {
   if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="bg-premium-bg-elevated border border-premium-border-subtle rounded-premium-md shadow-premium-lg p-3 backdrop-blur-sm">
-      <p className="text-xs font-medium text-premium-text-secondary mb-2">{label}</p>
+    <div className="rounded-lg border border-white/[0.08] bg-premium-bg-elevated/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+      <p className="text-[0.65rem] font-medium text-premium-text-muted mb-1.5">{label}</p>
       {payload.map((entry: any, index: number) => (
-        <div key={index} className="flex items-center gap-2 text-sm">
+        <div key={index} className="flex items-center gap-2 text-xs">
           <div
-            className="w-2 h-2 rounded-full"
+            className="w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-premium-text-primary font-medium">
-            {entry.name}:
-          </span>
-          <span className="text-premium-text-primary font-bold">
+          <span className="text-premium-text-muted">{entry.name}:</span>
+          <span className="font-medium text-premium-text-primary tabular-nums">
             {type === "cost" || type === "savings"
               ? `$${entry.value.toFixed(2)}`
               : entry.value.toLocaleString()}
@@ -53,6 +49,14 @@ const CustomTooltip = ({ active, payload, label, type }: any) => {
 };
 
 function UsageChartComponent({ data, type = "requests" }: UsageChartProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Gentle load animation
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const getChartIcon = () => {
     switch (type) {
       case "cost":
@@ -78,73 +82,79 @@ function UsageChartComponent({ data, type = "requests" }: UsageChartProps) {
   const ChartIcon = getChartIcon();
 
   return (
-    <div className="group relative overflow-hidden bg-premium-bg-elevated border border-premium-border-subtle rounded-premium-lg shadow-premium-sm hover:shadow-premium-md transition-all duration-base p-6">
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-premium-accent/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-base pointer-events-none" />
+    <div className="relative rounded-xl border border-white/[0.06] bg-premium-bg-elevated/60 p-5">
+      {/* Inner highlight */}
+      <div className="absolute inset-0 rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)] pointer-events-none" />
 
       {/* Header */}
-      <div className="relative flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-premium-md bg-premium-bg-elevated-hover border border-premium-border-subtle">
-            <ChartIcon className="h-5 w-5 text-premium-accent" />
-          </div>
-          <h3 className="text-lg font-semibold text-premium-text-primary">
-            {getChartTitle()}
-          </h3>
+      <div className="relative flex items-center gap-3 mb-5">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+          <ChartIcon className="h-4 w-4 text-premium-accent" />
         </div>
+        <h3 className="text-sm font-semibold text-premium-text-primary">
+          {getChartTitle()}
+        </h3>
       </div>
 
       {/* Chart */}
-      <div className="relative h-[350px]">
+      <div 
+        className="relative h-[300px] transition-opacity duration-500"
+        style={{ opacity: isLoaded ? 1 : 0 }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           {type === "requests" ? (
             <AreaChart data={data}>
               <defs>
                 <linearGradient id="colorRequests" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--accent-primary))" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(var(--accent-primary))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(258, 90%, 66%)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="hsl(258, 90%, 66%)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorCached" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(158, 64%, 52%)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="hsl(158, 64%, 52%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border-subtle))"
+                stroke="rgba(255,255,255,0.04)"
                 vertical={false}
               />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "hsl(var(--text-muted))", fontSize: 12 }}
+                tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                dy={10}
+                dy={8}
               />
               <YAxis
-                tick={{ fill: "hsl(var(--text-muted))", fontSize: 12 }}
+                tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                dx={-10}
+                dx={-8}
+                width={40}
               />
               <Tooltip content={<CustomTooltip type={type} />} />
               <Area
                 type="monotone"
                 dataKey="requests"
-                stroke="hsl(var(--accent-primary))"
-                strokeWidth={2}
+                stroke="hsl(258, 90%, 66%)"
+                strokeWidth={1.5}
                 fillOpacity={1}
                 fill="url(#colorRequests)"
-                name="Total Requests"
+                name="Total"
+                animationDuration={800}
+                animationEasing="ease-out"
               />
               <Area
                 type="monotone"
                 dataKey="cached"
-                stroke="hsl(var(--success))"
-                strokeWidth={2}
+                stroke="hsl(158, 64%, 52%)"
+                strokeWidth={1.5}
                 fillOpacity={1}
                 fill="url(#colorCached)"
-                name="Cached Requests"
+                name="Cached"
+                animationDuration={800}
+                animationEasing="ease-out"
               />
             </AreaChart>
           ) : (
@@ -153,56 +163,47 @@ function UsageChartComponent({ data, type = "requests" }: UsageChartProps) {
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor={
-                      type === "savings"
-                        ? "hsl(var(--success))"
-                        : "hsl(var(--accent-primary))"
-                    }
-                    stopOpacity={0.4}
+                    stopColor={type === "savings" ? "hsl(158, 64%, 52%)" : "hsl(258, 90%, 66%)"}
+                    stopOpacity={0.2}
                   />
                   <stop
                     offset="95%"
-                    stopColor={
-                      type === "savings"
-                        ? "hsl(var(--success))"
-                        : "hsl(var(--accent-primary))"
-                    }
+                    stopColor={type === "savings" ? "hsl(158, 64%, 52%)" : "hsl(258, 90%, 66%)"}
                     stopOpacity={0}
                   />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border-subtle))"
+                stroke="rgba(255,255,255,0.04)"
                 vertical={false}
               />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "hsl(var(--text-muted))", fontSize: 12 }}
+                tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                dy={10}
+                dy={8}
               />
               <YAxis
-                tick={{ fill: "hsl(var(--text-muted))", fontSize: 12 }}
+                tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
-                dx={-10}
+                dx={-8}
+                width={40}
                 tickFormatter={(value) => `$${value}`}
               />
               <Tooltip content={<CustomTooltip type={type} />} />
               <Area
                 type="monotone"
                 dataKey={type}
-                stroke={
-                  type === "savings"
-                    ? "hsl(var(--success))"
-                    : "hsl(var(--accent-primary))"
-                }
-                strokeWidth={2}
+                stroke={type === "savings" ? "hsl(158, 64%, 52%)" : "hsl(258, 90%, 66%)"}
+                strokeWidth={1.5}
                 fillOpacity={1}
                 fill="url(#colorValue)"
                 name={type === "cost" ? "Cost" : "Savings"}
+                animationDuration={800}
+                animationEasing="ease-out"
               />
             </AreaChart>
           )}

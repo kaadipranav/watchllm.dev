@@ -40,27 +40,26 @@ export function Header() {
     : "U";
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-premium-border-subtle bg-premium-bg-elevated/80 backdrop-blur-md px-8">
+    <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-white/[0.06] bg-[hsl(220_13%_8%)]/90 backdrop-blur-md px-6">
       {/* Search */}
-      <div className="relative w-96">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-text-muted" />
+      <div className="relative w-80">
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
         <Input 
-          placeholder="Search projects, keys..." 
-          className="pl-10 bg-premium-bg-primary border-premium-border-subtle text-premium-text-primary placeholder:text-premium-text-muted focus:border-premium-accent/50 focus:ring-premium-accent/20 transition-all duration-base"
+          placeholder="Search..." 
+          className="h-8 pl-9 text-sm bg-white/[0.04] border-white/[0.06] text-white/80 placeholder:text-white/30 focus:border-white/[0.12] focus:bg-white/[0.06] transition-all duration-100"
         />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Notifications */}
         <Button 
           variant="ghost" 
           size="icon"
-          className="relative h-10 w-10 hover:bg-premium-bg-elevated-hover transition-colors duration-base"
+          className="relative h-8 w-8"
         >
-          <Bell className="h-5 w-5 text-premium-text-secondary" />
-          {/* Notification badge */}
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-premium-accent shadow-glow-accent" />
+          <Bell className="h-4 w-4 text-white/50" />
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-blue-400" />
         </Button>
 
         {/* User Menu */}
@@ -68,48 +67,48 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="relative h-10 w-10 rounded-full p-0 hover:bg-premium-bg-elevated-hover transition-colors duration-base"
+              className="relative h-8 w-8 rounded-full p-0"
             >
-              <Avatar className="h-9 w-9 border-2 border-premium-border-subtle hover:border-premium-accent/50 transition-colors duration-base">
+              <Avatar className="h-7 w-7 border border-white/[0.08]">
                 <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email || ""} />
-                <AvatarFallback className="bg-premium-accent text-white text-sm font-semibold">
+                <AvatarFallback className="bg-white/[0.08] text-white/70 text-xs font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
-            className="w-56 bg-premium-bg-elevated border-premium-border-subtle shadow-premium-lg" 
+            className="w-52 bg-[hsl(220_13%_12%)] border-white/[0.08] shadow-xl" 
             align="end" 
-            forceMount
+            sideOffset={8}
           >
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold text-premium-text-primary">
+            <DropdownMenuLabel className="font-normal py-2">
+              <div className="flex flex-col space-y-0.5">
+                <p className="text-sm font-medium text-white/90">
                   {user?.user_metadata?.full_name || "User"}
                 </p>
-                <p className="text-xs text-premium-text-muted">
+                <p className="text-xs text-white/40 truncate">
                   {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-premium-border-subtle" />
+            <DropdownMenuSeparator className="bg-white/[0.06]" />
             <DropdownMenuItem 
               onClick={() => router.push("/dashboard/settings")}
-              className="cursor-pointer text-premium-text-secondary hover:text-premium-text-primary hover:bg-premium-bg-elevated-hover focus:bg-premium-bg-elevated-hover"
+              className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100"
             >
               Settings
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => router.push("/dashboard/billing")}
-              className="cursor-pointer text-premium-text-secondary hover:text-premium-text-primary hover:bg-premium-bg-elevated-hover focus:bg-premium-bg-elevated-hover"
+              className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100"
             >
               Billing
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-premium-border-subtle" />
+            <DropdownMenuSeparator className="bg-white/[0.06]" />
             <DropdownMenuItem 
               onClick={handleSignOut}
-              className="cursor-pointer text-premium-danger hover:bg-premium-danger/10 focus:bg-premium-danger/10"
+              className="text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors duration-100"
             >
               Sign out
             </DropdownMenuItem>

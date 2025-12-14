@@ -35,68 +35,64 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
   const isHighCacheRate = project.cache_hit_rate > 60;
 
   return (
-    <div className="group relative overflow-hidden bg-premium-bg-elevated border border-premium-border-subtle rounded-premium-lg shadow-premium-sm hover:shadow-premium-md transition-all duration-base hover:-translate-y-1">
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-premium-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-base pointer-events-none" />
+    <div className="group relative bg-[hsl(220_13%_10%)] border border-white/[0.06] rounded-xl transition-all duration-100 hover:-translate-y-0.5 hover:border-white/[0.1]">
+      {/* Gradient border on hover - subtle */}
+      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none" />
       
-      {/* Content */}
-      <div className="relative p-6 space-y-5">
+      <div className="relative p-5 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            {/* Project icon */}
-            <div className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-premium-md border transition-all duration-base",
-              "bg-premium-bg-elevated-hover border-premium-border-subtle",
-              "group-hover:border-premium-accent/30 group-hover:bg-premium-accent/10"
-            )}>
-              <FolderOpen className="h-5 w-5 text-premium-accent" />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04] border border-white/[0.06]">
+              <FolderOpen className="h-4 w-4 text-white/60" />
             </div>
             
-            {/* Project info */}
             <div className="flex-1 min-w-0">
               <Link href={`/dashboard/projects/${project.id}`}>
-                <h3 className="text-base font-semibold text-premium-text-primary group-hover:text-premium-accent transition-colors duration-base truncate cursor-pointer">
+                <h3 className="text-sm font-medium text-white/90 hover:text-white transition-colors duration-100 truncate">
                   {project.name}
                 </h3>
               </Link>
-              <p className="text-xs text-premium-text-muted truncate">{project.slug}</p>
+              <p className="text-xs text-white/40 truncate font-mono">{project.slug}</p>
             </div>
           </div>
           
-          {/* Actions menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-8 w-8 hover:bg-premium-bg-elevated-hover"
+                className="h-8 w-8 hover:bg-white/[0.04] transition-colors duration-100"
               >
-                <MoreVertical className="h-4 w-4 text-premium-text-muted" />
+                <MoreVertical className="h-4 w-4 text-white/40" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/projects/${project.id}`} className="cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
+            <DropdownMenuContent 
+              align="end" 
+              className="w-44 bg-[hsl(220_13%_12%)] border-white/[0.08] shadow-xl"
+              sideOffset={4}
+            >
+              <DropdownMenuItem asChild className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100">
+                <Link href={`/dashboard/projects/${project.id}`}>
+                  <Settings className="h-3.5 w-3.5 mr-2 opacity-60" />
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/projects/${project.id}/keys`} className="cursor-pointer">
-                  <Key className="h-4 w-4 mr-2" />
+              <DropdownMenuItem asChild className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100">
+                <Link href={`/dashboard/projects/${project.id}/keys`}>
+                  <Key className="h-3.5 w-3.5 mr-2 opacity-60" />
                   API Keys
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/projects/${project.id}/usage`} className="cursor-pointer">
-                  <BarChart className="h-4 w-4 mr-2" />
+              <DropdownMenuItem asChild className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100">
+                <Link href={`/dashboard/projects/${project.id}/usage`}>
+                  <BarChart className="h-3.5 w-3.5 mr-2 opacity-60" />
                   Usage
                 </Link>
               </DropdownMenuItem>
               {onDelete && (
                 <DropdownMenuItem
-                  className="text-premium-danger cursor-pointer"
+                  className="text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors duration-100"
                   onClick={() => onDelete(project.id)}
                 >
                   Delete Project
@@ -106,88 +102,61 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
           </DropdownMenu>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 p-3 rounded-premium-md bg-premium-bg-primary border border-premium-border-subtle">
-            <Key className="h-4 w-4 text-premium-text-muted" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-premium-text-primary">{project.api_keys_count}</span>
-              <span className="text-xs text-premium-text-muted">API Keys</span>
-            </div>
+        {/* Stats - inline */}
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <Key className="h-3.5 w-3.5 text-white/30" />
+            <span className="text-white/60">{project.api_keys_count} keys</span>
           </div>
-          
-          <div className="flex items-center gap-2 p-3 rounded-premium-md bg-premium-bg-primary border border-premium-border-subtle">
-            <BarChart className="h-4 w-4 text-premium-text-muted" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-premium-text-primary">
-                {formatCompactNumber(project.requests_this_month)}
-              </span>
-              <span className="text-xs text-premium-text-muted">Requests</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <BarChart className="h-3.5 w-3.5 text-white/30" />
+            <span className="text-white/60">{formatCompactNumber(project.requests_this_month)} req</span>
           </div>
         </div>
 
-        {/* Cache Hit Rate */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-premium-success" />
-              <span className="text-sm font-medium text-premium-text-secondary">Cache Hit Rate</span>
-            </div>
-            <Badge
-              className={cn(
-                "text-xs font-semibold",
-                isHighCacheRate
-                  ? "bg-premium-success/10 text-premium-success border-premium-success/20"
-                  : "bg-premium-warning/10 text-premium-warning border-premium-warning/20"
-              )}
-            >
-              {project.cache_hit_rate.toFixed(1)}%
-            </Badge>
+        {/* Cache Hit Rate - compact */}
+        <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <div className="flex items-center gap-2">
+            <Zap className={cn(
+              "h-3.5 w-3.5",
+              isHighCacheRate ? "text-emerald-400/70" : "text-amber-400/70"
+            )} />
+            <span className="text-xs text-white/50">Cache hit rate</span>
           </div>
+          <span className={cn(
+            "text-sm font-medium tabular-nums",
+            isHighCacheRate ? "text-emerald-400/90" : "text-amber-400/90"
+          )}>
+            {project.cache_hit_rate.toFixed(1)}%
+          </span>
         </div>
 
-        {/* Usage Progress */}
+        {/* Usage Progress - minimal */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs">
-            <span className="font-medium text-premium-text-secondary">Monthly Usage</span>
-            <span className="text-premium-text-muted font-mono">
-              {formatNumber(project.requests_this_month)} / {formatCompactNumber(project.requests_limit)}
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-white/40">Usage</span>
+            <span className="text-xs text-white/50 font-mono tabular-nums">
+              {formatCompactNumber(project.requests_this_month)}/{formatCompactNumber(project.requests_limit)}
             </span>
           </div>
           
-          {/* Custom progress bar */}
-          <div className="relative h-2 rounded-full bg-premium-bg-primary border border-premium-border-subtle overflow-hidden">
+          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
             <div
               className={cn(
-                "absolute inset-y-0 left-0 rounded-full transition-all duration-slow",
-                isHighUsage
-                  ? "bg-gradient-to-r from-premium-warning to-premium-danger"
-                  : "bg-gradient-to-r from-premium-accent to-premium-success"
-              )}
-              style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-            />
-            {/* Glow effect */}
-            <div
-              className={cn(
-                "absolute inset-y-0 left-0 rounded-full blur-sm transition-all duration-slow",
-                isHighUsage ? "bg-premium-warning/30" : "bg-premium-accent/30"
+                "h-full rounded-full transition-all duration-300",
+                isHighUsage ? "bg-amber-500/70" : "bg-white/20"
               )}
               style={{ width: `${Math.min(usagePercentage, 100)}%` }}
             />
           </div>
           
           {isHighUsage && (
-            <p className="text-xs text-premium-warning flex items-center gap-1">
-              <span>⚠️</span>
-              <span>Approaching usage limit</span>
+            <p className="text-[11px] text-amber-400/70">
+              Approaching limit
             </p>
           )}
         </div>
       </div>
-
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-premium-accent/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-base" />
     </div>
   );
 }

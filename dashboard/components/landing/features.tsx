@@ -1,3 +1,5 @@
+"use client";
+
 import { 
   Zap, 
   Database, 
@@ -8,6 +10,7 @@ import {
   Clock,
   DollarSign 
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -60,43 +63,90 @@ const features = [
   },
 ];
 
+/**
+ * Feature card with computational glass effect.
+ * Directional gradient border, inner shadow, Z-axis hover lift.
+ */
+function FeatureCard({ 
+  feature, 
+  index 
+}: { 
+  feature: typeof features[0]; 
+  index: number;
+}) {
+  const Icon = feature.icon;
+  
+  return (
+    <motion.div
+      className="group relative"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ 
+        duration: 0.4, 
+        delay: index * 0.05,
+        ease: [0.25, 0.46, 0.45, 0.94] 
+      }}
+    >
+      {/* Gradient border on hover */}
+      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className="relative h-full rounded-xl border border-white/[0.06] bg-premium-bg-elevated/60 p-6 transition-transform duration-200 group-hover:-translate-y-0.5">
+        {/* Inner highlight */}
+        <div className="absolute inset-0 rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]" />
+        
+        {/* Icon container */}
+        <div className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.02]">
+          <Icon className="h-5 w-5 text-premium-accent" />
+        </div>
+        
+        {/* Content */}
+        <h3 className="relative mt-4 text-base font-semibold text-premium-text-primary">
+          {feature.title}
+        </h3>
+        <p className="relative mt-2 text-sm leading-relaxed text-premium-text-muted">
+          {feature.description}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
 export function Features() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden bg-gradient-to-b from-premium-bg-elevated/40 to-transparent py-24"
+      className="relative py-24"
     >
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -z-10 right-0 top-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(59,130,246,0.3),_transparent)] blur-3xl" />
+      {/* Subtle background gradient */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-premium-bg-elevated/30 via-transparent to-transparent" />
       </div>
 
       <div className="relative container mx-auto px-4">
-        <div className="mx-auto max-w-3xl text-center mb-16 space-y-3">
-          <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Capabilities</p>
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        {/* Section header - tighter typography */}
+        <motion.div 
+          className="mx-auto max-w-2xl text-center mb-16"
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
+            Capabilities
+          </p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-premium-text-primary sm:text-4xl">
             Everything you need to cut AI costs
           </h2>
-          <p className="text-lg text-premium-text-secondary">
-            WatchLLM combines semantic caching, analytics, and enterprise controls so you can scale safely and save aggressively.
+          <p className="mt-4 text-base text-premium-text-secondary">
+            Semantic caching, analytics, and enterprise controls. Scale safely, save aggressively.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="card-premium p-6 transition duration-base hover:-translate-y-1"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-premium-bg-secondary">
-                <feature.icon className="h-6 w-6 text-premium-accent" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-premium-text-primary">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm text-premium-text-secondary">
-                {feature.description}
-              </p>
-            </div>
+        {/* Feature grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature, index) => (
+            <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
         </div>
       </div>
