@@ -37,7 +37,7 @@ export function LiveFlow() {
               </div>
               <div className="relative h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r ${flow.accent} flow-wave`}
+                  className={`h-full rounded-full bg-gradient-to-r ${flow.accent}`}
                   style={{ width: `${flow.width}%` }}
                 />
               </div>
@@ -52,7 +52,7 @@ export function LiveFlow() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute left-6 top-6 hidden h-20 w-px animate-pulse bg-gradient-to-b from-white/80 to-transparent lg:block" />
+      <div className="pointer-events-none absolute left-6 top-6 hidden h-20 w-px bg-gradient-to-b from-white/80 to-transparent lg:block" />
       <div className="pointer-events-none absolute right-10 bottom-6 hidden h-16 w-16 rounded-full bg-gradient-to-b from-transparent via-white/30 to-transparent blur-2xl lg:block" />
     </section>
   );

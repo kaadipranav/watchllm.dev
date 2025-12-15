@@ -18,11 +18,11 @@ export function Navbar() {
   }, []);
 
   return (
-    <header 
+    <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200",
-        scrolled 
-          ? "border-b border-white/[0.06] bg-premium-bg-primary/80 backdrop-blur-xl" 
+        scrolled
+          ? "border-b border-white/[0.06] bg-premium-bg-primary/80 backdrop-blur-xl"
           : "bg-transparent"
       )}
     >
@@ -59,21 +59,23 @@ export function Navbar() {
 
         {/* Auth Buttons - stable, confident */}
         <div className="flex items-center gap-2">
-          <Link href="/login">
-            <Button
-              variant="ghost"
-              className="h-9 px-3 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary hover:bg-transparent"
-            >
+          <Button
+            asChild
+            variant="ghost"
+            className="h-9 px-3 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary hover:bg-transparent"
+          >
+            <Link href="/login">
               Log in
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button
-              className="h-9 rounded-lg bg-premium-accent px-4 text-sm font-semibold text-white transition-all duration-150 hover:bg-premium-accent/90 active:scale-[0.98]"
-            >
+            </Link>
+          </Button>
+          <Button
+            asChild
+            className="h-9 rounded-lg bg-premium-accent px-4 text-sm font-semibold text-white transition-all duration-150 hover:bg-premium-accent/90 active:scale-[0.98]"
+          >
+            <Link href="/signup">
               Get Started
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </header>
