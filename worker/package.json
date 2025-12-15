@@ -5,6 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev",
+    "dev:remote": "wrangler dev --remote",
+    "dev:node": "tsx watch scripts/node-dev.ts",
     "build": "wrangler deploy --dry-run --outdir=dist",
     "deploy": "wrangler deploy",
     "deploy:prod": "wrangler deploy --env production",
@@ -19,8 +21,10 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
+    "@hono/node-server": "^1.19.4",
     "@types/node": "^20.0.0",
     "msw": "^2.3.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.3.3",
     "vitest": "^1.0.0",
     "wrangler": "^4.54.0"

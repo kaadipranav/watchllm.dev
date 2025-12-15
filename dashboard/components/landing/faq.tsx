@@ -19,7 +19,7 @@ const faqs = [
   {
     question: "How do I integrate WatchLLM?",
     answer:
-      "Integration takes less than 2 minutes. Just change your OpenAI base URL from 'api.openai.com' to 'api.watchllm.com' and add your WatchLLM API key. Your existing code works without any other changes.",
+      "Integration takes less than 2 minutes. Just change your OpenAI base URL from 'api.openai.com' to 'proxy.watchllm.dev' and add your WatchLLM API key. Your existing code works without any other changes.",
   },
   {
     question: "Which AI providers do you support?",

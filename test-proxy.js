@@ -15,7 +15,7 @@ async function makeRequest(i) {
                 "Accept-Encoding": "identity" // Disable compression for debugging
             },
             body: JSON.stringify({
-                model: "gpt-3.5-turbo",
+                model: "meta-llama/llama-3-8b-instruct:free", // Valid OpenRouter model
                 messages: [{ role: "user", content: "What is 2+2?" }],
                 temperature: 0 // Deterministic for caching
             })
@@ -42,6 +42,7 @@ async function makeRequest(i) {
         console.log(`Cache: ${cacheStatus} ${cacheStatus === 'HIT' ? '✅ (MONEY SAVED)' : '❌ (COST INCURRED)'}`);
         if (res.status !== 200) {
             console.log("Full Response Body:", JSON.stringify(data, null, 2));
+            console.log("Raw Text:", text); // Also print raw just in case
         }
         console.log(`Response: ${data.choices?.[0]?.message?.content}`);
 

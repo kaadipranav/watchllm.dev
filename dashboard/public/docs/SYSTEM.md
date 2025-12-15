@@ -705,6 +705,21 @@ After deploying:
 
 ### 7.1 Common Issues
 
+**Issue: `wrangler dev` crashes on Windows with an "access violation"**
+
+Symptoms:
+- Wrangler prints: "There was an access violation in the runtime"
+- The Workers runtime fails to start
+
+Fix:
+- Install/repair the latest Microsoft Visual C++ Redistributable (x64) and retry.
+
+Workaround:
+- If you can’t fix the local runtime immediately, use the Node fallback dev server:
+  ```bash
+  pnpm --filter @watchllm/worker dev:node
+  ```
+
 **Issue: Worker returns 500 error**
 ```bash
 # Check logs

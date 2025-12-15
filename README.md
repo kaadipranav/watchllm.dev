@@ -16,7 +16,8 @@ Reduce your OpenAI costs by 40-70% through semantic caching. Built for ChatGPT w
 git clone https://github.com/kaadipranav/WATCHLLM.git
 cd WATCHLLM
 pnpm install
-pnpm --filter @watchllm/worker dev    # Cloudflare Worker proxy
+pnpm --filter @watchllm/worker dev    # Cloudflare Worker proxy (if this crashes on Windows, use dev:node)
+pnpm --filter @watchllm/worker dev:node
 pnpm --filter @watchllm/dashboard dev   # Next.js dashboard
 ```
 

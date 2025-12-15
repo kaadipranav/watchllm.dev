@@ -22,5 +22,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", ".wrangler"]
+  "exclude": ["node_modules", "dist", ".wrangler", "src/node-dev.ts"]
 }

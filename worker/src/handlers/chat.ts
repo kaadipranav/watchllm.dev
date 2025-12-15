@@ -228,7 +228,7 @@ export async function handleChatCompletions(
     }
 
     return errorResponse(
-      status === 500 ? 'Internal server error' : errorMessage,
+      errorMessage, // Unmasked for debugging
       status
     );
   }

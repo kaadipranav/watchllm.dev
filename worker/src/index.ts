@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { compress } from 'hono/compress';
 import { logger } from 'hono/logger';
-import * as Sentry from '@sentry/cloudflare';
+import { captureException } from './lib/sentry';
 
 import type { Env, ValidatedAPIKey, APIError } from './types';
 import { securityHeaders, getCORSConfig, isOriginAllowed } from './lib/security';
@@ -86,7 +86,7 @@ app.use('*', async (c, next) => {
   try {
     await next();
   } catch (err) {
-    Sentry.captureException(err, {
+    void captureException(err, {
       extra: { requestId, path: c.req.path, method: c.req.method },
     });
     throw err;
@@ -344,7 +344,7 @@ app.notFound((c) => {
  * Global error handler
  */
 app.onError((err, c) => {
-  Sentry.captureException(err, { extra: { path: c.req.path, method: c.req.method, requestId: c.get('requestId') } });
+  void captureException(err, { extra: { path: c.req.path, method: c.req.method, requestId: c.get('requestId') } });
   console.error('Unhandled error:', err);
 
   return c.json(

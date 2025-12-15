@@ -5,9 +5,11 @@ import type { ChatCompletionRequest, CompletionRequest, EmbeddingsRequest, Env }
 const baseEnv: Env = {
   SUPABASE_URL: "https://example.supabase.co",
   SUPABASE_ANON_KEY: "anon",
+  SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
   UPSTASH_REDIS_REST_URL: "https://redis",
   UPSTASH_REDIS_REST_TOKEN: "token",
   OPENAI_API_KEY: "openai-key",
+  ANTHROPIC_API_KEY: "anthropic-key",
 };
 
 afterEach(() => {
@@ -87,7 +89,7 @@ describe("ProviderClient", () => {
   });
 
   it("throws when provider key is missing", async () => {
-    const client = new ProviderClient(baseEnv);
+    const client = new ProviderClient({ ...baseEnv, ANTHROPIC_API_KEY: undefined });
     const request: ChatCompletionRequest = {
       model: "claude-3-5-sonnet-20241022",
       messages: [{ role: "user", content: "Hi" }],

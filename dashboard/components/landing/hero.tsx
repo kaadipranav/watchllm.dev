@@ -292,7 +292,7 @@ export function Hero() {
                   {"  "}
                   <span className="text-premium-text-muted">baseURL</span>
                   {": "}
-                  <span className="text-amber-400">&quot;https://api.watchllm.com/v1&quot;</span>
+                  <span className="text-amber-400">&quot;https://proxy.watchllm.dev/v1&quot;</span>
                   {",\n"}
                   {"});"}
                 </code>

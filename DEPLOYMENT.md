@@ -4,6 +4,8 @@ Deploying WatchLLM involves a Cloudflare Worker proxy and a Next.js dashboard. B
 
 ## Worker (Cloudflare)
 1. Install Wrangler and login if you haven’t: `pnpm --filter @watchllm/worker install wrangler` then `wrangler login`.
+	- Windows note: if `wrangler dev` fails with an "access violation in the runtime", install the latest Microsoft Visual C++ Redistributable and retry.
+	- If you cannot fix the Windows runtime crash immediately, you can still develop locally via the Node fallback: `pnpm --filter @watchllm/worker dev:node`.
 2. Configure `wrangler.toml` (copy the sample from the repo) with `name = "watchllm-proxy"`, `compatibility_date`, and bindings for `SUPABASE_*`, `UPSTASH_*`, `OPENAI_*`, and `SENTRY_DSN`.
 3. Publish dry run: `pnpm --filter @watchllm/worker build`.
 4. Deploy: `pnpm --filter @watchllm/worker deploy` or `wrangler deploy --env production`.
