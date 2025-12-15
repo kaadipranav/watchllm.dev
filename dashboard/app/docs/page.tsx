@@ -166,7 +166,7 @@ export default function DocsIndexPage() {
 
         {/* Support Section */}
         <div className="mt-32 rounded-3xl bg-white/5 px-6 py-12 sm:px-12 lg:px-16 ring-1 ring-white/10 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Need help?</h2>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-400">
             Join our community of developers saving thousands on API costs.
