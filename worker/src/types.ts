@@ -6,11 +6,13 @@
 export interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
   UPSTASH_REDIS_REST_URL: string;
   UPSTASH_REDIS_REST_TOKEN: string;
   OPENAI_API_KEY: string;
   ANTHROPIC_API_KEY?: string;
   GROQ_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
   APP_URL?: string;
   EMAIL_TRIGGER_SECRET?: string;
   SENTRY_DSN?: string;
@@ -194,7 +196,7 @@ export interface UsageLogEntry {
   project_id: string;
   api_key_id: string;
   model: string;
-  provider: 'openai' | 'anthropic' | 'groq';
+  provider: 'openai' | 'anthropic' | 'groq' | 'openrouter';
   tokens_input: number;
   tokens_output: number;
   tokens_total: number;
@@ -232,7 +234,7 @@ export interface CacheEntry<T> {
 }
 
 // Provider types
-export type Provider = 'openai' | 'anthropic' | 'groq';
+export type Provider = 'openai' | 'anthropic' | 'groq' | 'openrouter';
 
 // Model to provider mapping
 export const MODEL_PROVIDER_MAP: Record<string, Provider> = {

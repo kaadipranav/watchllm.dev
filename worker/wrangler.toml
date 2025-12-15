@@ -16,9 +16,9 @@ compatibility_flags = ["nodejs_compat"]
 
 [env.production]
 name = "watchllm-worker-production"
-routes = [
-  { pattern = "proxy.watchllm.dev/*", zone_name = "watchllm.dev" }
-]
+# routes = [
+#   { pattern = "proxy.watchllm.dev/*", zone_name = "watchllm.dev" }
+# ]
 
 [env.development]
 name = "watchllm-worker-dev"

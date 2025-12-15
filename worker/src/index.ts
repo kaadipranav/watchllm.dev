@@ -27,7 +27,7 @@ import { log, maskApiKey } from './lib/logger';
 const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
 
 // Response compression for text/JSON payloads
-app.use('*', compress());
+// app.use('*', compress());
 
 // ============================================================================
 // Middleware
@@ -37,7 +37,7 @@ app.use('*', compress());
 app.use('*', async (c, next) => {
   const config = getCORSConfig(c.env);
   const origin = c.req.header('Origin');
-  
+
   // For preflight requests
   if (c.req.method === 'OPTIONS') {
     const headers: Record<string, string> = {
@@ -46,18 +46,18 @@ app.use('*', async (c, next) => {
       'Access-Control-Expose-Headers': config.exposedHeaders.join(', '),
       'Access-Control-Max-Age': config.maxAge.toString(),
     };
-    
+
     if (config.allowedOrigins.includes('*')) {
       headers['Access-Control-Allow-Origin'] = '*';
     } else if (origin && isOriginAllowed(origin, config.allowedOrigins)) {
       headers['Access-Control-Allow-Origin'] = origin;
     }
-    
+
     return new Response(null, { status: 204, headers });
   }
-  
+
   await next();
-  
+
   // Add CORS headers to response
   if (config.allowedOrigins.includes('*')) {
     c.res.headers.set('Access-Control-Allow-Origin', '*');
@@ -132,7 +132,7 @@ function extractAPIKey(authHeader: string | undefined): string | null {
 app.use('/v1/*', async (c, next) => {
   const contentLength = c.req.header('Content-Length');
   const sizeCheck = checkRequestSize(contentLength);
-  
+
   if (!sizeCheck.allowed) {
     return c.json(
       {
@@ -145,7 +145,7 @@ app.use('/v1/*', async (c, next) => {
       413
     );
   }
-  
+
   await next();
 });
 

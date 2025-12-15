@@ -21,7 +21,7 @@ export class SupabaseClient {
 
   constructor(env: Env) {
     this.url = env.SUPABASE_URL;
-    this.key = env.SUPABASE_ANON_KEY;
+    this.key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
   }
 
   /**
@@ -42,7 +42,7 @@ export class SupabaseClient {
     try {
       // Build URL with query parameters
       const url = new URL(`${this.url}/rest/v1/${table}`);
-      
+
       if (select) {
         url.searchParams.set('select', select);
       }

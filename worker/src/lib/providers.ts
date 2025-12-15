@@ -19,12 +19,20 @@ const PROVIDER_ENDPOINTS = {
   openai: 'https://api.openai.com/v1',
   anthropic: 'https://api.anthropic.com/v1',
   groq: 'https://api.groq.com/openai/v1',
+  openrouter: 'https://openrouter.ai/api/v1',
 };
 
 /**
  * Get provider for a given model
  */
 export function getProviderForModel(model: string): Provider {
+  // OpenRouter models usually have a slash (e.g. meta-llama/llama-3-8b-instruct)
+  // or explicit mapping for google/anthropic via openrouter if configured.
+  // For now, if it looks like a vendor/model string, assume OpenRouter.
+  if (model.includes('/')) {
+    return 'openrouter';
+  }
+
   // Check if model starts with known prefixes
   if (model.startsWith('gpt-') || model.startsWith('text-embedding')) {
     return 'openai';
@@ -55,6 +63,9 @@ function getAPIKey(env: Env, provider: Provider): string | null {
       return env.ANTHROPIC_API_KEY || null;
     case 'groq':
       return env.GROQ_API_KEY || null;
+    case 'openrouter':
+      // Try explicit OpenRouter key first, fallback to OpenAI key if user wants to reuse
+      return env.OPENROUTER_API_KEY || null;
     default:
       return null;
   }
