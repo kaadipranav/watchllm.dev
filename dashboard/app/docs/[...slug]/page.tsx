@@ -6,10 +6,11 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkFrontmatter from "remark-frontmatter";
+import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeStringify from "rehype-stringify";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypeStringify from "rehype-stringify";
 import matter from "gray-matter";
 
 function getDocFilePath(slugParts: string[]): string {
@@ -41,6 +42,7 @@ export default async function DocPage({ params }: { params: { slug: string[] } }
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkFrontmatter, ["yaml", "toml"])
+    .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       behavior: "wrap",

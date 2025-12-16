@@ -55,6 +55,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.0",
     "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "resend": "^6.6.0",
     "shiki": "^1.0.0",
     "stripe": "^14.14.0",

@@ -20,9 +20,9 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-200",
+        "sticky top-0 z-50 w-full transition-all duration-300",
         scrolled
-          ? "border-b border-white/[0.06] bg-premium-bg-primary/80 backdrop-blur-xl"
+          ? "border-b border-white/[0.06] bg-[hsl(222_47%_4%_/_0.85)] backdrop-blur-xl"
           : "bg-transparent"
       )}
     >
@@ -39,30 +39,32 @@ export function Navbar() {
           <span className="text-lg font-semibold tracking-tight">WatchLLM</span>
         </Link>
 
-        {/* Navigation - anchored feel, fast transitions */}
-        <nav className="hidden md:flex items-center gap-1">
-          {[
-            { href: "#features", label: "Features" },
-            { href: "#pricing", label: "Pricing" },
-            { href: "#faq", label: "FAQ" },
-            { href: "/docs", label: "Docs" },
-          ].map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="relative px-3 py-2 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary"
-            >
-              {link.label}
-            </Link>
-          ))}
+        {/* Dovetail-style pill navigation */}
+        <nav className="hidden md:flex items-center">
+          <div className="flex items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.02] p-1">
+            {[
+              { href: "#features", label: "Features" },
+              { href: "#pricing", label: "Pricing" },
+              { href: "#faq", label: "FAQ" },
+              { href: "/docs", label: "Docs" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="relative rounded-full px-4 py-1.5 text-sm font-medium text-premium-text-muted transition-all duration-200 hover:text-premium-text-primary hover:bg-white/[0.06]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </nav>
 
-        {/* Auth Buttons - stable, confident */}
-        <div className="flex items-center gap-2">
+        {/* Auth Buttons */}
+        <div className="flex items-center gap-3">
           <Button
             asChild
             variant="ghost"
-            className="h-9 px-3 text-sm font-medium text-premium-text-muted transition-colors duration-100 hover:text-premium-text-primary hover:bg-transparent"
+            className="h-9 px-4 text-sm font-medium text-premium-text-muted transition-colors duration-150 hover:text-premium-text-primary hover:bg-transparent"
           >
             <Link href="/login">
               Log in
@@ -70,7 +72,7 @@ export function Navbar() {
           </Button>
           <Button
             asChild
-            className="h-9 rounded-lg bg-premium-accent px-4 text-sm font-semibold text-white transition-all duration-150 hover:bg-premium-accent/90 active:scale-[0.98]"
+            className="h-9 rounded-full bg-white px-5 text-sm font-semibold text-[hsl(222_47%_4%)] transition-all duration-200 hover:bg-white/90 active:scale-[0.98]"
           >
             <Link href="/signup">
               Get Started

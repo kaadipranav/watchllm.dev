@@ -1,89 +1,112 @@
 # API Reference
 
-> Wide picture of the WatchLLM proxy, its security model, and the payloads that power every customer request.
+> Everything you need to integrate the WatchLLM proxy with minimal code changes.
 
-![API traffic overview](https://via.placeholder.com/900x360.png?text=API+Traffic+Dashboard)
+![API traffic control room](https://via.placeholder.com/900x360.png?text=API+Traffic+Control+Room)
 
-## Authentication
+### Base URLs (choose the right environment)
 
-| Header | Value |
+| Environment | Base URL |
 |---|---|
-| `Authorization` | `Bearer lgw_<project|test>_...` |
-| `Content-Type` | `application/json` |
+| Local development | `http://localhost:8787/v1` (worker)
+| Production (managed) | `https://proxy.watchllm.dev/v1` |
 
-Your API key is bound to a project, not a person. Rotate the key anytime from the dashboard, but never expose it inside a browser bundle.
+### Authentication
 
-## Proxy Endpoints (Base URL: `https://proxy.watchllm.dev`)
+WatchLLM uses project-scoped API keys that look like `lgw_proj_<slug>_<random>`. Every request must include the header below.
 
-### POST /v1/chat/completions
-- OpenAI-compatible chat completion request.
-- Supports streaming (`stream: true`), functions, tools, stop sequences, and metadata.
-- Returns `x-WatchLLM-*` headers that describe cache hits, cost, provider, latency, and tokens saved.
+```
+Authorization: Bearer lgw_proj_xxx
+Content-Type: application/json
+```
 
-**Sample body:**
+Rotate keys from the dashboard, revoke compromised keys instantly, and never embed them in client-side bundles.
+
+## Key Endpoints
+
+Each endpoint mirrors OpenAI semantics but adds caching metadata in headers.
+
+### POST /v1/chat/completions  
+The main multi-role chat endpoint. Supports function calling, streaming responses (`stream: true`), and delta delivery.
+
+**Sample request**
 ```json
 {
-  "model": "gpt-4o",
+  "model": "gpt-4o-mini",
   "messages": [
     { "role": "system", "content": "You are WatchLLM." },
-    { "role": "user", "content": "Summarize my last release." }
+    { "role": "user", "content": "Summarize today’s alerts." }
   ],
-  "temperature": 0.75,
-  "max_tokens": 250
+  "temperature": 0.3,
+  "stream": true
 }
 ```
 
-**Success response highlights:**
+**Response highlights (JSON + headers)**
 ```json
 {
   "choices": [ ... ],
-  "usage": { ... }
-  // headers: x-WatchLLM-cached, x-WatchLLM-cost-usd, x-WatchLLM-latency-ms, x-WatchLLM-provider
+  "usage": { "prompt_tokens": 150, "completion_tokens": 60 }
 }
 ```
 
-### POST /v1/completions
-- Legacy endpoint that mirrors OpenAI text completions.
-- Accepts `prompt`, `temperature`, `max_tokens`, `stop`.
-- Cached responses still return the same headers as `/chat/completions`.
+Response headers:
+```
+x-WatchLLM-cached: HIT
+x-WatchLLM-cost-usd: 0.00
+x-WatchLLM-latency-ms: 95
+x-WatchLLM-provider: openai
+```
 
-### POST /v1/embeddings
-- OpenAI-compatible embeddings request with single or batch input.
-- Always routed to OpenAI.
-- Responses include normalized vectors and usage info.
+### POST /v1/completions  
+Legacy text-completions endpoint. Works with OpenAI-style prompts and the same caching metadata as `/chat/completions`.
 
-### GET /health
-- Lightweight health check for uptime monitoring.
-- Returns service name, version, timestamp, and dependency statuses (`redis`, `supabase`).
+### POST /v1/embeddings  
+Returns normalized vectors for single or batched inputs. Always routed to OpenAI but still logged and cached for 24 hours by default.
 
-### GET /v1/models
-- Mirror of the OpenAI models list for compatibility.
-- Use as a quick reference for provider availability.
+### GET /health  
+Lightweight health check used by load balancers and monitors. Returns `dependencies.redis`, `dependencies.supabase`, and `uptime`.
 
-## Headers injected by WatchLLM
+### GET /v1/models  
+Mirror of provider model list. Useful for verifying the currently enabled models without querying each provider.
 
-| Header | Description |
+## SDK Picks
+
+Reuse the official OpenAI SDKs—only swap the base URL and API key. Refer to [examples](./examples.md) for ready-to-run snippets.
+
+## Caching Headers
+
+| Header | Purpose |
 |---|---|
-| `x-WatchLLM-cached` | `HIT` or `MISS` depending on cache outcome |
-| `x-WatchLLM-cost-usd` | Estimated provider cost for the request |
-| `x-WatchLLM-latency-ms` | Total processing time (in milliseconds) |
-| `x-WatchLLM-provider` | Provider that fulfilled the call (openai/anthropic/groq) |
-| `x-WatchLLM-tokens-saved` | Tokens saved when the cache hits |
+| `x-WatchLLM-cached` | `HIT` or `MISS` so you can short-circuit scorecards. |
+| `x-WatchLLM-cost-usd` | Estimated provider spend (includes streaming increments). |
+| `x-WatchLLM-latency-ms` | Total end-to-end time, including cache lookups. |
+| `x-WatchLLM-provider` | Provider that handled the miss (openai/anthropic/groq). |
+| `x-WatchLLM-tokens-saved` | Zero when the cache misses; >0 when a cache hit saves tokens. |
 
-## Error responses
+## Error Model
 
-- `401 invalid_api_key`: API key not recognized or inactive.
-- `429 rate_limit_exceeded`: Per-minute throttling enforced by plan limits.
-- `400 invalid_request_error`: Bad payload (missing model/messages/prompt).
-- `500 api_error`: Internal worker issue (Sentry + Datadog capture every stack trace).
+| Code | Status | Description | Fix |
+|---|---|---|---|
+| `invalid_api_key` | 401 | API key missing or revoked. | Rotate key from the dashboard and retry; do not leak old keys. |
+| `rate_limit_exceeded` | 429 | Plan limit reached (per minute). | Upgrade plan or slow down client; check `X-RateLimit-Remaining`. |
+| `invalid_request_error` | 400 | Missing model/messages or invalid payload. | Validate `messages`, `model`, `temperature`, and JSON structure. |
+| `api_error` | 500 | Unexpected worker exception. | Check Sentry + worker logs; automatic retries are safe. |
+| `signature_verification_failed` | 400 (webhook) | Stripe webhook secret mismatch. | Verify `STRIPE_WEBHOOK_SECRET` is up-to-date. |
+| `subscription_canceled` | 403 | Billing plan dropped to Free. | Invite the account owner to upgrade via Stripe Checkout. |
 
-## Webhooks
+## Troubleshooting
 
-The dashboard exposes `POST /api/webhooks/stripe` for billing events such as `checkout.session.completed`, `customer.subscription.updated`, and `invoice.payment_failed`. Every call is signature-verified and logged into Supabase.
+- **Cache never hits?** Check that prompts normalize identically (trim, lowercase, consistent JSON).
+- **Headers missing?** Disable any middleware that strips `x-*` headers (Cloudflare Workers preserve them by default).
+- **Need metrics?** Every request emits structured logs to Supabase (`usage_logs`) and optional Datadog traces.
 
-Use the manual endpoint to keep billing state, send emails, and notify team channels when payments fail.
+## Security Checklist
 
-## SDKs & Examples
+- Use TLS (HTTPS) for every client application.
+- Store `lgw_` keys in secrets managers and rotate monthly.
+- Use Supabase RLS + Stripe webhook verification to defend backend flows.
 
-- Drop-in compatible with the official OpenAI SDKs—simply swap the base URL.
-- Refer to [examples](./examples.md) for Node.js, Python, and cURL snippets.
+## Observability
+
+All requests are tagged with `WatchLLM: <project>` so you can filter by project, plan, or environment. Combine Supabase dashboards with Datadog/Sentry to trace latency, cache hits, and provider costs.

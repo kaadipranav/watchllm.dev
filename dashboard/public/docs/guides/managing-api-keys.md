@@ -1,24 +1,39 @@
 # Managing API Keys
 
-> Keys start with `lgw_` and last until you revoke them.
+![Key management](https://via.placeholder.com/900x360.png?text=Key+Management+Center)
 
-## Key Actions
-- **Create** new keys per project for staging, production, bots, or team members.
-- **Describe** each key so you remember what it powers (e.g., `cli-batch-job`, `dev-cli`).
-- **Rotate** keys monthly by creating a new one, switching your services, and deleting the old key once traffic stabilizes.
-- **Revoke** compromised keys immediately—the dashboard blocks them instantly across the proxy.
+> Every WatchLLM key begins with `lgw_`. Keep them secret and rotate regularly.
 
-## Best Practices
+## Create & label keys
+
+1. In your project, click **API Keys → + New key**.
+2. Choose a descriptive name (`cli-batch-job`, `staging-webhook`) and note its scope (read-only analytics vs. full proxy access).
+3. Copy the key immediately—it will only show once. Persist it in a secret vault (1Password, Vault, Cloudflare Secrets). Do not paste it into frontend bundles.
+
+## Rotation & revocation
+
+- Rotate monthly by creating a new key, delaying traffic cutover until the new key works, then deleting the old key.
+- Revoke immediately if a key leaks. The proxy stops honoring it across all environments.
+
+## Storage guidelines
+
 | Practice | Why it matters |
 |---|---|
-| Use separate keys per environment | Limits blast radius and rate limits per tier.
-| Store keys in a secrets manager | Avoid leaking keys in frontend bundles.
-| Monitor `last_used_at` and team activity | Detect unused keys and clean them up.
-| Combine with project tags | Group keys by service, region, or customer.
+| One key per environment | Prevents a staging leak from affecting production and keeps rate limits manageable. |
+| Secrets manager only | Avoid using `.env` in shared repos or frontend code. |
+| Monitor `last_used_at` | Supabase logs show when a key ages out—clean up unused ones monthly. |
+| Tag keys by service | `backend-dispatch`, `lambda-notifier`, `playwright-tests` make audits faster. |
 
-## Troubleshooting
-- If you see frequent `invalid_api_key` errors, issue a new key and update callers before revoking the old one.
-- Need temporary access? Create a `lgw_test_` key and share it with your contractor; it expires on demand.
+## Troubleshooting & automation
 
-## Automation Tip
-Use the [dashboard API](../api-reference.md#authentication) to programmatically list, rotate, or revoke keys when deploying new services.
+- **Frequent `invalid_api_key` errors?** Create a brand-new key and swap it across callers before revoking the old one.
+- **Need a temporary key?** Generate a `lgw_test_...` key, share with contractors, delete immediately after use.
+- **Automation tip**: Use the API to rotate keys programmatically.
+
+```bash
+curl https://dashboard-api.watchllm.dev/api/projects/{projectId}/keys \
+	-H "Authorization: Bearer admin_token" \
+	-X POST
+```
+
+Remember: once revoked, a key cannot be resurrected. Always update services before revoking.

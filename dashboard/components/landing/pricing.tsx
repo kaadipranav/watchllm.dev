@@ -23,6 +23,7 @@ const plans = [
     cta: "Get Started",
     href: "/signup",
     popular: false,
+    gradient: "from-cyan-500/10 to-blue-500/5",
   },
   {
     name: "Starter",
@@ -42,6 +43,7 @@ const plans = [
     cta: "Start Free Trial",
     href: "/signup?plan=starter",
     popular: false,
+    gradient: "from-violet-500/10 to-purple-500/5",
   },
   {
     name: "Pro",
@@ -63,6 +65,7 @@ const plans = [
     cta: "Start Free Trial",
     href: "/signup?plan=pro",
     popular: true,
+    gradient: "from-amber-500/10 to-orange-500/5",
   },
 ];
 
@@ -85,36 +88,37 @@ function PricingCard({
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
     >
-      {/* Popular highlight ring */}
+      {/* Popular highlight ring - gradient border */}
       {plan.popular && (
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-premium-accent/40 via-premium-accent/20 to-transparent" />
-      )}
-
-      {/* Gradient border on hover (non-popular) */}
-      {!plan.popular && (
-        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-violet-500/50 via-violet-500/20 to-transparent" />
       )}
 
       <div className={cn(
-        "relative flex h-full flex-col rounded-2xl border p-6",
+        "relative flex h-full flex-col rounded-2xl border p-6 transition-all duration-300",
         plan.popular
-          ? "border-premium-accent/30 bg-premium-bg-elevated/80"
-          : "border-white/[0.06] bg-premium-bg-elevated/60"
+          ? "border-transparent bg-white/[0.04]"
+          : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.04]"
       )}>
-        {/* Inner highlight */}
-        <div className="absolute inset-0 rounded-2xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]" />
+        {/* Gradient overlay on hover */}
+        <div className={cn(
+          "absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+          plan.gradient
+        )} />
+        
+        {/* Top shine */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent rounded-t-2xl" />
 
         {/* Popular badge */}
         {plan.popular && (
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="rounded-full border border-premium-accent/30 bg-premium-bg-elevated px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-premium-accent">
+            <span className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-white shadow-lg shadow-violet-500/25">
               Most Popular
             </span>
           </div>
         )}
 
         {/* Plan info */}
-        <div className="relative space-y-1">
+        <div className="relative space-y-1 pt-2">
           <h3 className="text-lg font-semibold text-premium-text-primary">
             {plan.name}
           </h3>
@@ -125,7 +129,7 @@ function PricingCard({
 
         {/* Price */}
         <div className="relative mt-6">
-          <span className="text-4xl font-bold tabular-nums text-premium-text-primary">
+          <span className="text-5xl font-bold tabular-nums text-premium-text-primary">
             {plan.price}
           </span>
           <span className="ml-1 text-sm text-premium-text-muted">
@@ -137,7 +141,7 @@ function PricingCard({
         <ul className="relative mt-6 flex-1 space-y-3">
           {plan.features.map((feature) => (
             <li key={feature} className="flex items-start gap-3 text-sm">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500/80" />
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
               <span className="text-premium-text-secondary">{feature}</span>
             </li>
           ))}
@@ -148,10 +152,10 @@ function PricingCard({
           <Button
             asChild
             className={cn(
-              "w-full h-11 rounded-lg text-sm font-semibold transition-all duration-150 active:scale-[0.98]",
+              "w-full h-11 rounded-full text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
               plan.popular
-                ? "bg-premium-accent text-white hover:bg-premium-accent/90"
-                : "border border-white/[0.1] bg-white/[0.02] text-premium-text-primary hover:border-white/[0.15] hover:bg-white/[0.04]"
+                ? "bg-white text-[hsl(222_47%_4%)] hover:bg-white/90"
+                : "border border-white/[0.12] bg-transparent text-premium-text-primary hover:border-white/[0.2] hover:bg-white/[0.05]"
             )}
           >
             <Link href={plan.href}>
@@ -176,19 +180,17 @@ export function Pricing() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
-            Pricing
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-premium-text-primary sm:text-4xl">
-            Simple, transparent pricing
+          <p className="text-sm font-medium text-violet-400 mb-4">Pricing</p>
+          <h2 className="text-4xl font-bold tracking-tight text-premium-text-primary sm:text-5xl">
+            Simple, <span className="text-gradient-accent">transparent</span> pricing
           </h2>
-          <p className="mt-4 text-base text-premium-text-secondary">
+          <p className="mt-6 text-lg text-premium-text-secondary">
             Start free, upgrade when you need more. Predictable pricing with no surprises.
           </p>
         </motion.div>
 
         {/* Pricing grid */}
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="grid gap-5 lg:grid-cols-3 lg:gap-6 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <PricingCard key={plan.name} plan={plan} index={index} />
           ))}
@@ -205,7 +207,7 @@ export function Pricing() {
           Need a custom plan?{" "}
           <Link
             href="mailto:support@watchllm.com"
-            className="text-premium-accent hover:text-premium-accent/80 transition-colors duration-100"
+            className="text-violet-400 hover:text-violet-300 transition-colors duration-150 underline underline-offset-4"
           >
             Contact us
           </Link>

@@ -4,10 +4,10 @@ import { StatsCard } from "@/components/dashboard/stats-card";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { ProjectCard } from "@/components/dashboard/project-card";
 import { Button } from "@/components/ui/button";
-import { 
-  Activity, 
-  DollarSign, 
-  Zap, 
+import {
+  Activity,
+  DollarSign,
+  Zap,
   TrendingUp,
   Plus,
   ArrowRight
@@ -17,56 +17,112 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// Mock data for demo
-const mockUsageData = [
-  { date: "Mon", requests: 1200, cached: 800, cost: 2.4, savings: 1.6 },
-  { date: "Tue", requests: 1800, cached: 1200, cost: 3.6, savings: 2.4 },
-  { date: "Wed", requests: 2200, cached: 1600, cost: 4.4, savings: 3.2 },
-  { date: "Thu", requests: 1600, cached: 1100, cost: 3.2, savings: 2.2 },
-  { date: "Fri", requests: 2400, cached: 1800, cost: 4.8, savings: 3.6 },
-  { date: "Sat", requests: 1000, cached: 700, cost: 2.0, savings: 1.4 },
-  { date: "Sun", requests: 800, cached: 550, cost: 1.6, savings: 1.1 },
-];
-
-const mockProjects = [
-  {
-    id: "1",
-    name: "Production App",
-    slug: "production-app",
-    created_at: new Date().toISOString(),
-    api_keys_count: 3,
-    requests_this_month: 45000,
-    requests_limit: 50000,
-    cache_hit_rate: 67.5,
-  },
-  {
-    id: "2",
-    name: "Development",
-    slug: "development",
-    created_at: new Date().toISOString(),
-    api_keys_count: 1,
-    requests_this_month: 5000,
-    requests_limit: 50000,
-    cache_hit_rate: 45.2,
-  },
-];
-
 export default function DashboardPage() {
   const router = useRouter();
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalRequests: 0,
+    cacheHitRate: 0,
+    totalSavings: 0,
+    apiCost: 0,
+  });
+  const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-      } else {
+    const fetchData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push("/login");
+          return;
+        }
+
+        // 1. Fetch Projects (limit 4 for preview)
+        const { data: projectsData } = await supabase
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        // Fetch API Key counts for these projects
+        const projectsWithCounts = await Promise.all((projectsData || []).map(async (p) => {
+          const { count } = await supabase
+            .from("api_keys")
+            .select("*", { count: "exact", head: true })
+            .eq("project_id", p.id);
+          return {
+            ...p,
+            api_keys_count: count || 0,
+            requests_this_month: 0, // Placeholder
+            requests_limit: 50000,
+            cache_hit_rate: 0
+          };
+        }));
+        setProjects(projectsWithCounts);
+
+        // 2. Fetch Usage Logs (Last 7 days for Chart & aggregates)
+        // In a real production app, this should be an RPC call or aggregated table.
+        // For individual dev accounts, fetching raw logs is okay for small volumes.
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const { data: logs } = await supabase
+          .from("usage_logs")
+          .select("created_at, tokens, cached, cost, savings")
+          .gte("created_at", sevenDaysAgo.toISOString());
+
+        // Process Stats
+        const validLogs = logs || [];
+        const totalRequests = validLogs.length;
+        const cachedRequests = validLogs.filter(l => l.cached).length;
+        const cacheHitRate = totalRequests > 0 ? (cachedRequests / totalRequests) * 100 : 0;
+        const totalSavings = validLogs.reduce((acc, l) => acc + (l.savings || 0), 0);
+        const apiCost = validLogs.reduce((acc, l) => acc + (l.cost || 0), 0);
+
+        setStats({
+          totalRequests,
+          cacheHitRate,
+          totalSavings,
+          apiCost
+        });
+
+        // Process Chart Data
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const chartMap = new Map();
+
+        // Initialize last 7 days with 0
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dayName = days[d.getDay()];
+          chartMap.set(dayName, { date: dayName, requests: 0, cached: 0, cost: 0, savings: 0 });
+        }
+
+        validLogs.forEach(log => {
+          const d = new Date(log.created_at);
+          const dayName = days[d.getDay()];
+          if (chartMap.has(dayName)) {
+            const entry = chartMap.get(dayName);
+            entry.requests += 1;
+            if (log.cached) entry.cached += 1;
+            entry.cost += (log.cost || 0);
+            entry.savings += (log.savings || 0);
+          }
+        });
+
+        setChartData(Array.from(chartMap.values()));
+
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
         setIsLoading(false);
       }
     };
-    checkAuth();
-  }, [router, supabase.auth]);
+
+    fetchData();
+  }, [router, supabase]);
 
   if (isLoading) {
     return (
@@ -86,7 +142,7 @@ export default function DashboardPage() {
             Overview of your API usage and savings
           </p>
         </div>
-        <Link href="/dashboard/projects/new">
+        <Link href="/dashboard/projects">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Project
@@ -98,54 +154,66 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Requests"
-          value="11,000"
-          description="from last week"
+          value={stats.totalRequests.toLocaleString()}
+          description="last 7 days"
           icon={Activity}
-          trend={{ value: 12.5, isPositive: true }}
+          trend={{ value: 0, isPositive: true }} // Trends require historical data comparison
         />
         <StatsCard
           title="Cache Hit Rate"
-          value="68.2%"
-          description="average this month"
+          value={`${stats.cacheHitRate.toFixed(1)}%`}
+          description="average this week"
           icon={Zap}
-          trend={{ value: 4.2, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
         <StatsCard
           title="Total Savings"
-          value="$15.50"
-          description="this month"
+          value={`$${stats.totalSavings.toFixed(4)}`}
+          description="this week"
           icon={DollarSign}
-          trend={{ value: 18.3, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
         <StatsCard
           title="API Cost"
-          value="$22.00"
-          description="vs $37.50 without caching"
+          value={`$${stats.apiCost.toFixed(4)}`}
+          description="actual spend"
           icon={TrendingUp}
-          trend={{ value: 41.3, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
       </div>
 
       {/* Usage Chart */}
-      <UsageChart data={mockUsageData} type="requests" />
+      {chartData.length > 0 && (
+        <UsageChart data={chartData} type="requests" />
+      )}
 
       {/* Projects Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-medium text-white/90">Your Projects</h2>
-          <Link 
-            href="/dashboard/projects" 
+          <Link
+            href="/dashboard/projects"
             className="text-sm text-white/50 hover:text-white/70 flex items-center gap-1 transition-colors duration-100"
           >
             View all
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {mockProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+
+        {projects.length === 0 ? (
+          <div className="text-center py-10 border border-white/5 rounded-xl bg-white/[0.02]">
+            <p className="text-white/40 text-sm">No projects created yet.</p>
+            <Link href="/dashboard/projects" className="mt-2 inline-block text-premium-accent text-sm hover:underline">
+              Create your first project &rarr;
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quick Start Guide */}
@@ -157,7 +225,7 @@ export default function DashboardPage() {
             </div>
             <h3 className="text-sm font-medium text-white/90">Quick Start Guide</h3>
           </div>
-          
+
           <div className="space-y-4">
             {/* Step 1 */}
             <div className="flex items-start gap-3">
@@ -173,7 +241,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Step 2 */}
             <div className="flex items-start gap-3">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.08] text-white/60 text-xs font-medium">
@@ -188,7 +256,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Step 3 */}
             <div className="flex items-start gap-3">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.08] text-white/60 text-xs font-medium">

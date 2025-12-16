@@ -1,152 +1,115 @@
 "use client";
 
-import { 
-  Zap, 
-  Database, 
-  Shield, 
-  BarChart3, 
-  Code, 
+import {
+  Zap,
+  Database,
+  Shield,
+  BarChart3,
+  Code,
   Globe,
-  Clock,
-  DollarSign 
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const features = [
   {
-    icon: Zap,
     title: "Semantic Caching",
-    description:
-      "Intelligent caching that understands similar queries, not just exact matches. Save up to 70% on repeated API calls.",
+    description: "Intelligent caching that understands similar queries, not just exact matches. Save up to 70% on repeated API calls.",
+    icon: Zap,
+    className: "md:col-span-2",
+    gradient: "from-violet-500/20 via-purple-500/10 to-transparent",
   },
   {
-    icon: Code,
     title: "Zero Code Changes",
-    description:
-      "Just change your base URL. Works with any OpenAI-compatible SDK - Python, Node.js, Go, and more.",
+    description: "Drop-in replacement for OpenAI SDKs. Change one URL and you're done.",
+    icon: Code,
+    className: "md:col-span-1",
+    gradient: "from-cyan-500/20 via-blue-500/10 to-transparent",
   },
   {
-    icon: Clock,
-    title: "Faster Responses",
-    description:
-      "Cached responses return in <50ms instead of 500ms+. Better user experience with lower latency.",
-  },
-  {
-    icon: DollarSign,
-    title: "Cost Analytics",
-    description:
-      "Real-time dashboard showing exactly how much you're saving. Track costs by project, model, and more.",
-  },
-  {
-    icon: Shield,
-    title: "Enterprise Security",
-    description:
-      "Your data never stored on disk. End-to-end encryption. SOC 2 compliant infrastructure.",
-  },
-  {
-    icon: Globe,
     title: "Global Edge Network",
-    description:
-      "Deployed on Cloudflare's global network. Low latency from anywhere in the world.",
+    description: "Deployed on Cloudflare's global network. <50ms latency worldwide.",
+    icon: Globe,
+    className: "md:col-span-1",
+    gradient: "from-emerald-500/20 via-teal-500/10 to-transparent",
   },
   {
+    title: "Real-time Analytics",
+    description: "Track costs by project, model, and user. See exactly where your money goes with granular insights.",
     icon: BarChart3,
-    title: "Usage Analytics",
-    description:
-      "Detailed insights into your API usage patterns. Optimize your prompts and reduce costs further.",
+    className: "md:col-span-2",
+    gradient: "from-amber-500/20 via-orange-500/10 to-transparent",
   },
   {
+    title: "Enterprise Security",
+    description: "SOC 2 compliant infrastructure. End-to-end encryption for all requests.",
+    icon: Shield,
+    className: "md:col-span-1",
+    gradient: "from-rose-500/20 via-pink-500/10 to-transparent",
+  },
+  {
+    title: "Multi-Provider",
+    description: "Unified API for OpenAI, Anthropic, and Groq. Switch providers seamlessly.",
     icon: Database,
-    title: "Multi-Provider Support",
-    description:
-      "Route requests to OpenAI, Anthropic, Groq, and more through a single unified API.",
+    className: "md:col-span-1",
+    gradient: "from-indigo-500/20 via-blue-500/10 to-transparent",
   },
 ];
 
-/**
- * Feature card with computational glass effect.
- * Directional gradient border, inner shadow, Z-axis hover lift.
- */
-function FeatureCard({ 
-  feature, 
-  index 
-}: { 
-  feature: typeof features[0]; 
-  index: number;
-}) {
-  const Icon = feature.icon;
-  
-  return (
-    <motion.div
-      className="group relative"
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ 
-        duration: 0.4, 
-        delay: index * 0.05,
-        ease: [0.25, 0.46, 0.45, 0.94] 
-      }}
-    >
-      {/* Gradient border on hover */}
-      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
-      <div className="relative h-full rounded-xl border border-white/[0.06] bg-premium-bg-elevated/60 p-6 transition-transform duration-200 group-hover:-translate-y-0.5">
-        {/* Inner highlight */}
-        <div className="absolute inset-0 rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]" />
-        
-        {/* Icon container */}
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.02]">
-          <Icon className="h-5 w-5 text-premium-accent" />
-        </div>
-        
-        {/* Content */}
-        <h3 className="relative mt-4 text-base font-semibold text-premium-text-primary">
-          {feature.title}
-        </h3>
-        <p className="relative mt-2 text-sm leading-relaxed text-premium-text-muted">
-          {feature.description}
-        </p>
-      </div>
-    </motion.div>
-  );
-}
-
 export function Features() {
   return (
-    <section
-      id="features"
-      className="relative py-24"
-    >
-      {/* Subtle background gradient */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-premium-bg-elevated/30 via-transparent to-transparent" />
-      </div>
-
-      <div className="relative container mx-auto px-4">
-        {/* Section header - tighter typography */}
-        <motion.div 
-          className="mx-auto max-w-2xl text-center mb-16"
+    <section id="features" className="relative py-24 sm:py-32 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+        {/* Dovetail/OpenAI style header */}
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto max-w-2xl text-center mb-16"
         >
-          <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
-            Capabilities
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-premium-text-primary sm:text-4xl">
-            Everything you need to cut AI costs
+          <p className="text-sm font-medium text-violet-400 mb-4">Features</p>
+          <h2 className="text-4xl font-bold tracking-tight text-premium-text-primary sm:text-5xl">
+            Everything you need for
+            <br />
+            <span className="text-gradient-accent">AI availability</span>
           </h2>
-          <p className="mt-4 text-base text-premium-text-secondary">
-            Semantic caching, analytics, and enterprise controls. Scale safely, save aggressively.
+          <p className="mt-6 text-lg leading-8 text-premium-text-secondary">
+            A comprehensive suite of tools designed to optimize your AI infrastructure.
           </p>
         </motion.div>
 
-        {/* Feature grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.title} feature={feature} index={index} />
+        {/* OpenAI-style card grid */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
+          {features.map((feature, i) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.5 }}
+              className={cn(
+                "group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/[0.15] hover:bg-white/[0.04]",
+                feature.className
+              )}
+            >
+              {/* Gradient overlay on hover */}
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+                feature.gradient
+              )} />
+
+              {/* Top shine line */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              <div className="relative z-10">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.05] border border-white/[0.08]">
+                  <feature.icon className="h-5 w-5 text-premium-text-secondary group-hover:text-premium-text-primary transition-colors duration-300" />
+                </div>
+                <h3 className="text-lg font-semibold text-premium-text-primary mb-2">{feature.title}</h3>
+                <p className="text-sm text-premium-text-muted leading-relaxed group-hover:text-premium-text-secondary transition-colors duration-300">{feature.description}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

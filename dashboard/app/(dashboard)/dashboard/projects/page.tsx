@@ -48,13 +48,23 @@ export default function ProjectsPage() {
 
       if (error) throw error;
 
-      // Transform to include mock stats for now
-      const projectsWithStats = (data || []).map((p) => ({
-        ...p,
-        api_keys_count: 0,
-        requests_this_month: Math.floor(Math.random() * 50000),
-        requests_limit: 50000,
-        cache_hit_rate: Math.random() * 100,
+      if (error) throw error;
+
+      // Fetch API key counts for each project
+      const projectsWithStats = await Promise.all((data || []).map(async (p) => {
+        const { count: apiKeysCount } = await supabase
+          .from("api_keys")
+          .select("*", { count: "exact", head: true })
+          .eq("project_id", p.id);
+
+        // For now, we'll set usage to 0. In a real app, this would come from a materialized view or fast cache.
+        return {
+          ...p,
+          api_keys_count: apiKeysCount || 0,
+          requests_this_month: 0,
+          requests_limit: 50000, // Default limit
+          cache_hit_rate: 0,
+        };
       }));
 
       setProjects(projectsWithStats);
@@ -80,7 +90,7 @@ export default function ProjectsPage() {
         .replace(/(^-|-$)/g, "");
 
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const { error } = await supabase.from("projects").insert({
         name: newProjectName,
         slug,
@@ -117,7 +127,7 @@ export default function ProjectsPage() {
         title: "Project Deleted",
         description: "The project has been deleted.",
       });
-      
+
       fetchProjects();
     } catch (error: any) {
       toast({

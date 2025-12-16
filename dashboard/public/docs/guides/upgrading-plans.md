@@ -1,23 +1,37 @@
 # Upgrading Plans
 
-> Upgrade instantly from the dashboard with zero downtime.
+![Billing upgrade](https://via.placeholder.com/900x420.png?text=Upgrade+Billing+Panel)
 
-| Tier | Price | Requests / minute | Projects | When to upgrade |
+> Move from Free to Starter/Pro instantly with Stripe Checkout.
+
+## Plan comparison
+
+| Tier | Price | Requests / minute | Projects | Notes |
 |---|---|---|---|---|
-| Free | $0 | 10 | 3 | Testing, early adoption, prototypes |
-| Starter | $29 / month | 50 | 10 | Production chatbots, small teams, audit logs |
-| Pro | $49 / month | 200 | Unlimited | Agencies, high-scale customers, multiple regions |
+| Free | $0 | 10 | 3 | Testing, prototypes, auditing behavior. |
+| Starter | $29 / month | 50 | 10 | Production for small teams with audit logs. |
+| Pro | $49 / month | 200 | Unlimited | Agencies, multi-region deployments, premium support. |
 
-## Upgrade steps
-1. Open `Settings > Billing` and click “Upgrade plan”.
-2. Confirm payment via Stripe—no PCI handling because the dashboard uses Stripe Checkout.
-3. The worker picks up the new rate limit immediately via Supabase flags.
-4. All current API keys stay active; no re-issuing required.
+## Upgrade process
 
-## What changes when you upgrade
-- **Scale**: Rate limits increase, letting you burst with higher concurrency.
-- **Insights**: New analytics cards appear (cost saved, cache hit thresholds, exports).
-- **Support**: Starter and Pro plans include priority email support.
+1. Visit `Settings → Billing` and select a plan.
+2. Stripe Checkout handles payments—no PCI scope for you.
+3. After success, Supabase flags the plan change; the worker immediately enforces the new rate limit.
+4. All existing API keys remain valid; no need to rotate unless desired.
 
-## Need custom limits?
-Contact the team via `support@watchllm.dev` (or create a GitHub issue). We can add a dedicated plan with SLA boundaries, more history, or team seats.
+## What improves with Starter/Pro
+
+- **Higher limits** (per-minute requests increase while keeping cache behavior the same).
+- **Analytics extras**: Additional cards for `cost saved`, `cache hit decay`, and `plan pacing` appear in the dashboard.
+- **Support**: Starter and Pro subscribers get prioritized email/Discord response times.
+
+## Need custom allowances?
+
+- Email support@watchllm.dev or open an issue; we can craft enterprise or dedicated plans with SLA, extra logs, or custom rate limits.
+- Use Supabase feature flags to gate beta features per project before upgrading an entire organization.
+
+## Prevent billing disruptions
+
+- Keep the same Stripe customer ID and webhook secret across environments.
+- Monitor usage trends (requests, cost, hit rate) on the dashboard before the next billing cycle.
+- Export a CSV of `usage_logs` monthly via Supabase for auditing.

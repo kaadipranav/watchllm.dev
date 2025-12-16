@@ -68,9 +68,13 @@ function BillingContent() {
     // Mock fetch subscription
     const fetchSubscription = async () => {
       // In a real app, fetch from API/Supabase
-      // const supabase = createClient();
-      // ...
-      setUsage({ requests: 12500, limit: PLAN_LIMITS.free.requestsPerMonth });
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Calculate explicit usage if possible, or leave as 0 for now until subscription logic is solid
+      // For now, defaulting to 0 to respect "no mock data" rule
+      setUsage({ requests: 0, limit: PLAN_LIMITS.free.requestsPerMonth });
     };
 
     fetchSubscription();

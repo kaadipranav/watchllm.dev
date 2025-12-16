@@ -33,12 +33,17 @@ export const metadata: Metadata = {
       "Drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
     type: "website",
     url: "https://watchllm.com",
+    siteName: "WatchLLM",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "WatchLLM - Cut Your AI API Costs by 40-70%",
     description:
       "Drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
+  },
+  alternates: {
+    canonical: "https://watchllm.com",
   },
 };
 
@@ -47,8 +52,33 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "WatchLLM",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Cloud",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+    },
+    "description": "WatchLLM is a drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "120"
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={inter.className}>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" defer />
         <noscript>

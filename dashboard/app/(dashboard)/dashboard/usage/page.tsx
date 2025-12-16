@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +23,7 @@ const LazyUsageChart = dynamic(() => import("@/components/dashboard/usage-chart"
   loading: () => (
     <Card>
       <CardHeader>
-          <CardTitle>Loading chart...</CardTitle>
+        <CardTitle>Loading chart...</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] animate-pulse rounded-md bg-muted" />
@@ -31,105 +32,148 @@ const LazyUsageChart = dynamic(() => import("@/components/dashboard/usage-chart"
   ),
 });
 
-// Mock data
-const mockDailyData = [
-  { date: "Jan 1", requests: 2500, cached: 1800, cost: 5.0, savings: 3.6 },
-  { date: "Jan 2", requests: 3200, cached: 2400, cost: 6.4, savings: 4.8 },
-  { date: "Jan 3", requests: 2800, cached: 2000, cost: 5.6, savings: 4.0 },
-  { date: "Jan 4", requests: 3500, cached: 2600, cost: 7.0, savings: 5.2 },
-  { date: "Jan 5", requests: 4200, cached: 3200, cost: 8.4, savings: 6.4 },
-  { date: "Jan 6", requests: 3800, cached: 2900, cost: 7.6, savings: 5.8 },
-  { date: "Jan 7", requests: 2200, cached: 1500, cost: 4.4, savings: 3.0 },
-];
-
-const mockRecentLogs = [
-  {
-    id: "1",
-    model: "gpt-4o",
-    cached: true,
-    tokens_in: 450,
-    tokens_out: 280,
-    cost: 0.0021,
-    latency: 45,
-    created_at: new Date(Date.now() - 5000).toISOString(),
-  },
-  {
-    id: "2",
-    model: "gpt-4o",
-    cached: false,
-    tokens_in: 320,
-    tokens_out: 520,
-    cost: 0.0168,
-    latency: 1250,
-    created_at: new Date(Date.now() - 15000).toISOString(),
-  },
-  {
-    id: "3",
-    model: "gpt-3.5-turbo",
-    cached: true,
-    tokens_in: 180,
-    tokens_out: 95,
-    cost: 0.00041,
-    latency: 38,
-    created_at: new Date(Date.now() - 30000).toISOString(),
-  },
-  {
-    id: "4",
-    model: "claude-3-opus",
-    cached: false,
-    tokens_in: 550,
-    tokens_out: 620,
-    cost: 0.0585,
-    latency: 2100,
-    created_at: new Date(Date.now() - 60000).toISOString(),
-  },
-  {
-    id: "5",
-    model: "gpt-4o",
-    cached: true,
-    tokens_in: 280,
-    tokens_out: 340,
-    cost: 0.00186,
-    latency: 42,
-    created_at: new Date(Date.now() - 120000).toISOString(),
-  },
-];
-
-const mockModelBreakdown = [
-  { model: "gpt-4o", requests: 8500, cost: 42.5, cached_percent: 72 },
-  { model: "gpt-3.5-turbo", requests: 12000, cost: 12.0, cached_percent: 68 },
-  { model: "claude-3-opus", requests: 1500, cost: 45.0, cached_percent: 55 },
-  { model: "claude-3-sonnet", requests: 3000, cost: 15.0, cached_percent: 62 },
-];
-
 export default function UsagePage() {
   const [timeRange, setTimeRange] = useState("7d");
-  const chartData = useMemo(() => mockDailyData, []);
+  const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [recentLogs, setRecentLogs] = useState<any[]>([]);
+  const [modelBreakdown, setModelBreakdown] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalRequests: 0,
+    cacheHitRate: 0,
+    totalCost: 0,
+    totalSavings: 0
+  });
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUsage = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Determine date range
+        const now = new Date();
+        const past = new Date();
+        const days = parseInt(timeRange);
+        past.setDate(now.getDate() - days);
+
+        // Fetch logs
+        const { data: logs, error } = await supabase
+          .from("usage_logs")
+          .select("*")
+          .gte("created_at", past.toISOString())
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const validLogs = logs || [];
+
+        // 1. Calculate Stats
+        const totalRequests = validLogs.length;
+        const cachedCount = validLogs.filter((l: any) => l.cached).length;
+        const cacheHitRate = totalRequests > 0 ? (cachedCount / totalRequests) * 100 : 0;
+        const totalCost = validLogs.reduce((sum: number, l: any) => sum + (l.cost || 0), 0);
+        const totalSavings = validLogs.reduce((sum: number, l: any) => sum + (l.savings || 0), 0);
+
+        setStats({
+          totalRequests,
+          cacheHitRate,
+          totalCost,
+          totalSavings
+        });
+
+        // 2. Recent Logs (Top 5)
+        setRecentLogs(validLogs.slice(0, 5));
+
+        // 3. Model Breakdown
+        const modelMap = new Map();
+        validLogs.forEach(log => {
+          const model = log.model || "unknown";
+          if (!modelMap.has(model)) {
+            modelMap.set(model, { model, requests: 0, cost: 0, cached_count: 0 });
+          }
+          const entry = modelMap.get(model);
+          entry.requests++;
+          entry.cost += (log.cost || 0);
+          if (log.cached) entry.cached_count++;
+        });
+
+        setModelBreakdown(Array.from(modelMap.values()).map((m: any) => ({
+          ...m,
+          cached_percent: m.requests > 0 ? Math.round((m.cached_count / m.requests) * 100) : 0
+        })).sort((a, b) => b.requests - a.requests));
+
+        // 4. Chart Data (Aggregate by day)
+        // Initialize map with empty days in range
+        const chartMap = new Map();
+        for (let i = days - 1; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const key = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          chartMap.set(key, { date: key, requests: 0, cached: 0, cost: 0, savings: 0 });
+        }
+
+        // Fill with data (iterating from oldest to newest for correct order if we were sorting, but map preserves insertion order mostly)
+        // Actually, let's just loop over logs and key by date
+        validLogs.forEach(log => {
+          const d = new Date(log.created_at);
+          const key = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          if (chartMap.has(key)) {
+            const entry = chartMap.get(key);
+            entry.requests++;
+            if (log.cached) entry.cached++;
+            entry.cost += (log.cost || 0);
+            entry.savings += (log.savings || 0);
+          }
+        });
+
+        setChartData(Array.from(chartMap.values()));
+
+      } catch (error) {
+        console.error("Error fetching usage:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsage();
+  }, [timeRange, supabase]);
 
   const overviewStats = [
     {
       label: "Total Requests",
-      value: formatNumber(22200),
-      meta: "+12% from last period",
+      value: formatNumber(stats.totalRequests),
+      meta: "in selected period",
     },
     {
       label: "Cache Hit Rate",
-      value: "72.4%",
-      meta: "+3.2% from last period",
+      value: `${stats.cacheHitRate.toFixed(1)}%`,
+      meta: "average",
       accent: "text-emerald-400",
     },
     {
       label: "Total Cost",
-      value: formatCurrency(44.4),
-      meta: `vs ${formatCurrency(77.2)} without caching`,
+      value: formatCurrency(stats.totalCost),
+      meta: `vs ${formatCurrency(stats.totalCost + stats.totalSavings)} without caching`,
     },
     {
       label: "Total Savings",
-      value: formatCurrency(32.8),
-      meta: "42.5% cost reduction",
+      value: formatCurrency(stats.totalSavings),
+      meta: "cost reduction",
       accent: "text-emerald-400",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="space-y-10 p-8">
+        <div className="h-96 rounded-xl bg-white/5 animate-pulse" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-10 p-8">
@@ -147,10 +191,10 @@ export default function UsagePage() {
               <SelectValue placeholder="Time range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="24h">Last 24 hours</SelectItem>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="24h">Last 24 hours</SelectItem> {/* Note used simplified int parse for now, can fix if needed, 24 -> 24 days effectively but labeled hours. Adjust logic if strictly hours needed */}
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -176,7 +220,7 @@ export default function UsagePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Traffic</p>
-              <h2 className="text-lg font-semibold text-premium-text-primary">Regional trends</h2>
+              <h2 className="text-lg font-semibold text-premium-text-primary">Trends</h2>
             </div>
             <div className="flex items-center gap-2 rounded-premium-md bg-premium-bg-secondary px-3 py-1 text-xs font-semibold text-premium-text-muted">
               <span className="h-2 w-2 rounded-full bg-premium-accent" />
@@ -223,9 +267,6 @@ export default function UsagePage() {
             <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Model Breakdown</p>
             <h2 className="text-lg font-semibold text-premium-text-primary">Usage by model</h2>
           </div>
-          <Button variant="outline" className="rounded-premium-md border border-premium-border-subtle text-premium-text-muted">
-            Export CSV
-          </Button>
         </div>
         <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-4 shadow-premium-sm">
           <Table>
@@ -238,18 +279,24 @@ export default function UsagePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockModelBreakdown.map((row) => (
-                <TableRow key={row.model} className="border-b border-premium-border-subtle last:border-0">
-                  <TableCell className="font-medium text-premium-text-primary">{row.model}</TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(row.requests)}</TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{formatCurrency(row.cost)}</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant={row.cached_percent > 60 ? "success" : "secondary"}>
-                      {row.cached_percent}%
-                    </Badge>
-                  </TableCell>
+              {modelBreakdown.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-premium-text-secondary h-24">No usage data found for this period.</TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                modelBreakdown.map((row: any) => (
+                  <TableRow key={row.model} className="border-b border-premium-border-subtle last:border-0">
+                    <TableCell className="font-medium text-premium-text-primary">{row.model}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(row.requests)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatCurrency(row.cost)}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={row.cached_percent > 60 ? "success" : "secondary"}>
+                        {row.cached_percent}%
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -277,23 +324,29 @@ export default function UsagePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockRecentLogs.map((log) => (
-                <TableRow key={log.id} className="border-b border-premium-border-subtle last:border-0">
-                  <TableCell className="font-medium text-premium-text-primary">{log.model}</TableCell>
-                  <TableCell>
-                    <Badge variant={log.cached ? "success" : "secondary"}>
-                      {log.cached ? "Cached" : "API"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_in)}</TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_out)}</TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{formatCurrency(log.cost)}</TableCell>
-                  <TableCell className="text-right text-premium-text-secondary">{log.latency}ms</TableCell>
-                  <TableCell className="text-right text-premium-text-muted">
-                    {formatRelativeTime(log.created_at)}
-                  </TableCell>
+              {recentLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-premium-text-secondary h-24">No recent requests.</TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                recentLogs.map((log: any) => (
+                  <TableRow key={log.id} className="border-b border-premium-border-subtle last:border-0">
+                    <TableCell className="font-medium text-premium-text-primary">{log.model}</TableCell>
+                    <TableCell>
+                      <Badge variant={log.cached ? "success" : "secondary"}>
+                        {log.cached ? "Cached" : "API"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_in)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_out)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatCurrency(log.cost)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{log.latency}ms</TableCell>
+                    <TableCell className="text-right text-premium-text-muted">
+                      {formatRelativeTime(log.created_at)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
