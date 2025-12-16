@@ -58,7 +58,7 @@ export default function CookiesPage() {
                 Cookies are small data files stored on your device when you
                 visit a website. They help websites remember your preferences,
                 maintain your session, and improve your experience. Cookies can
-                be either "persistent" (stored until deleted) or "session"
+                be either &quot;persistent&quot; (stored until deleted) or &quot;session&quot;
                 (deleted when you close your browser).
               </p>
             </section>
@@ -261,11 +261,11 @@ export default function CookiesPage() {
               </p>
               <ul className="list-disc list-inside space-y-2">
                 <li>
-                  <strong>No tracking cookies:</strong> We don't use tools like
+                  <strong>No tracking cookies:</strong> We don&apos;t use tools like
                   Google Analytics
                 </li>
                 <li>
-                  <strong>No cross-site tracking:</strong> We don't follow you
+                  <strong>No cross-site tracking:</strong> We don&apos;t follow you
                   across the web
                 </li>
                 <li>
@@ -273,7 +273,7 @@ export default function CookiesPage() {
                   provides insights without PII
                 </li>
                 <li>
-                  <strong>No third-party ads:</strong> We don't sell your data
+                  <strong>No third-party ads:</strong> We don&apos;t sell your data
                   to advertisers
                 </li>
               </ul>
@@ -301,7 +301,7 @@ export default function CookiesPage() {
               <p>
                 We may update this Cookie Policy as our practices evolve. We
                 will notify you of significant changes by posting the updated
-                policy and updating the "Last updated" date above.
+                policy and updating the &quot;Last updated&quot; date above.
               </p>
             </section>
 
