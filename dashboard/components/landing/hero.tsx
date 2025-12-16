@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Zap, CheckCircle, ExternalLink } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Metric card with OpenAI-inspired glass effect
@@ -113,10 +114,54 @@ function HighlightCard({
   );
 }
 
+const typingPhrases = [
+  "Semantic caching that thinks like you.",
+  "Run GPT-5 with 30-70% lower spend.",
+  "Built for teams scaling AI globally.",
+];
+
+function useTyping(phrases: string[]) {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[phraseIndex];
+    const timeout = setTimeout(() => {
+      if (!isDeleting && charIndex < current.length) {
+        setCharIndex((prev) => prev + 1);
+        return;
+      }
+
+      if (isDeleting && charIndex > 0) {
+        setCharIndex((prev) => prev - 1);
+        return;
+      }
+
+      if (charIndex === current.length) {
+        setIsDeleting(true);
+        return;
+      }
+
+      if (isDeleting && charIndex === 0) {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    }, isDeleting ? 70 : 120);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, phraseIndex, phrases]);
+
+  return useMemo(() => phrases[phraseIndex].slice(0, charIndex), [charIndex, phraseIndex, phrases]);
+}
+
 export function Hero() {
   const reduceMotion = useReducedMotion();
+  const typedText = useTyping(typingPhrases);
+
   return (
     <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
+      <div className="pointer-events-none absolute inset-0 hero-grid opacity-70" />
       {/* Highlight stats on the right - desktop only */}
       <div className="pointer-events-none absolute top-16 right-6 hidden w-72 flex-col gap-3 lg:flex">
         {highlightStats.map((stat) => (
@@ -159,6 +204,15 @@ export function Hero() {
               Unify AI costs across OpenAI, Claude, and Groq. Let semantic caching surface the savings that matter.
               <span className="text-premium-text-muted"> Instantly cut costs by 70%.</span>
             </p>
+            <div className="text-sm font-medium text-premium-text-muted">
+              <span className="typing-effect text-white/80">
+                {typedText}
+                <span className="typing-cursor">|</span>
+              </span>
+              <span className="ml-2 text-xs uppercase tracking-[0.3em] text-white/40">
+                Series A-ready tooling
+              </span>
+            </div>
           </motion.div>
 
           {/* CTAs - OpenAI style with white primary button */}

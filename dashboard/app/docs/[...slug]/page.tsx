@@ -12,6 +12,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import matter from "gray-matter";
+import { cache } from "react";
 
 function getDocFilePath(slugParts: string[]): string {
   const baseDir = path.join(process.cwd(), "public", "docs");
@@ -20,23 +21,21 @@ function getDocFilePath(slugParts: string[]): string {
   return filePath;
 }
 
-export default async function DocPage({ params }: { params: { slug: string[] } }) {
-  const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
-  const filePath = getDocFilePath(slugParts);
-
-  let md = "# Not Found\n\nThe requested document could not be found.";
+const readDocFile = cache(async (filePath: string) => {
   try {
-    md = await fs.readFile(filePath, "utf-8");
-  } catch {
-    // keep default md
+    return await fs.readFile(filePath, "utf-8");
+  } catch (error) {
+    return null;
   }
+});
 
-  const parsed = matter(md);
-  const content = parsed.content || md;
+const renderMarkdown = cache(async (content: string, slugKey: string) => {
+  const parsed = matter(content);
+  const body = (parsed.content || content).trim();
   const title =
     (parsed.data?.title as string) ||
-    (content.match(/^#\s+(.*)$/m) || [])[1] ||
-    slugParts.join(" / ");
+    (body.match(/^#\s+(.*)$/m) || [])[1] ||
+    slugKey;
 
   const result = await unified()
     .use(remarkParse)
@@ -53,8 +52,19 @@ export default async function DocPage({ params }: { params: { slug: string[] } }
       keepBackground: false,
     })
     .use(rehypeStringify)
-    .process(content);
-  const html = result.toString();
+    .process(body);
+
+  return { html: result.toString(), title };
+});
+
+export default async function DocPage({ params }: { params: { slug: string[] } }) {
+  const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
+  const filePath = getDocFilePath(slugParts);
+
+  const markdown =
+    (await readDocFile(filePath)) || "# Not Found\n\nThe requested document could not be found.";
+  const slugKey = slugParts.join(" / ");
+  const { html, title } = await renderMarkdown(markdown, slugKey);
 
   return (
     <div className="relative min-h-screen bg-premium-bg-primary text-white selection:bg-indigo-500/30">
