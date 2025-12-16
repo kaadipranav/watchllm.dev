@@ -10,8 +10,9 @@ export const metadata: Metadata = {
   title: "WatchLLM - Cut Your AI API Costs by 40-70%",
   description:
     "WatchLLM is a drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
-  keywords: ["AI", "OpenAI", "API", "proxy", "caching", "cost reduction", "LLM"],
-  authors: [{ name: "WatchLLM" }],
+  keywords: ["AI", "OpenAI", "API", "proxy", "caching", "cost reduction", "LLM", "semantic caching"],
+  authors: [{ name: "WatchLLM", url: "https://watchllm.dev" }],
+  creator: "Pranav Kaadi",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -32,18 +33,48 @@ export const metadata: Metadata = {
     description:
       "Drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
     type: "website",
-    url: "https://watchllm.com",
+    url: "https://watchllm.dev",
     siteName: "WatchLLM",
     locale: "en_US",
+    images: [
+      {
+        url: "https://watchllm.dev/watchllm_logo.png",
+        width: 1200,
+        height: 630,
+        alt: "WatchLLM - AI API Cost Optimization",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "WatchLLM - Cut Your AI API Costs by 40-70%",
     description:
       "Drop-in proxy that reduces your OpenAI, Claude, and Groq API costs through intelligent semantic caching.",
+    creator: "@kaad_zz",
+    creatorId: "kaad_zz",
+    images: {
+      url: "https://watchllm.dev/watchllm_logo.png",
+      alt: "WatchLLM Logo",
+    },
   },
   alternates: {
-    canonical: "https://watchllm.com",
+    canonical: "https://watchllm.dev",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
   },
 };
 

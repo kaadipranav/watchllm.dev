@@ -1,0 +1,29 @@
+# robots.txt for WatchLLM
+# Allow search engines to crawl the public pages and exclude admin/internal areas
+
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /docs/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /.next/
+Disallow: /private/
+Disallow: */admin
+Disallow: */internal
+
+# Allow specific crawlers more access if desired
+User-agent: Googlebot
+Allow: /
+Allow: /dashboard/
+
+User-agent: Bingbot
+Allow: /
+Allow: /dashboard/
+
+# Crawl delay in seconds (optional, 1 second for respectful crawling)
+Crawl-delay: 1
+
+# Point to sitemap
+Sitemap: https://watchllm.dev/sitemap.xml

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import fs from "fs/promises";
 import path from "path";
 import Link from "next/link";
@@ -56,6 +57,45 @@ const renderMarkdown = cache(async (content: string, slugKey: string) => {
 
   return { html: result.toString(), title };
 });
+
+export async function generateMetadata(
+  { params }: { params: { slug: string[] } }
+): Promise<Metadata> {
+  const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
+  const filePath = getDocFilePath(slugParts);
+  const markdown = (await readDocFile(filePath)) || "# Not Found";
+  const slugKey = slugParts.join(" / ");
+  const { title } = await renderMarkdown(markdown, slugKey);
+  const description = markdown.split("\n").find(line => !line.startsWith("#"))?.slice(0, 160) || "WatchLLM documentation";
+
+  return {
+    title: `${title} | WatchLLM Docs`,
+    description,
+    openGraph: {
+      title: `${title} | WatchLLM Docs`,
+      description,
+      type: "article",
+      url: `https://watchllm.dev/docs/${slugParts.join("/")}`,
+      siteName: "WatchLLM",
+      locale: "en_US",
+      images: [
+        {
+          url: "https://watchllm.dev/watchllm_logo.png",
+          width: 1200,
+          height: 630,
+          alt: "WatchLLM",
+          type: "image/png",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary",
+      title: `${title} | WatchLLM Docs`,
+      description,
+      creator: "@kaad_zz",
+    },
+  };
+}
 
 export default async function DocPage({ params }: { params: { slug: string[] } }) {
   const slugParts = Array.isArray(params.slug) ? params.slug : [params.slug];
