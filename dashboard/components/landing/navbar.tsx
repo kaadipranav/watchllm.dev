@@ -34,7 +34,7 @@ export function Navbar() {
             alt="WatchLLM Logo"
             width={28}
             height={28}
-            className="h-7 w-7 brightness-110 drop-shadow-[0_0_18px_rgba(0,245,212,0.16)]"
+            className="h-7 w-7"
           />
           <span className="text-lg font-semibold tracking-tight">WatchLLM</span>
         </Link>

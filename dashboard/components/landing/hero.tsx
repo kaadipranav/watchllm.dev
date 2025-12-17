@@ -1,356 +1,359 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageCircle, Activity, ShieldCheck } from "lucide-react";
-import { animate, motion, useInView, useMotionValue, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { LogoBeams } from "@/components/landing/logo-beams";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Zap, CheckCircle, ExternalLink } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
-function useOneShotTyping(text: string, durationMs: number) {
-  const reduced = useReducedMotion();
-  const [count, setCount] = useState(reduced ? text.length : 0);
-
-  useEffect(() => {
-    if (reduced) return;
-    const stepMs = Math.max(14, Math.floor(durationMs / Math.max(1, text.length)));
-    const id = window.setInterval(() => {
-      setCount((prev) => {
-        if (prev >= text.length) {
-          window.clearInterval(id);
-          return prev;
-        }
-
-        return prev + 1;
-      });
-    }, stepMs);
-
-    return () => window.clearInterval(id);
-  }, [durationMs, reduced, text.length]);
-
-  return useMemo(() => text.slice(0, count), [count, text]);
-}
-
-function formatMoney(amount: number) {
-  return amount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function LiveCostTicker() {
-  const reduced = useReducedMotion();
-  const [value, setValue] = useState(1284.32);
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setInterval(() => {
-      setValue((v) => {
-        const drift = (Math.random() - 0.35) * 2.4;
-        const next = Math.max(0, v + drift);
-        return Math.round(next * 100) / 100;
-      });
-    }, 650);
-    return () => window.clearInterval(id);
-  }, [reduced]);
-
-  return (
-    <div className="flex items-baseline justify-between">
-      <div className="text-xs font-medium uppercase tracking-[0.22em] text-white/40">
-        live spend
-      </div>
-      <div className="text-lg font-semibold tabular-nums text-white/90">
-        ${formatMoney(value)}
-        <span className="ml-1 text-xs font-medium text-white/40">/day</span>
-      </div>
-    </div>
-  );
-}
-
-function LivePulse() {
-  const reduced = useReducedMotion();
-  return (
-    <span className="relative flex h-2 w-2">
-      {!reduced && (
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00F5D4]/30" />
-      )}
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00F5D4]" />
-    </span>
-  );
-}
-
-function DashboardPanel() {
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(ref, { once: true, amount: 0.35 });
-
+/**
+ * Metric card with OpenAI-inspired glass effect
+ */
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <motion.div
-      ref={ref}
-      initial={reduced ? undefined : { opacity: 0, y: 14 }}
-      animate={inView && !reduced ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative"
+      className="group relative"
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      <div className="absolute -inset-6 -z-10 rounded-3xl bg-black/40 blur-2xl" />
-      <div className="rounded-2xl border border-white/5 bg-[#0F0F0F]/85 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-medium text-white/70">
-            <LivePulse />
-            Command Center
-          </div>
-          <div className="rounded-full border border-white/5 bg-black/30 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-white/40">
-            edge
-          </div>
-        </div>
+      {/* Gradient border effect */}
+      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.1] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        <div className="mt-4 grid gap-3">
-          <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-            <LiveCostTicker />
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <CountUp label="Cache hit" value={78} suffix="%" />
-              <CountUp label="Saved" value={34} prefix="$" suffix="K" />
-              <CountUp label="Latency" value={48} suffix="ms" />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-white/40">
-                recent requests
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/50">
-                <ShieldCheck className="h-4 w-4 text-white/40" />
-                audited
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              {[
-                { provider: "OpenAI", model: "gpt-4.1", cached: true, ms: 42 },
-                { provider: "Claude", model: "sonnet", cached: false, ms: 96 },
-                { provider: "Groq", model: "llama", cached: true, ms: 39 },
-              ].map((row) => (
-                <div
-                  key={`${row.provider}-${row.model}`}
-                  className="flex items-center justify-between rounded-lg border border-white/5 bg-black/20 px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium text-white/80">
-                      {row.provider}
-                      <span className="text-white/35"> / </span>
-                      <span className="text-white/55">{row.model}</span>
-                    </div>
-                    <div className="mt-0.5 text-[11px] font-medium uppercase tracking-[0.18em] text-white/35">
-                      {row.cached ? "cache hit" : "cache miss"}
-                    </div>
-                  </div>
-                  <div className="ml-4 flex items-center gap-3">
-                    <div
-                      className={
-                        row.cached
-                          ? "rounded-md border border-[#00F5D4]/20 bg-[#00F5D4]/10 px-2 py-1 text-[11px] font-medium text-[#00F5D4]"
-                          : "rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/55"
-                      }
-                    >
-                      {row.cached ? "cached" : "live"}
-                    </div>
-                    <div className="text-sm font-semibold tabular-nums text-white/80">
-                      {row.ms}
-                      <span className="ml-0.5 text-xs font-medium text-white/40">ms</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/5 bg-black/30 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-white/40">
-                proxy integration
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/50">
-                <Activity className="h-4 w-4 text-white/40" />
-                headers
-              </div>
-            </div>
-            <div className="mt-3 rounded-lg border border-white/5 bg-black px-4 py-4">
-              <pre className="overflow-x-auto text-[13px] leading-relaxed">
-                <code className="font-mono text-white/80">
-                  <span className="text-white/70">const</span> client <span className="text-white/70">=</span> <span className="text-[#00F5D4]">new</span> WatchLLM({"\n"}
-                  {"  "}apiKey: <span className="text-[#9D4EDD]">process.env.WATCHLLM_KEY</span>,{"\n"}
-                  {"  "}baseURL: <span className="text-[#9D4EDD]">&quot;https://proxy.watchllm.dev/v1&quot;</span>,{"\n"}
-                  {"  "}headers: {"{"}<span className="text-[#9D4EDD]">\"x-watchllm-cache\"</span>: <span className="text-[#00F5D4]">\"semantic\"</span>{"}"},{"\n"}
-                  {"}"});
-                </code>
-              </pre>
-            </div>
-          </div>
-        </div>
+      <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-center backdrop-blur-sm">
+        <p className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
+          {label}
+        </p>
+        <p className="mt-1 text-2xl font-bold tabular-nums text-premium-text-primary">
+          {value}
+        </p>
       </div>
     </motion.div>
   );
 }
 
-function CountUp({
-  label,
-  suffix,
-  prefix,
-  value,
-}: {
-  label: string;
-  value: number;
-  prefix?: string;
-  suffix?: string;
-}) {
-  const reduced = useReducedMotion();
-  const ref = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(ref, { once: true, amount: 0.6 });
-  const mv = useMotionValue(reduced ? value : 0);
-  const [display, setDisplay] = useState(reduced ? value : 0);
-
-  useEffect(() => {
-    if (!inView || reduced) return;
-    const controls = animate(mv, value, {
-      duration: 0.9,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (latest) => setDisplay(Math.round(latest)),
-    });
-    return () => controls.stop();
-  }, [inView, mv, reduced, value]);
-
+/**
+ * Live indicator with controlled pulse animation
+ */
+function LiveIndicator() {
   return (
-    <div ref={ref} className="rounded-lg border border-white/5 bg-black/0 px-3 py-2">
-      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-500">{label}</p>
-      <p className="mt-1 text-sm font-medium text-white/90 tabular-nums">
-        {prefix}
-        {display}
-        {suffix}
-      </p>
+    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-premium-text-muted">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/40" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      </span>
+      Live Edge
     </div>
   );
 }
 
-export function Hero() {
-  const typed = useOneShotTyping("New: unified cost intelligence →", 2000);
+const highlightStats = [
+  {
+    label: "Cache hit",
+    valueText: "78%",
+    width: 78,
+    accent: "from-emerald-400 via-cyan-400 to-blue-500",
+    delay: 0,
+  },
+  {
+    label: "Requests/s",
+    valueText: "1.2K",
+    width: 68,
+    accent: "from-violet-500 via-purple-500 to-pink-500",
+    delay: 0.08,
+  },
+  {
+    label: "Savings",
+    valueText: "$34K",
+    width: 82,
+    accent: "from-amber-400 via-orange-400 to-red-500",
+    delay: 0.16,
+  },
+];
 
-  const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-    },
-  } as const;
+function HighlightCard({
+  stat,
+  reduceMotion,
+}: {
+  stat: (typeof highlightStats)[0];
+  reduceMotion: boolean;
+}) {
+  const width = `${stat.width}%`;
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-black" />
-      <LogoBeams />
-      <div className="pointer-events-none absolute inset-0 -z-10 grain-overlay" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(1200px_680px_at_50%_20%,rgba(255,255,255,0.06),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-black/0 via-black/0 to-black" />
+    <motion.div
+      className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3 backdrop-blur-sm"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: stat.delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      <p className="text-[0.55rem] font-medium uppercase tracking-[0.2em] text-white/50">
+        {stat.label}
+      </p>
+      <div className="mt-2 flex items-center justify-between text-base font-semibold text-white">
+        <span>{stat.valueText}</span>
+        <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-white/40">Live</span>
+      </div>
+      <div className="mt-3 h-1 rounded-full bg-white/[0.08]">
+        <motion.div
+          className={`h-full rounded-full bg-gradient-to-r ${stat.accent}`}
+          animate={
+            reduceMotion
+              ? { width }
+              : { width: ["40%", width, "58%", width] }
+          }
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+    </motion.div>
+  );
+}
 
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-12 px-4 pt-20 pb-16 lg:grid-cols-2 lg:gap-16 lg:pt-24">
-        <div className="max-w-xl">
-          <motion.div variants={fadeUp} initial="hidden" animate="show" className="flex flex-wrap items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/watchllm_logo.png"
-                alt="WatchLLM"
-                width={28}
-                height={28}
-                className="h-7 w-7 brightness-110 drop-shadow-[0_0_22px_rgba(0,245,212,0.18)]"
-                priority
-              />
-              <span className="text-sm font-semibold tracking-tight text-white/85">WatchLLM</span>
+const typingPhrases = [
+  "Semantic caching that thinks like you.",
+  "Run GPT-5 with 30-70% lower spend.",
+  "Built for teams scaling AI globally.",
+];
+
+function useTyping(phrases: string[]) {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[phraseIndex];
+    const timeout = setTimeout(() => {
+      if (!isDeleting && charIndex < current.length) {
+        setCharIndex((prev) => prev + 1);
+        return;
+      }
+
+      if (isDeleting && charIndex > 0) {
+        setCharIndex((prev) => prev - 1);
+        return;
+      }
+
+      if (charIndex === current.length) {
+        setIsDeleting(true);
+        return;
+      }
+
+      if (isDeleting && charIndex === 0) {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    }, isDeleting ? 70 : 120);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, phraseIndex, phrases]);
+
+  return useMemo(() => phrases[phraseIndex].slice(0, charIndex), [charIndex, phraseIndex, phrases]);
+}
+
+export function Hero() {
+  const reduceMotion = useReducedMotion();
+  const typedText = useTyping(typingPhrases);
+
+  return (
+    <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
+      <div className="pointer-events-none absolute inset-0 hero-grid opacity-70" />
+      {/* Highlight stats on the right - desktop only */}
+      <div className="pointer-events-none absolute top-16 right-6 hidden w-72 flex-col gap-3 lg:flex">
+        {highlightStats.map((stat) => (
+          <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
+        ))}
+      </div>
+
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-16 px-4 lg:flex-row lg:items-center">
+        {/* Left content */}
+        <div className="max-w-2xl space-y-8">
+          {/* Dovetail-style announcement badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <Link 
+              href="#features"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm font-medium text-premium-text-muted transition-all duration-200 hover:border-white/[0.2] hover:bg-white/[0.05]"
+            >
+              <span className="flex h-1.5 w-1.5 rounded-full bg-violet-500" />
+              <span>Watch the 2025 launch keynote</span>
+              <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-transform group-hover:translate-x-0.5" />
             </Link>
-
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 backdrop-blur-md">
-              <LivePulse />
-              <span className="text-xs font-medium uppercase tracking-[0.22em] text-white/55">live</span>
-            </div>
-            <div className="text-sm font-medium text-[#9D4EDD]">{typed}</div>
           </motion.div>
 
-          <motion.h1
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ delay: 0.08 }}
-            className="mt-6 font-display text-[clamp(2.6rem,4.8vw,5.3rem)] font-semibold leading-[1.04] tracking-[-0.02em] text-white"
-          >
-            Real-time API cost
-            <br />
-            <span className="text-[#00F5D4]">intelligence</span>
-          </motion.h1>
-
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ delay: 0.18 }}
-            className="mt-5 text-[18px] leading-relaxed text-white/60"
-          >
-            WatchLLM monitors every request, surfaces spend in real time, and cuts costs through semantic caching —
-            built for engineering leads and FinOps.
-          </motion.p>
-
+          {/* Headline - Dovetail/Raycast style big typography */}
           <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ delay: 0.28 }}
-            className="mt-9 flex flex-col gap-3 sm:flex-row"
+            className="space-y-5"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <Button
-              asChild
-              className="h-12 rounded-xl bg-white px-5 text-[15px] font-medium text-black transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_18px_60px_-28px_rgba(255,255,255,0.35)] active:scale-[0.98]"
-            >
-              <Link href="/signup" aria-label="Try WatchLLM free">
-                <span className="mr-2">▶</span>
-                Try free
-                <ArrowRight className="ml-2 h-4 w-4" />
+            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-premium-text-primary sm:text-6xl lg:text-7xl">
+              Real-time LLM
+              <br />
+              <span className="text-gradient-accent">intelligence</span>
+            </h1>
+            <p className="max-w-xl text-lg leading-relaxed text-premium-text-secondary sm:text-xl">
+              Unify AI costs across OpenAI, Claude, and Groq. Let semantic caching surface the savings that matter.
+              <span className="text-premium-text-muted"> Instantly cut costs by 70%.</span>
+            </p>
+            <div className="text-sm font-medium text-premium-text-muted">
+              <span className="typing-effect text-white/80">
+                {typedText}
+                <span className="typing-cursor">|</span>
+              </span>
+              <span className="ml-2 text-xs uppercase tracking-[0.3em] text-white/40">
+                Series A-ready tooling
+              </span>
+            </div>
+          </motion.div>
+
+          {/* CTAs - OpenAI style with white primary button */}
+          <motion.div
+            className="flex flex-wrap items-center gap-4"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <Button asChild className="h-12 rounded-full bg-white px-7 text-base font-semibold text-[hsl(222_47%_4%)] transition-all duration-200 hover:bg-white/90 active:scale-[0.98]">
+              <Link href="/signup">
+                Try WatchLLM free
               </Link>
             </Button>
-
             <Button
               asChild
               variant="outline"
-              className="h-12 rounded-xl border-white/10 bg-transparent px-5 text-[15px] font-medium text-white transition-all duration-200 ease-out hover:scale-[1.02] hover:border-white/20 hover:bg-white/[0.03] active:scale-[0.98]"
+              className="h-12 rounded-full border-white/[0.12] bg-transparent px-7 text-base font-semibold text-premium-text-primary transition-all duration-200 hover:border-white/[0.2] hover:bg-white/[0.05] active:scale-[0.98]"
             >
-              <Link href="mailto:sales@watchllm.com" aria-label="Contact sales">
-                <MessageCircle className="mr-2 h-4 w-4" />
+              <Link href="mailto:sales@watchllm.com">
                 Contact sales
               </Link>
             </Button>
           </motion.div>
 
+          {/* Trust indicators - cleaner inline style */}
           <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            transition={{ delay: 0.34 }}
-            className="mt-8 flex flex-wrap items-center gap-5 text-sm text-white/45"
+            className="flex flex-wrap items-center gap-6 pt-2"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <span className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-white/30" />
-              OpenAI / Claude / Groq
+            <span className="flex items-center gap-2 text-sm text-premium-text-muted">
+              <CheckCircle className="h-4 w-4 text-emerald-500/80" />
+              No credit card required
             </span>
-            <span className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-white/30" />
-              cache hit-rate + savings
+            <span className="flex items-center gap-2 text-sm text-premium-text-muted">
+              <CheckCircle className="h-4 w-4 text-emerald-500/80" />
+              OpenAI-compatible API
             </span>
-            <span className="flex items-center gap-2">
-              <span className="h-1 w-1 rounded-full bg-white/30" />
-              drop-in proxy
-            </span>
+          </motion.div>
+
+          {/* Metrics - tighter grid */}
+          <motion.div
+            className="grid grid-cols-3 gap-3 pt-4"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <MetricCard label="Free Requests" value="50K" />
+            <MetricCard label="Latency" value="<50ms" />
+            <MetricCard label="Uptime" value="99.9%" />
           </motion.div>
         </div>
 
-        <DashboardPanel />
+        {/* Right side - Code preview panel */}
+        <motion.div
+          className="relative w-full max-w-xl"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          {/* Card with OpenAI-style glass effect */}
+          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow">
+            {/* Inner glow at top */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <LiveIndicator />
+              <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.15em] text-emerald-400">
+                99.9% up
+              </Badge>
+            </div>
+
+            {/* Code block - terminal style */}
+            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[hsl(222_47%_3%)]">
+              {/* Terminal header */}
+              <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
+                <div className="flex gap-1.5">
+                  <span className="h-3 w-3 rounded-full bg-red-500/60" />
+                  <span className="h-3 w-3 rounded-full bg-yellow-500/60" />
+                  <span className="h-3 w-3 rounded-full bg-green-500/60" />
+                </div>
+                <span className="ml-2 text-[0.7rem] font-medium text-premium-text-muted">
+                  integration.ts
+                </span>
+              </div>
+              {/* Code content */}
+              <pre className="overflow-x-auto px-4 py-5 text-[13px] leading-relaxed">
+                <code className="text-premium-text-secondary">
+                  <span className="text-violet-400">const</span>{" "}
+                  <span className="text-premium-text-primary">client</span>{" "}
+                  <span className="text-violet-400">=</span>{" "}
+                  <span className="text-violet-400">new</span>{" "}
+                  <span className="text-cyan-400">WatchLLM</span>
+                  {"({\n"}
+                  {"  "}
+                  <span className="text-premium-text-muted">apiKey</span>
+                  {": "}
+                  <span className="text-emerald-400">process.env.WATCHLLM_KEY</span>
+                  {",\n"}
+                  {"  "}
+                  <span className="text-premium-text-muted">baseURL</span>
+                  {": "}
+                  <span className="text-amber-400">&quot;https://proxy.watchllm.dev/v1&quot;</span>
+                  {",\n"}
+                  {"});"}
+                </code>
+              </pre>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Cache hit", value: "68%" },
+                { label: "Regions", value: "240+" },
+                { label: "Avg RT", value: "47ms" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 text-center"
+                >
+                  <p className="text-[0.55rem] font-medium uppercase tracking-[0.15em] text-premium-text-muted">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-premium-text-primary">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer bar */}
+            <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-premium-text-muted">
+              <span>Global semantic cache</span>
+              <span className="text-premium-text-secondary">OpenAI / Claude / Groq</span>
+            </div>
+          </div>
+        </motion.div>
+
       </div>
     </section>
   );

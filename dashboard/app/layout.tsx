@@ -1,23 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "WatchLLM - Cut Your AI API Costs by 40-70%",
@@ -84,7 +71,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
@@ -119,7 +110,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+      <body className={inter.className}>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" defer />
         <noscript>
           <img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerPolicy="no-referrer-when-downgrade" />

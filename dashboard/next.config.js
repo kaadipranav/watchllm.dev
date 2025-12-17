@@ -2,16 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-    ],
+    domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com'],
   },
   // Security headers for all pages
   async headers() {
