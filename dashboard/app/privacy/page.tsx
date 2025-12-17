@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default async function PrivacyPage() {
-  const policyPath = path.join(process.cwd(), "policy.html");
+  const policyPath = path.join(process.cwd(), "..", "policy.html");
   const policyHtml = await fs.readFile(policyPath, "utf-8");
 
   return (
