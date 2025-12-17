@@ -2,102 +2,110 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Zap, CheckCircle, ExternalLink } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Play } from "lucide-react";
+import { motion } from "framer-motion";
 
 /**
- * Metric card with OpenAI-inspired glass effect
+ * Dovetail-inspired Hero Section
+ * Clean, sophisticated, minimalist design with excellent typography
  */
-function MetricCard({ label, value }: { label: string; value: string }) {
+export function Hero() {
   return (
-    <motion.div
-      className="group relative"
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-    >
-      {/* Gradient border effect */}
-      <div className="absolute -inset-px rounded-xl bg-gradient-to-b from-white/[0.1] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      <div className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 text-center backdrop-blur-sm">
-        <p className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-premium-text-muted">
-          {label}
-        </p>
-        <p className="mt-1 text-2xl font-bold tabular-nums text-premium-text-primary">
-          {value}
-        </p>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Sophisticated grid background */}
+      <div className="absolute inset-0 bg-[hsl(222_47%_4%)]">
+        <div className="absolute inset-0 grid-pattern opacity-60" />
+        
+        {/* Subtle gradient overlays */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[radial-gradient(circle,hsl(25_95%_60%_/_0.02)_0%,transparent_70%)] blur-[100px]" />
+        <div className="absolute top-[20%] right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(258_90%_66%_/_0.02)_0%,transparent_70%)] blur-[80px]" />
+        
+        {/* Dovetail-style geometric connections */}
+        <svg className="absolute top-[15%] right-[10%] w-[400px] h-[300px] opacity-20" viewBox="0 0 400 300">
+          <path d="M50 50 L150 100 L250 80 L200 150 L300 200" stroke="hsl(25 95% 60% / 0.4)" strokeWidth="1" fill="none" />
+          <path d="M100 150 L200 200" stroke="hsl(258 90% 66% / 0.3)" strokeWidth="1" fill="none" />
+          <circle cx="50" cy="50" r="3" fill="hsl(25 95% 60% / 0.5)" />
+          <circle cx="150" cy="100" r="2" fill="white" fillOpacity="0.3" />
+          <circle cx="250" cy="80" r="3" fill="hsl(25 95% 60% / 0.5)" />
+          <circle cx="200" cy="150" r="2" fill="white" fillOpacity="0.2" />
+          <circle cx="300" cy="200" r="3" fill="hsl(258 90% 66% / 0.4)" />
+        </svg>
       </div>
-    </motion.div>
-  );
-}
 
-/**
- * Live indicator with controlled pulse animation
- */
-function LiveIndicator() {
-  return (
-    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-premium-text-muted">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/40" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-      </span>
-      Live Edge
-    </div>
-  );
-}
-
-const highlightStats = [
-  {
-    label: "Cache hit",
-    valueText: "78%",
-    width: 78,
-    accent: "from-emerald-400 via-cyan-400 to-blue-500",
-    delay: 0,
-  },
-  {
-    label: "Requests/s",
-    valueText: "1.2K",
-    width: 68,
-    accent: "from-violet-500 via-purple-500 to-pink-500",
-    delay: 0.08,
-  },
-  {
-    label: "Savings",
-    valueText: "$34K",
-    width: 82,
-    accent: "from-amber-400 via-orange-400 to-red-500",
-    delay: 0.16,
-  },
-];
-
-function HighlightCard({
-  stat,
-  reduceMotion,
-}: {
-  stat: (typeof highlightStats)[0];
-  reduceMotion: boolean;
-}) {
-  const width = `${stat.width}%`;
-
-  return (
-    <motion.div
-      className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3 backdrop-blur-sm"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: stat.delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-    >
-      <p className="text-[0.55rem] font-medium uppercase tracking-[0.2em] text-white/50">
-        {stat.label}
-      </p>
-      <div className="mt-2 flex items-center justify-between text-base font-semibold text-white">
-        <span>{stat.valueText}</span>
-        <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-white/40">Live</span>
-      </div>
-      <div className="mt-3 h-1 rounded-full bg-white/[0.08]">
+      {/* Content */}
+      <div className="relative z-10 text-center px-6 max-w-6xl mx-auto">
+        {/* Announcement banner */}
         <motion.div
-          className={`h-full rounded-full bg-gradient-to-r ${stat.accent}`}
-          animate={
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-4 py-2 mb-8 border border-white/10 rounded-full bg-white/5 backdrop-blur-sm"
+        >
+          <Play className="w-3 h-3 text-[hsl(var(--accent-orange))]" />
+          <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/60">
+            WATCH THE WINTER LAUNCH 2025 KEYNOTE
+          </span>
+          <ArrowRight className="w-3 h-3 text-white/40" />
+        </motion.div>
+
+        {/* Main headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight mb-6"
+        >
+          Real-time API
+          <br />
+          <span className="text-gradient-accent">cost intelligence</span>
+        </motion.h1>
+
+        {/* Subheadline */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto leading-relaxed mb-12"
+        >
+          Unify AI costs across OpenAI, Claude, and Groq with semantic caching. 
+          Let AI surface the signals that matter. Instantly create evidence-backed 
+          savings, optimize requests, and reduce costs by 70%.
+        </motion.p>
+
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+        >
+          <Link href="/signup">
+            <Button className="btn-primary-premium px-8 py-4 text-lg rounded-full">
+              Try WatchLLM free
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+          
+          <Link href="/contact">
+            <Button className="btn-secondary-premium px-8 py-4 text-lg rounded-full">
+              Contact sales
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Trust indicators */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-16 text-sm text-white/40"
+        >
+          <p>Trusted by teams at</p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
             reduceMotion
               ? { width }
               : { width: ["40%", width, "58%", width] }

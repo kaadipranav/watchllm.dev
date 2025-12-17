@@ -42,6 +42,22 @@
     /* Grid pattern for Dovetail-inspired backgrounds */
     --grid-color: 220 30% 50% / 0.04;
     
+    /* Dovetail-inspired accent colors */
+    --accent-orange: 25 95% 60%;      /* #FB923C - vibrant orange */
+    --accent-orange-glow: 25 95% 60% / 0.08;
+    
+    /* Typography scale - more refined */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+    --text-6xl: 3.75rem;
+    
     /* Legacy mappings for compatibility */
     --background: var(--bg-primary);
     --foreground: var(--text-primary);
@@ -296,6 +312,15 @@
     @apply bg-[hsl(var(--bg-glass))] backdrop-blur-xl border border-[hsl(0_0%_100%/0.06)];
   }
 
+  /* Dovetail-inspired grid pattern */
+  .grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--grid-color)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-color)) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: -1px -1px;
+  }
+
   /* Flow bars animation for landing pulse */
   .flow-wave {
     background-size: 200% 100%;
@@ -309,6 +334,36 @@
     100% {
       background-position: -200% 0;
     }
+  }
+
+  /* Dovetail-style geometric decorations */
+  .geometric-node {
+    @apply w-2 h-2 rounded-full border border-white/20;
+  }
+  
+  .geometric-node-filled {
+    @apply w-1.5 h-1.5 rounded-full bg-white/10;
+  }
+  
+  .geometric-node-accent {
+    @apply w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-orange))];
+  }
+
+  /* Sophisticated text gradients */
+  .text-gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--text-primary)), hsl(var(--accent-orange)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Premium button styles */
+  .btn-primary-premium {
+    @apply bg-white text-black hover:bg-white/90 transition-all duration-200 font-medium;
+  }
+  
+  .btn-secondary-premium {
+    @apply border border-white/20 text-white hover:bg-white/10 transition-all duration-200 font-medium;
   }
 
   @media (prefers-reduced-motion: reduce) {
