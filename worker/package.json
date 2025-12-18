@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@sentry/cloudflare": "^10.30.0",
-    "hono": "^4.6.0"
+    "hono": "^4.6.0",
+    "mongodb": "^7.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
