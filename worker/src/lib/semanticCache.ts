@@ -1,10 +1,10 @@
 /**
- * Semantic cache backed by Redis (vector similarity in-worker)
+ * Semantic cache backed by MongoDB Atlas (vector similarity in-worker)
  * - Embeds text with OpenAI embeddings
  * - Performs cosine similarity search over a small per-project index
  */
 
-import type { RedisClient } from './redis';
+import type { MongoDBClient } from './mongodb';
 import type {
   ChatCompletionResponse,
   CompletionResponse,
@@ -55,22 +55,26 @@ function semanticKey(kind: SemanticKind, projectId: string): string {
 }
 
 export class SemanticCache {
-  private redis: RedisClient;
+  private db: MongoDBClient;
   private projectId: string;
   private maxEntries: number;
 
-  constructor(redis: RedisClient, projectId: string, maxEntries: number = MAX_ENTRIES) {
-    this.redis = redis;
+  constructor(db: MongoDBClient, projectId: string, maxEntries: number = MAX_ENTRIES) {
+    this.db = db;
     this.projectId = projectId;
     this.maxEntries = maxEntries;
   }
 
   private async load<T>(kind: SemanticKind): Promise<SemanticCacheEntry<T>[]> {
-    return (await this.redis.get<SemanticCacheEntry<T>[]>(semanticKey(kind, this.projectId))) ?? [];
+    // For MongoDB, we store all entries in one document per project/kind
+    const key = semanticKey(kind, this.projectId);
+    const doc = await this.db.get<{ entries: SemanticCacheEntry<T>[] }>(key);
+    return doc?.entries ?? [];
   }
 
   private async save<T>(kind: SemanticKind, entries: SemanticCacheEntry<T>[]): Promise<void> {
-    await this.redis.set(semanticKey(kind, this.projectId), entries.slice(0, this.maxEntries));
+    const key = semanticKey(kind, this.projectId);
+    await this.db.set(key, { entries: entries.slice(0, this.maxEntries) });
   }
 
   async findSimilar<T>(

@@ -16,6 +16,7 @@ import type {
 type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>;
 import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
+import { createMongoDBClient } from '../lib/mongodb';
 import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
@@ -106,10 +107,11 @@ export async function handleCompletions(
 
   // Initialize clients
   const redis = createRedisClient(env);
+  const mongodb = createMongoDBClient(env);
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
-  const semanticCache = new SemanticCache(redis, project.id);
+  const semanticCache = new SemanticCache(mongodb, project.id);
   const semanticThreshold =
     typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
