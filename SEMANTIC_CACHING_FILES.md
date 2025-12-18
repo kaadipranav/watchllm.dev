@@ -57,21 +57,21 @@ This is the **main file** containing all semantic caching algorithms and logic. 
 These files implement the semantic caching by using the algorithms defined in `cache.ts`:
 
 ### `/worker/src/handlers/chat.ts`
-- **Lines 20**: Import `createCacheManager`
-- **Lines 105**: Initialize cache manager
+- **Line 20**: Import `createCacheManager`
+- **Line 105**: Initialize cache manager
 - **Lines 149-177**: Check cache before making API call
 - **Lines 190-191**: Store response in cache after API call
 - Adds cache headers: `X-Cache: HIT/MISS`, `X-Cache-Age`
 
 ### `/worker/src/handlers/completions.ts`
-- **Lines 19**: Import `createCacheManager`
-- **Lines 103**: Initialize cache manager
+- **Line 19**: Import `createCacheManager`
+- **Line 103**: Initialize cache manager
 - **Lines 147-172**: Cache lookup and response
 - **Lines 188-189**: Cache storage after API call
 
 ### `/worker/src/handlers/embeddings.ts`
-- **Lines 19**: Import `createCacheManager`
-- **Lines 105**: Initialize cache manager
+- **Line 19**: Import `createCacheManager`
+- **Line 105**: Initialize cache manager
 - **Lines 144-169**: Cache lookup and response
 - **Lines 185-186**: Cache storage (with 24-hour TTL)
 
