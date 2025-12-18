@@ -3,56 +3,6 @@
 import Link from "next/link";
 import { ArrowRight, Book, Code, Terminal, Zap, Shield, Layout, FileText, Cpu, Server } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "WatchLLM Documentation - API Reference & Guides",
-  description: "Complete documentation for WatchLLM semantic caching proxy. Learn how to integrate, deploy, and optimize AI API costs with vector similarity matching.",
-  keywords: [
-    "WatchLLM documentation",
-    "AI API proxy guide",
-    "semantic caching tutorial",
-    "OpenAI cost optimization",
-    "Claude API savings",
-    "vector similarity guide",
-    "API gateway documentation",
-    "LLM caching setup",
-    "AI cost reduction guide"
-  ],
-  openGraph: {
-    title: "WatchLLM Documentation - Complete API Reference",
-    description: "Learn how to integrate and deploy WatchLLM semantic caching proxy for 40-70% AI API cost savings.",
-    type: "website",
-    url: "https://watchllm.dev/docs",
-    siteName: "WatchLLM",
-    locale: "en_US",
-    images: [
-      {
-        url: "https://watchllm.dev/og-docs-1200x630.png",
-        width: 1200,
-        height: 630,
-        alt: "WatchLLM Documentation - Semantic Caching Guide",
-        type: "image/png",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "WatchLLM Documentation - Complete API Reference",
-    description: "Learn how to integrate and deploy WatchLLM semantic caching proxy for 40-70% AI API cost savings.",
-    creator: "@kaad_zz",
-    site: "@watchllm",
-    images: {
-      url: "https://watchllm.dev/twitter-docs-1200x600.png",
-      alt: "WatchLLM Documentation",
-      width: 1200,
-      height: 600,
-    },
-  },
-  alternates: {
-    canonical: "https://watchllm.dev/docs",
-  },
-};
 
 export default function DocsIndexPage() {
   const categories = [

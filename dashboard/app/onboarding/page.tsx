@@ -2,22 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-
-export const metadata: Metadata = {
-  title: "Welcome to WatchLLM | Quick Onboarding",
-  description: "Tell us who you are so we can personalize your WatchLLM dashboard and billing experience.",
-  robots: {
-    index: false,
-    follow: true,
-  },
-};
 
 export default function OnboardingPage() {
   const supabase = createClient();
