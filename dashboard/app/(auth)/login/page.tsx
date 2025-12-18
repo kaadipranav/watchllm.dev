@@ -10,6 +10,58 @@ import { Label } from "@/components/ui/label";
 import { Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sign In - WatchLLM | Access Your AI Cost Optimization Dashboard",
+  description: "Sign in to your WatchLLM account to monitor AI API costs, manage semantic caching, and optimize your OpenAI, Claude, and Groq API usage.",
+  keywords: [
+    "WatchLLM login",
+    "AI cost optimization dashboard",
+    "semantic caching proxy",
+    "OpenAI cost tracking",
+    "Claude API monitoring",
+    "Groq usage analytics",
+    "API cost management"
+  ],
+  openGraph: {
+    title: "Sign In - WatchLLM Dashboard",
+    description: "Access your AI cost optimization dashboard and start saving 40-70% on API costs with semantic caching.",
+    type: "website",
+    url: "https://watchllm.dev/login",
+    siteName: "WatchLLM",
+    locale: "en_US",
+    images: [
+      {
+        url: "https://watchllm.dev/og-login-1200x630.png",
+        width: 1200,
+        height: 630,
+        alt: "WatchLLM Dashboard Login",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sign In - WatchLLM Dashboard",
+    description: "Access your AI cost optimization dashboard and start saving 40-70% on API costs.",
+    creator: "@kaad_zz",
+    site: "@watchllm",
+    images: {
+      url: "https://watchllm.dev/twitter-login-1200x600.png",
+      alt: "WatchLLM Dashboard Login",
+      width: 1200,
+      height: 600,
+    },
+  },
+  alternates: {
+    canonical: "https://watchllm.dev/login",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -90,8 +142,8 @@ export default function LoginPage() {
             <Zap className="h-4 w-4 text-[hsl(220_13%_8%)]" />
           </div>
         </Link>
-        <CardTitle className="text-lg">Welcome back</CardTitle>
-        <CardDescription className="text-white/50">Sign in to your WatchLLM account</CardDescription>
+        <CardTitle className="text-lg">Welcome back to WatchLLM</CardTitle>
+        <CardDescription className="text-white/50">Sign in to access your AI cost optimization dashboard</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* OAuth Buttons */}

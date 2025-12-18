@@ -10,6 +10,59 @@ import { Label } from "@/components/ui/label";
 import { Zap, CheckCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sign Up - WatchLLM | Start Saving 40-70% on AI API Costs",
+  description: "Create your free WatchLLM account and start optimizing OpenAI, Claude, and Groq API costs with semantic caching. Get 50,000 free requests per month.",
+  keywords: [
+    "WatchLLM signup",
+    "AI cost optimization",
+    "semantic caching proxy",
+    "OpenAI cost savings",
+    "Claude API optimization",
+    "Groq cost reduction",
+    "API proxy service",
+    "LLM caching"
+  ],
+  openGraph: {
+    title: "Sign Up - WatchLLM | Start Saving 40-70% on AI API Costs",
+    description: "Create your free account and start optimizing AI API costs with semantic caching. Get 50,000 free requests per month.",
+    type: "website",
+    url: "https://watchllm.dev/signup",
+    siteName: "WatchLLM",
+    locale: "en_US",
+    images: [
+      {
+        url: "https://watchllm.dev/og-signup-1200x630.png",
+        width: 1200,
+        height: 630,
+        alt: "WatchLLM Signup - AI Cost Optimization",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sign Up - WatchLLM | Start Saving 40-70% on AI API Costs",
+    description: "Create your free account and start optimizing AI API costs with semantic caching. Get 50,000 free requests per month.",
+    creator: "@kaad_zz",
+    site: "@watchllm",
+    images: {
+      url: "https://watchllm.dev/twitter-signup-1200x600.png",
+      alt: "WatchLLM Signup",
+      width: 1200,
+      height: 600,
+    },
+  },
+  alternates: {
+    canonical: "https://watchllm.dev/signup",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 function SignupForm() {
   const [email, setEmail] = useState("");
@@ -132,11 +185,11 @@ function SignupForm() {
             <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
         </Link>
-        <CardTitle className="text-2xl">Create an account</CardTitle>
+        <CardTitle className="text-2xl">Start saving on AI costs</CardTitle>
         <CardDescription>
           {plan !== "free" 
             ? `Start your free trial of the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan`
-            : "Get started with 50,000 free requests/month"
+            : "Get 50,000 free requests/month with semantic caching"
           }
         </CardDescription>
       </CardHeader>

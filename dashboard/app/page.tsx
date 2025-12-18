@@ -11,48 +11,60 @@ import { Footer } from "@/components/landing/footer";
 import { LiveFlow } from "@/components/landing/live-flow";
 
 export const metadata: Metadata = {
-  title: "WatchLLM - Real-time LLM Intelligence | Cut AI Costs by 70%",
+  title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
   description:
-    "Unify AI costs across OpenAI, Claude, and Groq with semantic caching. Drop-in proxy for 70% cost savings on repeated API calls. No code changes required.",
+    "Unify AI costs across OpenAI, Claude, and Groq with true semantic caching. Vector similarity matching with 95%+ accuracy. Drop-in proxy for 70% cost savings on repeated API calls. No code changes required.",
   keywords: [
-    "LLM",
-    "AI",
     "semantic caching",
-    "OpenAI",
-    "Claude",
-    "Groq",
-    "API proxy",
-    "cost optimization",
-    "AI API gateway",
+    "vector similarity",
+    "AI API proxy",
+    "OpenAI cost reduction",
+    "Claude API savings",
+    "Groq optimization",
+    "LLM caching",
+    "cosine similarity",
+    "API cost optimization",
+    "AI gateway",
+    "chat completions cache",
+    "embeddings cache",
+    "reduce AI costs",
+    "intelligent caching",
+    "vector database"
   ],
   openGraph: {
-    title: "WatchLLM - Real-time LLM Intelligence | Cut AI Costs by 70%",
+    title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
     description:
-      "Drop-in proxy that unifies AI costs across OpenAI, Claude, and Groq with intelligent semantic caching.",
+      "Drop-in proxy with true semantic caching and vector similarity matching. Unify AI costs across OpenAI, Claude, and Groq with 95%+ accuracy.",
     type: "website",
     url: "https://watchllm.dev",
     siteName: "WatchLLM",
     locale: "en_US",
     images: [
       {
-        url: "https://watchllm.dev/watchllm_logo.png",
+        url: "https://watchllm.dev/og-homepage-1200x630.png",
         width: 1200,
         height: 630,
-        alt: "WatchLLM - Real-time LLM Intelligence",
+        alt: "WatchLLM - Semantic Caching for AI APIs",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "WatchLLM - Real-time LLM Intelligence | Cut AI Costs by 70%",
+    title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
     description:
-      "Drop-in proxy that unifies AI costs across OpenAI, Claude, and Groq with intelligent semantic caching.",
+      "True semantic caching with vector similarity matching. Drop-in proxy for OpenAI, Claude, and Groq APIs with 95%+ accuracy.",
     creator: "@kaad_zz",
+    site: "@watchllm",
     images: {
-      url: "https://watchllm.dev/watchllm_logo.png",
-      alt: "WatchLLM Logo",
+      url: "https://watchllm.dev/twitter-home-1200x600.png",
+      alt: "WatchLLM Semantic Caching Architecture",
+      width: 1200,
+      height: 600,
     },
+  },
+  alternates: {
+    canonical: "https://watchllm.dev",
   },
 };
 
