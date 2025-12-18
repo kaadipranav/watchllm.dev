@@ -160,18 +160,12 @@ export function Hero() {
   const typedText = useTyping(typingPhrases);
 
   return (
-    <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
+    <section className="relative overflow-hidden pt-32 pb-32 sm:pt-40 sm:pb-40">
       <div className="pointer-events-none absolute inset-0 hero-grid opacity-70" />
-      {/* Highlight stats on the right - desktop only */}
-      <div className="pointer-events-none absolute top-16 right-6 hidden w-72 flex-col gap-3 lg:flex">
-        {highlightStats.map((stat) => (
-          <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
-        ))}
-      </div>
 
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-16 px-4 lg:flex-row lg:items-center">
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-24 px-4 lg:flex-row lg:items-center">
         {/* Left content */}
-        <div className="max-w-2xl space-y-8">
+        <div className="max-w-2xl space-y-12">
           {/* Dovetail-style announcement badge */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -190,34 +184,49 @@ export function Hero() {
 
           {/* Headline - Dovetail/Raycast style big typography */}
           <motion.div
-            className="space-y-5"
+            className="space-y-8 -mt-8"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-premium-text-primary sm:text-6xl lg:text-7xl">
-              Real-time LLM
+            <h1 className="text-6xl font-extrabold leading-[0.9] tracking-tight text-premium-text-primary sm:text-7xl lg:text-8xl pr-8">
+              <span className="whitespace-nowrap">Real-time LLM</span>
               <br />
-              <span className="text-gradient-accent">intelligence</span>
+              <motion.span 
+                className="inline-block bg-gradient-to-r from-purple-400 via-blue-400 via-cyan-400 via-teal-400 via-green-400 via-lime-400 via-yellow-400 via-orange-400 to-purple-400 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{
+                  backgroundSize: "200% 200%",
+                }}
+              >
+                intelligence
+              </motion.span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-premium-text-secondary sm:text-xl">
               Unify AI costs across OpenAI, Claude, and Groq. Let semantic caching surface the savings that matter.
               <span className="text-premium-text-muted"> Instantly cut costs by 70%.</span>
             </p>
             <div className="text-sm font-medium text-premium-text-muted">
-              <span className="typing-effect text-white/80">
+              <div className="typing-effect text-white/80">
                 {typedText}
                 <span className="typing-cursor">|</span>
-              </span>
-              <span className="ml-2 text-xs uppercase tracking-[0.3em] text-white/40">
+              </div>
+              <div className="mt-2 text-xs uppercase tracking-[0.3em] text-white/40">
                 Series A-ready tooling
-              </span>
+              </div>
             </div>
           </motion.div>
 
           {/* CTAs - OpenAI style with white primary button */}
           <motion.div
-            className="flex flex-wrap items-center gap-4"
+            className="flex flex-wrap items-center gap-6"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -240,7 +249,7 @@ export function Hero() {
 
           {/* Trust indicators - cleaner inline style */}
           <motion.div
-            className="flex flex-wrap items-center gap-6 pt-2"
+            className="flex flex-wrap items-center gap-8 pt-4"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -257,7 +266,7 @@ export function Hero() {
 
           {/* Metrics - tighter grid */}
           <motion.div
-            className="grid grid-cols-3 gap-3 pt-4"
+            className="grid grid-cols-3 gap-4 pt-8"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -275,8 +284,15 @@ export function Hero() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
+          {/* Highlight stats moved here - above code panel */}
+          <div className="pointer-events-none absolute -top-40 left-0 right-0 hidden w-full flex-col gap-3 lg:flex">
+            {highlightStats.map((stat) => (
+              <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
+            ))}
+          </div>
+
           {/* Card with OpenAI-style glass effect */}
-          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow">
+          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow mt-40">
             {/* Inner glow at top */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent" />
 
