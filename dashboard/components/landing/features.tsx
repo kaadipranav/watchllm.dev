@@ -62,7 +62,7 @@ const features: Feature[] = [
 
 export function Features() {
   return (
-    <section id="features" className="relative isolate overflow-hidden py-24 sm:py-32">
+    <section id="features" className="relative isolate py-24 sm:py-32">
       <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_35%)]" />
       <div className="absolute inset-x-0 top-2/3 h-[400px] bg-gradient-to-b from-transparent via-white/5 to-white/20 blur-3xl" />
 
@@ -72,25 +72,81 @@ export function Features() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mx-auto mb-14 max-w-3xl text-center"
+          className="mx-auto mb-8 max-w-2xl text-center"
         >
-          <p className="text-sm font-medium uppercase tracking-[0.35em] text-premium-text-muted">Features</p>
-          <h2 className="mt-6 text-4xl font-semibold leading-tight text-premium-text-primary sm:text-5xl">
+          <h2 className="text-sm font-semibold leading-7 text-premium-text-muted tracking-widest uppercase mb-2">Features</h2>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-premium-text-primary mb-2">
             Everything you need for
-            <br />
-            <span className="text-gradient-accent">AI availability</span>
-          </h2>
-          <p className="mt-5 text-lg text-premium-text-secondary">
+            <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent">AI availability</span>
+          </h1>
+          <p className="mt-2 text-base text-premium-text-secondary">
             A curated suite of controls that keep your AI layer reliable, observable, and cost-efficient.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.title} feature={feature} index={index} />
-          ))}
+        {/* Scrollable features container with left scrollbar */}
+        <div className="relative flex gap-6 mt-12 h-[600px]">
+          {/* Left scrollbar track */}
+          <div className="w-1 bg-white/10 rounded-full flex-shrink-0" />
+          
+          {/* Scrollable content */}
+          <div 
+            className="flex-1 overflow-y-scroll pr-4 space-y-6 scroll-smooth"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(168, 85, 247, 0.6) rgba(255, 255, 255, 0.05)',
+            }}
+          >
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, x: -24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.05 }}
+                className="group flex gap-5 px-8 py-7 bg-white/[0.05] hover:bg-white/[0.08] rounded-3xl border border-white/[0.1] hover:border-white/[0.15] transition-all duration-300 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.1)]"
+              >
+                <span className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/30 to-yellow-400/15 text-2xl text-purple-300 group-hover:text-purple-200 transition-colors">
+                  <feature.icon />
+                </span>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-base font-bold text-premium-text-primary group-hover:text-white transition-colors">
+                      {feature.title}
+                    </h3>
+                    {feature.badge && (
+                      <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-yellow-300 animate-pulse">
+                        {feature.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-premium-text-secondary text-sm leading-relaxed group-hover:text-premium-text-secondary/90 transition-colors">
+                    {feature.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        div::-webkit-scrollbar {
+          width: 8px;
+        }
+        div::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        div::-webkit-scrollbar-thumb {
+          background: rgba(168, 85, 247, 0.6);
+          border-radius: 10px;
+          transition: background 0.2s;
+        }
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(168, 85, 247, 0.8);
+        }
+      `}</style>
     </section>
   );
 }

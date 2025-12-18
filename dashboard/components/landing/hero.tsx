@@ -160,7 +160,7 @@ export function Hero() {
   const typedText = useTyping(typingPhrases);
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-32 sm:pt-40 sm:pb-40">
+    <section className="relative pt-32 pb-32 sm:pt-40 sm:pb-40">
       <div className="pointer-events-none absolute inset-0 hero-grid opacity-70" />
 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-24 px-4 lg:flex-row lg:items-center">
@@ -189,11 +189,11 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <h1 className="text-6xl font-extrabold leading-[0.9] tracking-tight text-premium-text-primary sm:text-7xl lg:text-8xl pr-8">
+            <h1 className="text-6xl font-extrabold leading-[1.05] tracking-tight text-premium-text-primary sm:text-7xl lg:text-8xl pr-8">
               <span className="whitespace-nowrap">Real-time LLM</span>
               <br />
               <motion.span 
-                className="inline-block bg-gradient-to-r from-purple-400 via-blue-400 via-cyan-400 via-teal-400 via-green-400 via-lime-400 via-yellow-400 via-orange-400 to-purple-400 bg-clip-text text-transparent"
+                className="inline-block overflow-visible leading-[1.05] pb-1 bg-gradient-to-r from-purple-400 via-blue-400 via-cyan-400 via-teal-400 via-green-400 via-lime-400 via-yellow-400 via-orange-400 to-purple-400 bg-clip-text text-transparent"
                 animate={{
                   backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                 }}
