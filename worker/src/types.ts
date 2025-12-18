@@ -16,6 +16,7 @@ export interface Env {
   APP_URL?: string;
   EMAIL_TRIGGER_SECRET?: string;
   SENTRY_DSN?: string;
+  SEMANTIC_CACHE_THRESHOLD?: string;
 }
 
 // API Key record from Supabase

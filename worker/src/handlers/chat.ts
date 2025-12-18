@@ -20,6 +20,12 @@ import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
+import {
+  SemanticCache,
+  SemanticCacheEntry,
+  embedText,
+  flattenChatText,
+} from '../lib/semanticCache';
 
 /**
  * Validate request body
@@ -104,6 +110,11 @@ export async function handleChatCompletions(
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
+  const semanticCache = new SemanticCache(redis, project.id);
+  const semanticThreshold =
+    typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
+      ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
+      : 0.95;
 
   try {
     // Parse and validate request body
@@ -146,7 +157,7 @@ export async function handleChatCompletions(
       return handleStreamingRequest(c, request, validatedKey, provider, supabase, startTime);
     }
 
-    // Check cache first
+    // Check deterministic cache first
     const cachedResponse = await cache.getChatCompletion(request);
     if (cachedResponse) {
       const latency = Date.now() - startTime;
@@ -176,6 +187,44 @@ export async function handleChatCompletions(
       });
     }
 
+    // Semantic cache (vector similarity) attempt
+    const textForEmbedding = flattenChatText(request.messages);
+    const textEmbedding = await embedText(provider, textForEmbedding);
+    if (textEmbedding) {
+      const semanticHit = await semanticCache.findSimilar<ChatCompletionResponse>(
+        'chat',
+        textEmbedding,
+        semanticThreshold
+      );
+      if (semanticHit) {
+        const latency = Date.now() - startTime;
+
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: semanticHit.entry.model,
+          provider: getProviderForModel(request.model),
+          tokens_input: semanticHit.entry.tokens.input,
+          tokens_output: semanticHit.entry.tokens.output,
+          tokens_total: semanticHit.entry.tokens.total,
+          cost_usd: 0,
+          cached: true,
+          latency_ms: latency,
+        });
+
+        return new Response(JSON.stringify(semanticHit.entry.data), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Cache': 'HIT-SEM',
+            'X-Cache-Similarity': semanticHit.similarity.toFixed(4),
+            'X-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
+            'X-Latency-Ms': latency.toString(),
+          },
+        });
+      }
+    }
+
     // Make request to provider
     const response = await provider.chatCompletion(request);
     const latency = Date.now() - startTime;
@@ -189,6 +238,23 @@ export async function handleChatCompletions(
 
     // Cache the response
     await cache.setChatCompletion(request, response);
+
+    // Store semantic entry if embedding is available
+    if (textEmbedding) {
+      const entry: SemanticCacheEntry<ChatCompletionResponse> = {
+        embedding: textEmbedding,
+        data: response,
+        model: response.model,
+        timestamp: Date.now(),
+        tokens: {
+          input: response.usage.prompt_tokens,
+          output: response.usage.completion_tokens,
+          total: response.usage.total_tokens,
+        },
+        text: textForEmbedding,
+      };
+      await semanticCache.put('chat', entry);
+    }
 
     // Log usage
     await supabase.logUsage({

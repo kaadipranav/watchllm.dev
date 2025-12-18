@@ -7,6 +7,7 @@ import type { Context } from 'hono';
 import type {
   Env,
   CompletionRequest,
+  CompletionResponse,
   ValidatedAPIKey,
   APIError,
 } from '../types';
@@ -19,6 +20,12 @@ import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
+import {
+  SemanticCache,
+  SemanticCacheEntry,
+  embedText,
+  flattenCompletionText,
+} from '../lib/semanticCache';
 
 /**
  * Validate request body
@@ -102,6 +109,11 @@ export async function handleCompletions(
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
+  const semanticCache = new SemanticCache(redis, project.id);
+  const semanticThreshold =
+    typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
+      ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
+      : 0.95;
 
   try {
     // Parse and validate request body
@@ -144,7 +156,7 @@ export async function handleCompletions(
       return errorResponse('Streaming not supported for legacy completions', 400);
     }
 
-    // Check cache first
+    // Check deterministic cache first
     const cachedResponse = await cache.getCompletion(request);
     if (cachedResponse) {
       const latency = Date.now() - startTime;
@@ -174,6 +186,44 @@ export async function handleCompletions(
       });
     }
 
+    // Semantic cache (vector similarity) attempt
+    const textForEmbedding = flattenCompletionText(request.prompt);
+    const textEmbedding = await embedText(provider, textForEmbedding);
+    if (textEmbedding) {
+      const semanticHit = await semanticCache.findSimilar<CompletionResponse>(
+        'completion',
+        textEmbedding,
+        semanticThreshold
+      );
+      if (semanticHit) {
+        const latency = Date.now() - startTime;
+
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: semanticHit.entry.model,
+          provider: getProviderForModel(request.model),
+          tokens_input: semanticHit.entry.tokens.input,
+          tokens_output: semanticHit.entry.tokens.output,
+          tokens_total: semanticHit.entry.tokens.total,
+          cost_usd: 0,
+          cached: true,
+          latency_ms: latency,
+        });
+
+        return new Response(JSON.stringify(semanticHit.entry.data), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Cache': 'HIT-SEM',
+            'X-Cache-Similarity': semanticHit.similarity.toFixed(4),
+            'X-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
+            'X-Latency-Ms': latency.toString(),
+          },
+        });
+      }
+    }
+
     // Make request to provider
     const response = await provider.completion(request);
     const latency = Date.now() - startTime;
@@ -187,6 +237,23 @@ export async function handleCompletions(
 
     // Cache the response
     await cache.setCompletion(request, response);
+
+    // Store semantic entry if embedding is available
+    if (textEmbedding) {
+      const entry: SemanticCacheEntry<CompletionResponse> = {
+        embedding: textEmbedding,
+        data: response,
+        model: response.model,
+        timestamp: Date.now(),
+        tokens: {
+          input: response.usage.prompt_tokens,
+          output: response.usage.completion_tokens,
+          total: response.usage.total_tokens,
+        },
+        text: textForEmbedding,
+      };
+      await semanticCache.put('completion', entry);
+    }
 
     // Log usage
     await supabase.logUsage({
