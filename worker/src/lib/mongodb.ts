@@ -8,17 +8,24 @@ interface MongoDBConfig {
   apiKey: string;
   database: string;
   collection: string;
+  dataSource?: string; // Cluster name, defaults to 'Cluster0'
 }
 
 export class MongoDBClient {
   private config: MongoDBConfig;
 
   constructor(config: MongoDBConfig) {
-    this.config = config;
+    this.config = {
+      dataSource: 'Cluster0',
+      ...config
+    };
   }
 
   private async request(action: string, body: any) {
-    const response = await fetch(`${this.config.dataApiUrl}/action/${action}`, {
+    const url = `${this.config.dataApiUrl}/action/${action}`;
+    console.log(`MongoDB ${action} request to:`, url);
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +33,7 @@ export class MongoDBClient {
         'apiKey': this.config.apiKey,
       },
       body: JSON.stringify({
-        dataSource: 'Cluster0', // Update with your cluster name
+        dataSource: this.config.dataSource,
         database: this.config.database,
         collection: this.config.collection,
         ...body,
@@ -34,10 +41,14 @@ export class MongoDBClient {
     });
 
     if (!response.ok) {
-      throw new Error(`MongoDB API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`MongoDB API error ${response.status}:`, errorText);
+      throw new Error(`MongoDB API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log(`MongoDB ${action} result:`, result);
+    return result;
   }
 
   async get<T>(key: string): Promise<T | null> {
@@ -78,10 +89,16 @@ export class MongoDBClient {
 }
 
 export function createMongoDBClient(env: any): MongoDBClient {
+  if (!env.MONGODB_DATA_API_URL || !env.MONGODB_API_KEY) {
+    console.warn('MongoDB not configured, caching will be disabled');
+    return null as any; // Will cause errors that disable caching gracefully
+  }
+
   return new MongoDBClient({
     dataApiUrl: env.MONGODB_DATA_API_URL,
     apiKey: env.MONGODB_API_KEY,
     database: env.MONGODB_DATABASE || 'watchllm',
     collection: env.MONGODB_COLLECTION || 'cache',
+    dataSource: env.MONGODB_DATA_SOURCE || 'Cluster0',
   });
 }

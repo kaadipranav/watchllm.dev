@@ -55,26 +55,36 @@ function semanticKey(kind: SemanticKind, projectId: string): string {
 }
 
 export class SemanticCache {
-  private db: MongoDBClient;
+  private db: MongoDBClient | null;
   private projectId: string;
   private maxEntries: number;
 
-  constructor(db: MongoDBClient, projectId: string, maxEntries: number = MAX_ENTRIES) {
+  constructor(db: MongoDBClient | null, projectId: string, maxEntries: number = MAX_ENTRIES) {
     this.db = db;
     this.projectId = projectId;
     this.maxEntries = maxEntries;
   }
 
   private async load<T>(kind: SemanticKind): Promise<SemanticCacheEntry<T>[]> {
-    // For MongoDB, we store all entries in one document per project/kind
-    const key = semanticKey(kind, this.projectId);
-    const doc = await this.db.get<{ entries: SemanticCacheEntry<T>[] }>(key);
-    return doc?.entries ?? [];
+    if (!this.db) return [];
+    try {
+      const key = semanticKey(kind, this.projectId);
+      const doc = await this.db.get<{ entries: SemanticCacheEntry<T>[] }>(key);
+      return doc?.entries ?? [];
+    } catch (error) {
+      console.error('Semantic cache load error:', error);
+      return [];
+    }
   }
 
   private async save<T>(kind: SemanticKind, entries: SemanticCacheEntry<T>[]): Promise<void> {
-    const key = semanticKey(kind, this.projectId);
-    await this.db.set(key, { entries: entries.slice(0, this.maxEntries) });
+    if (!this.db) return;
+    try {
+      const key = semanticKey(kind, this.projectId);
+      await this.db.set(key, { entries: entries.slice(0, this.maxEntries) });
+    } catch (error) {
+      console.error('Semantic cache save error:', error);
+    }
   }
 
   async findSimilar<T>(
@@ -82,21 +92,34 @@ export class SemanticCache {
     embedding: number[],
     threshold: number = DEFAULT_THRESHOLD
   ): Promise<SemanticHit<T> | null> {
-    const entries = await this.load<T>(kind);
-    let best: SemanticHit<T> | null = null;
-    for (const entry of entries) {
-      const sim = cosineSimilarity(embedding, entry.embedding);
-      if (sim >= threshold && (!best || sim > best.similarity)) {
-        best = { entry, similarity: sim };
+    if (!this.db || !embedding || embedding.length === 0) return null;
+
+    try {
+      const entries = await this.load<T>(kind);
+      let best: SemanticHit<T> | null = null;
+      for (const entry of entries) {
+        const sim = cosineSimilarity(embedding, entry.embedding);
+        if (sim >= threshold && (!best || sim > best.similarity)) {
+          best = { entry, similarity: sim };
+        }
       }
+      return best;
+    } catch (error) {
+      console.error('Semantic cache findSimilar error:', error);
+      return null;
     }
-    return best;
   }
 
   async put<T>(kind: SemanticKind, entry: SemanticCacheEntry<T>): Promise<void> {
-    const entries = await this.load<T>(kind);
-    const updated = [entry, ...entries].slice(0, this.maxEntries);
-    await this.save(kind, updated);
+    if (!this.db || !entry.embedding || entry.embedding.length === 0) return;
+
+    try {
+      const entries = await this.load<T>(kind);
+      const updated = [entry, ...entries].slice(0, this.maxEntries);
+      await this.save(kind, updated);
+    } catch (error) {
+      console.error('Semantic cache put error:', error);
+    }
   }
 }
 
@@ -108,7 +131,7 @@ export async function embedText(
   text: string,
   model: string = 'text-embedding-3-small'
 ): Promise<number[] | null> {
-  if (!text.trim()) return null;
+  if (!text.trim() || !provider) return null;
   try {
     const response = await provider.embeddings({
       model,

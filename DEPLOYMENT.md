@@ -8,8 +8,61 @@ Deploying WatchLLM requires the Cloudflare Worker proxy, the Next.js dashboard, 
 
 | Service | Required vars |
 |---|---|
-| Worker | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `SENTRY_DSN`, `EMAIL_TRIGGER_SECRET` |
+| Worker | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `MONGODB_DATA_API_URL`, `MONGODB_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `SENTRY_DSN`, `EMAIL_TRIGGER_SECRET` |
 | Dashboard | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_SENTRY_DSN`, `RESEND_API_KEY` |
+
+## MongoDB Atlas Setup (for Caching)
+
+WatchLLM uses MongoDB Atlas for semantic caching to reduce API costs. Students get $50 credits + Compass + University access via GitHub Student Developer Pack.
+
+### Quick Setup
+
+1. **Sign up with GitHub Student Pack**:
+   - Go to https://www.mongodb.com/atlas/database
+   - Sign in with GitHub
+   - Verify student status to get benefits
+
+2. **Create Cluster**:
+   - Choose free tier (M0)
+   - Select region closest to your users
+   - Name: `Cluster0` (default)
+
+3. **Enable Data API**:
+   - Go to Data API in cluster settings
+   - Enable "Data API"
+   - Create API Key (copy both URL and key)
+
+4. **Configure Secrets**:
+   ```bash
+   cd worker
+   node ../setup-mongodb.js
+   # OR manually:
+   wrangler secret put MONGODB_DATA_API_URL
+   wrangler secret put MONGODB_API_KEY
+   wrangler secret put MONGODB_DATA_SOURCE  # (optional, defaults to Cluster0)
+   ```
+
+5. **Deploy & Test**:
+   ```bash
+   wrangler deploy
+   cd ..
+   node test-proxy.js  # Should show cache hits on identical requests
+   ```
+
+### Manual Setup
+
+If the setup script doesn't work:
+
+1. Get your Data API URL from MongoDB Atlas dashboard
+2. Create an API key in Data API settings
+3. Set secrets manually as shown above
+4. The database `watchllm` and collection `cache` will be created automatically
+
+### Troubleshooting
+
+- **No cache hits**: Check MongoDB Atlas logs for API errors
+- **Connection failed**: Verify Data API is enabled and API key has correct permissions
+- **Student credits**: Ensure you verified your GitHub Student status
 
 ## Worker (Cloudflare)
 
