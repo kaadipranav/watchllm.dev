@@ -10,10 +10,14 @@ const REQUIRED_KEYS = [
     'SUPABASE_ANON_KEY',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
-    'OPENAI_API_KEY',
-    'ANTHROPIC_API_KEY',
-    'GROQ_API_KEY'
+    'OPENROUTER_API_KEY',
+    'OPENAI_API_KEY', // Check this just in case user pasted OR key here
+    'MONGODB_URI',
+    'MONGODB_DATABASE',
+    'MONGODB_COLLECTION'
 ];
+
+const ENV = process.argv[2] ? `--env ${process.argv[2]}` : '';
 
 function run() {
     if (!fs.existsSync(ENV_PATH)) {
@@ -51,7 +55,7 @@ function run() {
         if (value) {
             console.log(`Setting secret: ${key}...`);
             try {
-                execSync(`pnpm exec wrangler secret put ${key}`, {
+                execSync(`pnpm exec wrangler secret put ${key} ${ENV}`, {
                     cwd: WORKER_DIR,
                     input: value,
                     stdio: ['pipe', 'inherit', 'inherit'],

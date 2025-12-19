@@ -25,50 +25,29 @@ const PROVIDER_ENDPOINTS = {
 /**
  * Get provider for a given model
  */
+/**
+ * Get provider for a given model
+ * Modified to default to 'openrouter' for everything since user isn't using direct keys
+ */
 export function getProviderForModel(model: string): Provider {
-  // OpenRouter models usually have a slash (e.g. meta-llama/llama-3-8b-instruct)
-  // or explicit mapping for google/anthropic via openrouter if configured.
-  // For now, if it looks like a vendor/model string, assume OpenRouter.
-  if (model.includes('/')) {
-    return 'openrouter';
-  }
+  // Always map to openrouter as the underlying provider, but we keep the "logical" provider
+  // types (openai/anthropic/groq) for compatibility with the rest of the app's logic
+  // which might expect certain provider strings for logging/pricing.
 
-  // Check if model starts with known prefixes
-  if (model.startsWith('gpt-') || model.startsWith('text-embedding')) {
-    return 'openai';
-  }
-  if (model.startsWith('claude-')) {
-    return 'anthropic';
-  }
-  if (
-    model.startsWith('llama') ||
-    model.startsWith('mixtral') ||
-    model.startsWith('gemma')
-  ) {
-    return 'groq';
-  }
-
-  // Default to OpenAI
-  return 'openai';
+  // However, for the purpose of making requests, we want everything to verify against OpenRouter settings.
+  return 'openrouter';
 }
 
 /**
- * Get API key for a provider from environment
+ * Get API key and provider info
+ * Since we are ONLY using OpenRouter, we simplify this logic significantly.
  */
-function getAPIKey(env: Env, provider: Provider): string | null {
-  switch (provider) {
-    case 'openai':
-      return env.OPENAI_API_KEY || null;
-    case 'anthropic':
-      return env.ANTHROPIC_API_KEY || null;
-    case 'groq':
-      return env.GROQ_API_KEY || null;
-    case 'openrouter':
-      // Try explicit OpenRouter key first, fallback to OpenAI key if user wants to reuse
-      return env.OPENROUTER_API_KEY || null;
-    default:
-      return null;
-  }
+function getAPIKeyAndProvider(env: Env, provider: Provider, model: string): { apiKey: string | null; effectiveProvider: Provider } {
+  // Always return OpenRouter key and provider
+  return {
+    apiKey: env.OPENROUTER_API_KEY || (env.OPENAI_API_KEY?.startsWith('sk-or-') ? env.OPENAI_API_KEY : null),
+    effectiveProvider: 'openrouter'
+  };
 }
 
 /**
@@ -152,32 +131,49 @@ export class ProviderClient {
     request: ChatCompletionRequest
   ): Promise<ChatCompletionResponse> {
     const provider = getProviderForModel(request.model);
-    const apiKey = getAPIKey(this.env, provider);
+    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
     }
 
     // Handle Anthropic separately due to different API format
-    if (provider === 'anthropic') {
+    if (effectiveProvider === 'anthropic') {
       return this.anthropicChatCompletion(request, apiKey);
     }
 
     // OpenAI and Groq use the same format
-    const endpoint = PROVIDER_ENDPOINTS[provider];
+    // OpenAI and Groq use the same format (and OpenRouter too)
+    const endpoint = PROVIDER_ENDPOINTS[effectiveProvider];
+
+    // Auto-map model names to OpenRouter format if needed
+    let model = request.model;
+    if (effectiveProvider === 'openrouter' && !model.includes('/')) {
+      if (model.startsWith('gpt-')) {
+        model = `openai/${model}`;
+      } else if (model.startsWith('claude-')) {
+        model = `anthropic/${model}`;
+      } else if (model.startsWith('llama') || model.startsWith('mixtral')) {
+        // Best guess for others, though risky. Better to stick to obvious ones.
+        // Groq models on OR usually utilize their full names.
+      }
+    }
+
+    const payload = { ...request, model };
+
     const response = await fetch(`${endpoint}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const error = await response.text();
       console.error(`Provider ${provider} error:`, error);
-      throw new Error(`Provider error: ${response.status} - ${error}`);
+      throw new Error(`Provider error: ${response.status} - ${error} (Target: ${endpoint})`);
     }
 
     return response.json() as Promise<ChatCompletionResponse>;
@@ -217,13 +213,13 @@ export class ProviderClient {
    */
   async completion(request: CompletionRequest): Promise<CompletionResponse> {
     const provider = getProviderForModel(request.model);
-    const apiKey = getAPIKey(this.env, provider);
+    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
     }
 
-    if (provider !== 'openai') {
+    if (effectiveProvider !== 'openai') {
       throw new Error('Legacy completions only supported for OpenAI models');
     }
 
@@ -251,17 +247,17 @@ export class ProviderClient {
    */
   async embeddings(request: EmbeddingsRequest): Promise<EmbeddingsResponse> {
     const provider = getProviderForModel(request.model);
-    const apiKey = getAPIKey(this.env, provider);
+    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
     }
 
-    if (provider !== 'openai') {
-      throw new Error('Embeddings only supported for OpenAI models');
+    if (effectiveProvider !== 'openai' && effectiveProvider !== 'openrouter') {
+      throw new Error('Embeddings only supported for OpenAI or OpenRouter models');
     }
 
-    const endpoint = PROVIDER_ENDPOINTS.openai;
+    const endpoint = PROVIDER_ENDPOINTS[effectiveProvider] || PROVIDER_ENDPOINTS.openai;
     const response = await fetch(`${endpoint}/embeddings`, {
       method: 'POST',
       headers: {
@@ -287,18 +283,18 @@ export class ProviderClient {
     request: ChatCompletionRequest
   ): Promise<ReadableStream> {
     const provider = getProviderForModel(request.model);
-    const apiKey = getAPIKey(this.env, provider);
+    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
     }
 
     // For simplicity, we'll only support OpenAI/Groq streaming for now
-    if (provider === 'anthropic') {
+    if (effectiveProvider === 'anthropic') {
       throw new Error('Streaming not yet supported for Anthropic');
     }
 
-    const endpoint = PROVIDER_ENDPOINTS[provider];
+    const endpoint = PROVIDER_ENDPOINTS[effectiveProvider];
     const response = await fetch(`${endpoint}/chat/completions`, {
       method: 'POST',
       headers: {

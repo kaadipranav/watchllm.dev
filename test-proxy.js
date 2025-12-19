@@ -32,7 +32,7 @@ async function makeRequest(i) {
                 "Accept-Encoding": "identity" // Disable compression for debugging
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini", // Use OpenAI model as OpenAI key exists
+                model: "google/gemini-2.0-flash-exp:free", // Use a free model to test pipeline
                 messages: [{ role: "user", content: "What is 2+2?" }],
                 temperature: 0 // Deterministic for caching
             })

@@ -129,10 +129,13 @@ export class SemanticCache {
 export async function embedText(
   provider: ProviderClient,
   text: string,
-  model: string = 'text-embedding-3-small'
+  model: string = 'text-embedding-3-small' // Will be routed to OpenRouter
 ): Promise<number[] | null> {
   if (!text.trim() || !provider) return null;
   try {
+    // Note: ProviderClient will automatically route this to OpenRouter
+    // BUT we must ensure the model exists on OpenRouter if we are using OpenRouter exclusively.
+    // 'text-embedding-3-small' is available on OpenRouter via OpenAI.
     const response = await provider.embeddings({
       model,
       input: text,
@@ -142,6 +145,7 @@ export async function embedText(
     return vector as number[];
   } catch (error) {
     console.error('Semantic embedding failed:', error);
+    // Return null so we just skip semantic caching instead of crashing request
     return null;
   }
 }

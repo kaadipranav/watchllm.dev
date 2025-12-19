@@ -1,104 +1,114 @@
 /**
- * MongoDB Atlas Data API client for caching
- * Used as alternative to Redis for cost control
+ * MongoDB client for caching using the native driver
+ * Cloudflare Workers support the native driver via nodejs_compat and TCP connections
  */
 
-interface MongoDBConfig {
-  dataApiUrl: string;
-  apiKey: string;
-  database: string;
-  collection: string;
-  dataSource?: string; // Cluster name, defaults to 'Cluster0'
-}
+import { MongoClient, Collection, Document } from 'mongodb';
 
 export class MongoDBClient {
-  private config: MongoDBConfig;
+  private client: MongoClient;
+  private dbName: string;
+  private collectionName: string;
+  private collection: Collection<Document> | null = null;
 
-  constructor(config: MongoDBConfig) {
-    this.config = {
-      dataSource: 'Cluster0',
-      ...config
-    };
+  constructor(uri: string, dbName: string, collectionName: string) {
+    this.client = new MongoClient(uri, {
+      // Best practices for serverless/edge environments
+      maxPoolSize: 1,
+      connectTimeoutMS: 5000,
+      socketTimeoutMS: 5000,
+    });
+    this.dbName = dbName;
+    this.collectionName = collectionName;
   }
 
-  private async request(action: string, body: any) {
-    const url = `${this.config.dataApiUrl}/action/${action}`;
-    console.log(`MongoDB ${action} request to:`, url);
+  private async getCollection(): Promise<Collection<Document>> {
+    if (!this.collection) {
+      // MongoClient.connect() is implicit but we can be explicit
+      await this.client.connect();
+      const db = this.client.db(this.dbName);
+      this.collection = db.collection(this.collectionName);
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Request-Headers': '*',
-        'apiKey': this.config.apiKey,
-      },
-      body: JSON.stringify({
-        dataSource: this.config.dataSource,
-        database: this.config.database,
-        collection: this.config.collection,
-        ...body,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`MongoDB API error ${response.status}:`, errorText);
-      throw new Error(`MongoDB API error: ${response.status} ${response.statusText} - ${errorText}`);
+      // Ensure TTL index if needed - though we'll handle expiresAt in our logic
+      // Ideally this is done once at setup, not every request
     }
-
-    const result = await response.json();
-    console.log(`MongoDB ${action} result:`, result);
-    return result;
+    return this.collection;
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const result = await this.request('findOne', {
-      filter: { _id: key },
-    }) as { document: T | null };
-    return result.document || null;
+    try {
+      const collection = await this.getCollection();
+      const document = await collection.findOne({ _id: key as any });
+
+      if (!document) return null;
+
+      // Check for manual TTL if implemented
+      if (document.expiresAt && new Date(document.expiresAt as string) < new Date()) {
+        await this.delete(key);
+        return null;
+      }
+
+      return document as unknown as T;
+    } catch (error) {
+      console.error('MongoDB get error:', error);
+      return null;
+    }
   }
 
   async set(key: string, value: any, ttlSeconds?: number): Promise<boolean> {
-    const doc = { _id: key, ...value };
-    if (ttlSeconds) {
-      doc.expiresAt = new Date(Date.now() + ttlSeconds * 1000);
-    }
-
-    // Use insertOne, but for updates, we need to handle upsert
     try {
-      await this.request('insertOne', {
-        document: doc,
-      });
+      const collection = await this.getCollection();
+      const doc = { ...value };
+
+      if (ttlSeconds) {
+        doc.expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+      }
+
+      await collection.updateOne(
+        { _id: key as any },
+        { $set: doc },
+        { upsert: true }
+      );
+      return true;
     } catch (error) {
-      // If duplicate key, update
-      await this.request('updateOne', {
-        filter: { _id: key },
-        update: { $set: doc },
-        upsert: true,
-      });
+      console.error('MongoDB set error:', error);
+      return false;
     }
-    return true;
   }
 
   async delete(key: string): Promise<boolean> {
-    await this.request('deleteOne', {
-      filter: { _id: key },
-    });
-    return true;
+    try {
+      const collection = await this.getCollection();
+      await collection.deleteOne({ _id: key as any });
+      return true;
+    } catch (error) {
+      console.error('MongoDB delete error:', error);
+      return false;
+    }
+  }
+
+  // Cleanup connections if worker is shutting down (though unlikely to be called in ephemeral worker)
+  async close() {
+    await this.client.close();
   }
 }
 
 export function createMongoDBClient(env: any): MongoDBClient {
-  if (!env.MONGODB_DATA_API_URL || !env.MONGODB_API_KEY) {
-    console.warn('MongoDB not configured, caching will be disabled');
-    return null as any; // Will cause errors that disable caching gracefully
+  // Temporarily disabled due to Cloudflare Workers subrequest limits with native driver
+  console.warn('MongoDB disabled - semantic caching unavailable');
+  return null as any;
+
+  /* Original code - re-enable when we have HTTP-based solution
+  const uri = env.MONGODB_URI;
+  if (!uri) {
+    console.warn('MONGODB_URI not configured, caching will be disabled');
+    return null as any;
   }
 
-  return new MongoDBClient({
-    dataApiUrl: env.MONGODB_DATA_API_URL,
-    apiKey: env.MONGODB_API_KEY,
-    database: env.MONGODB_DATABASE || 'watchllm',
-    collection: env.MONGODB_COLLECTION || 'cache',
-    dataSource: env.MONGODB_DATA_SOURCE || 'Cluster0',
-  });
+  return new MongoDBClient(
+    uri,
+    env.MONGODB_DATABASE || 'watchllm',
+    env.MONGODB_COLLECTION || 'cache'
+  );
+  */
 }

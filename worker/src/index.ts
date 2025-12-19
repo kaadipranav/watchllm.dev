@@ -212,7 +212,7 @@ app.get('/health', async (c) => {
     status: 'ok',
     service: 'watchllm-proxy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: '1.1.0-debug',
   });
 });
 
