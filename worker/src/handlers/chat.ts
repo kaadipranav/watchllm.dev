@@ -16,7 +16,7 @@ import type {
 type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>;
 import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
-import { createMongoDBClient } from '../lib/mongodb';
+import { createD1Client } from '../lib/d1';
 import { createSupabaseClient } from '../lib/supabase';
 import { createCacheManager } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
@@ -108,15 +108,15 @@ export async function handleChatCompletions(
 
   // Initialize clients
   const redis = createRedisClient(env);
-  const mongodb = createMongoDBClient(env);
+  const d1 = createD1Client(env.DB);
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
-  const semanticCache = new SemanticCache(mongodb, project.id);
+  const semanticCache = new SemanticCache(d1, project.id);
   const semanticThreshold =
     typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
-      : 0.95;
+      : 0.85; // Lowered from 0.95 for better semantic matching
 
   try {
     // Parse and validate request body
@@ -191,7 +191,9 @@ export async function handleChatCompletions(
 
     // Semantic cache (vector similarity) attempt
     const textForEmbedding = flattenChatText(request.messages);
+    console.log(`Attempting to embed text: "${textForEmbedding.substring(0, 50)}..."`);
     const textEmbedding = await embedText(provider, textForEmbedding);
+    console.log(`Embedding result: ${textEmbedding ? `success (${textEmbedding.length} dims)` : 'failed'}`);
     if (textEmbedding) {
       const semanticHit = await semanticCache.findSimilar<ChatCompletionResponse>(
         'chat',
@@ -199,6 +201,7 @@ export async function handleChatCompletions(
         semanticThreshold
       );
       if (semanticHit) {
+        console.log(`Semantic cache HIT! Similarity: ${semanticHit.similarity.toFixed(4)}, Threshold: ${semanticThreshold}`);
         const latency = Date.now() - startTime;
 
         await supabase.logUsage({
@@ -243,6 +246,7 @@ export async function handleChatCompletions(
 
     // Store semantic entry if embedding is available
     if (textEmbedding) {
+      console.log(`Saving semantic cache entry for: "${textForEmbedding.substring(0, 50)}..."`);
       const entry: SemanticCacheEntry<ChatCompletionResponse> = {
         embedding: textEmbedding,
         data: response,
@@ -256,6 +260,7 @@ export async function handleChatCompletions(
         text: textForEmbedding,
       };
       await semanticCache.put('chat', entry);
+      console.log('Semantic cache entry saved to D1');
     }
 
     // Log usage
@@ -281,6 +286,7 @@ export async function handleChatCompletions(
         'X-Cache': 'MISS',
         'X-Latency-Ms': latency.toString(),
         'X-Cost-USD': cost.toFixed(6),
+        'X-WatchLLM-Debug': `emb:${!!textEmbedding},d1:${!!d1},redis:${!!redis}`,
       },
     });
   } catch (error) {

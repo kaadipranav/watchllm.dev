@@ -1,10 +1,10 @@
 /**
- * Semantic cache backed by MongoDB Atlas (vector similarity in-worker)
+ * Semantic cache backed by Cloudflare D1
  * - Embeds text with OpenAI embeddings
- * - Performs cosine similarity search over a small per-project index
+ * - Performs cosine similarity search over cached entries
  */
 
-import type { MongoDBClient } from './mongodb';
+import type { D1Client, D1CacheEntry } from './d1';
 import type {
   ChatCompletionResponse,
   CompletionResponse,
@@ -12,9 +12,8 @@ import type {
 } from '../types';
 import type { ProviderClient } from './providers';
 
-const SEM_PREFIX = 'watchllm:sem:';
 const DEFAULT_THRESHOLD = 0.95;
-const MAX_ENTRIES = 50; // cap to keep payload small in Redis
+const MAX_ENTRIES = 50;
 
 export type SemanticKind = 'chat' | 'completion';
 
@@ -50,16 +49,12 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
 
-function semanticKey(kind: SemanticKind, projectId: string): string {
-  return `${SEM_PREFIX}${kind}:${projectId}`;
-}
-
 export class SemanticCache {
-  private db: MongoDBClient | null;
+  private db: D1Client | null;
   private projectId: string;
   private maxEntries: number;
 
-  constructor(db: MongoDBClient | null, projectId: string, maxEntries: number = MAX_ENTRIES) {
+  constructor(db: D1Client | null, projectId: string, maxEntries: number = MAX_ENTRIES) {
     this.db = db;
     this.projectId = projectId;
     this.maxEntries = maxEntries;
@@ -68,22 +63,22 @@ export class SemanticCache {
   private async load<T>(kind: SemanticKind): Promise<SemanticCacheEntry<T>[]> {
     if (!this.db) return [];
     try {
-      const key = semanticKey(kind, this.projectId);
-      const doc = await this.db.get<{ entries: SemanticCacheEntry<T>[] }>(key);
-      return doc?.entries ?? [];
+      const entries = await this.db.getEntries(this.projectId, kind);
+      return entries.map(e => ({
+        embedding: JSON.parse(e.embedding),
+        data: JSON.parse(e.response) as T,
+        model: e.model,
+        timestamp: e.timestamp,
+        tokens: {
+          input: e.tokens_input,
+          output: e.tokens_output,
+          total: e.tokens_total,
+        },
+        text: e.text,
+      }));
     } catch (error) {
       console.error('Semantic cache load error:', error);
       return [];
-    }
-  }
-
-  private async save<T>(kind: SemanticKind, entries: SemanticCacheEntry<T>[]): Promise<void> {
-    if (!this.db) return;
-    try {
-      const key = semanticKey(kind, this.projectId);
-      await this.db.set(key, { entries: entries.slice(0, this.maxEntries) });
-    } catch (error) {
-      console.error('Semantic cache save error:', error);
     }
   }
 
@@ -96,12 +91,18 @@ export class SemanticCache {
 
     try {
       const entries = await this.load<T>(kind);
+      console.log(`Semantic cache: Comparing against ${entries.length} entries, threshold: ${threshold}`);
       let best: SemanticHit<T> | null = null;
       for (const entry of entries) {
         const sim = cosineSimilarity(embedding, entry.embedding);
         if (sim >= threshold && (!best || sim > best.similarity)) {
           best = { entry, similarity: sim };
         }
+      }
+      if (best) {
+        console.log(`Best match: similarity=${best.similarity.toFixed(4)}`);
+      } else {
+        console.log('No semantic match found above threshold');
       }
       return best;
     } catch (error) {
@@ -114,9 +115,23 @@ export class SemanticCache {
     if (!this.db || !entry.embedding || entry.embedding.length === 0) return;
 
     try {
-      const entries = await this.load<T>(kind);
-      const updated = [entry, ...entries].slice(0, this.maxEntries);
-      await this.save(kind, updated);
+      const id = crypto.randomUUID();
+      await this.db.saveEntry({
+        id,
+        project_id: this.projectId,
+        kind,
+        text: entry.text,
+        embedding: JSON.stringify(entry.embedding),
+        response: JSON.stringify(entry.data),
+        model: entry.model,
+        tokens_input: entry.tokens.input,
+        tokens_output: entry.tokens.output,
+        tokens_total: entry.tokens.total,
+        timestamp: entry.timestamp,
+      });
+
+      // Cleanup old entries
+      await this.db.cleanup(this.projectId, kind, this.maxEntries);
     } catch (error) {
       console.error('Semantic cache put error:', error);
     }

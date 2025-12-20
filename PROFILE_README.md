@@ -205,7 +205,7 @@ flowchart TB
 │  ⚡  Proxy: proxy.watchllm.dev          │
 │  🏗️   Stack: TS + Next + CF Workers     │
 │  💰  Payments: Whop integration         │
-│  🎯  Focus: $0→$1K MRR in 30 days      │
+│  🎯  Focus: $0→$1K MRR in 30 days       │
 └──────────────────────────────────────────┘
 ```
 

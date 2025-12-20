@@ -32,7 +32,7 @@ async function makeRequest(i) {
                 "Accept-Encoding": "identity" // Disable compression for debugging
             },
             body: JSON.stringify({
-                model: "google/gemini-2.0-flash-exp:free", // Use a free model to test pipeline
+                model: "mistralai/mistral-7b-instruct:free", // Using a lighter, faster free model
                 messages: [{ role: "user", content: "What is 2+2?" }],
                 temperature: 0 // Deterministic for caching
             })
@@ -52,19 +52,20 @@ async function makeRequest(i) {
 
         // Check headers for cache hit
 
-        const cacheStatus = res.headers.get("x-watchllm-cached") || "MISS";
+        const cacheStatus = res.headers.get("x-cache") || "MISS";
         const requestId = res.headers.get("x-request-id");
         const usage = res.headers.get("x-watchllm-usage");
+        const debug = res.headers.get("x-watchllm-debug");
 
         console.log(`Status: ${res.status}`);
         console.log(`Time: ${duration}ms`);
         console.log(`Cache: ${cacheStatus} ${cacheStatus === 'HIT' ? '✅ (MONEY SAVED)' : '❌ (COST INCURRED)'}`);
         if (usage) console.log(`Usage: ${usage}`);
         if (requestId) console.log(`Request ID: ${requestId}`);
-        if (res.status !== 200) {
-            console.log("Full Response Body:", JSON.stringify(data, null, 2));
-            console.log("Raw Text:", text); // Also print raw just in case
-        }
+        if (debug) console.log(`Debug: ${debug}`);
+
+        console.log("Full Response Body:", JSON.stringify(data, null, 2));
+
         console.log(`Response: ${data.choices?.[0]?.message?.content}`);
 
     } catch (e) {
@@ -95,10 +96,48 @@ async function run() {
 
     await checkHealth();
 
-    // Run 3 requests to test cache behavior
-    for (let i = 1; i <= 3; i++) {
-        await makeRequest(i);
-        await new Promise(r => setTimeout(r, 1000));
+    console.log("\n--- Testing Semantic Caching ---");
+
+    // Request 1: Fresh prompt
+    console.log("Sending: 'Calculate 5 times 3'");
+    await makeRequestCustom("Calculate 5 times 3");
+
+    await new Promise(r => setTimeout(r, 2000)); // Wait for D1 write
+
+    // Request 2: Semantically similar variant
+    console.log("\nSending: 'What is 5 multiplied by 3?'");
+    await makeRequestCustom("What is 5 multiplied by 3?");
+}
+
+async function makeRequestCustom(prompt) {
+    const start = Date.now();
+    try {
+        const res = await fetchFn(PROXY_URL, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: "mistralai/mistral-7b-instruct:free",
+                messages: [
+                    { role: "system", content: `Current time: ${Date.now()}` }, // Bypass simple cache
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0
+            })
+        });
+
+        const data = await res.json();
+        const duration = Date.now() - start;
+        const cacheStatus = res.headers.get("x-cache") || "MISS";
+        const debug = res.headers.get("x-watchllm-debug");
+
+        console.log(`Status: ${res.status} | Cache: ${cacheStatus} | Time: ${duration}ms`);
+        if (debug) console.log(`Debug: ${debug}`);
+        console.log(`Response: ${data.choices?.[0]?.message?.content}`);
+    } catch (e) {
+        console.error("Error:", e.message);
     }
 }
 

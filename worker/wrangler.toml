@@ -17,6 +17,13 @@ compatibility_flags = ["nodejs_compat"]
 # ANTHROPIC_API_KEY = ""
 # GROQ_API_KEY = ""
 
+# D1 Database for semantic caching
+[[d1_databases]]
+binding = "DB"
+database_name = "watchllm-cache"
+database_id = "05064211-5526-4438-8c68-f29824da1d60"
+
+
 # [env.production]
 # name = "watchllm-worker-production"
 # routes = [

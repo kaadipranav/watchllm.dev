@@ -17,6 +17,7 @@ export interface Env {
   EMAIL_TRIGGER_SECRET?: string;
   SENTRY_DSN?: string;
   SEMANTIC_CACHE_THRESHOLD?: string;
+  DB?: D1Database; // D1 database for semantic caching
 }
 
 // API Key record from Supabase
