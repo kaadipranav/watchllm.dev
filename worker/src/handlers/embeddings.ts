@@ -156,6 +156,11 @@ export async function handleEmbeddings(
         tokens_output: 0,
         tokens_total: cachedResponse.tokens.total,
         cost_usd: 0,
+        potential_cost_usd: calculateCost(
+          cachedResponse.model,
+          cachedResponse.tokens.input,
+          0
+        ),
         cached: true,
         latency_ms: latency,
       });
@@ -195,6 +200,7 @@ export async function handleEmbeddings(
       tokens_output: 0,
       tokens_total: response.usage.total_tokens,
       cost_usd: cost,
+      potential_cost_usd: cost,
       cached: false,
       latency_ms: latency,
     });

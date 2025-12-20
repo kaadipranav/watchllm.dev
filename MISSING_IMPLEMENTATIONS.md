@@ -10,8 +10,8 @@
 - [x] **BYOK Routing**: ✅ IMPLEMENTED - `providers.ts` prioritizes user's decrypted key over global OpenRouter fallback.
 
 ## 📊 Usage Tracking & Analytics
-- [ ] **Dashboard Aggregations**: Handlers log raw rows, but we need scheduled jobs or database functions to pre-calculate hourly/daily aggregations for fast dashboard loading.
-- [ ] **Cache Cost Savings**: Need to explicitly track "Potential Cost" vs "Actual Cost" in `usage_logs` to calculate "$ Saved" metrics.
+- [x] **Dashboard Aggregations**: ✅ IMPLEMENTED - Created hourly/daily aggregation tables with database functions for fast dashboard queries.
+- [x] **Cache Cost Savings**: ✅ IMPLEMENTED - Added `potential_cost_usd` column to track "Potential Cost" vs "Actual Cost" for calculating "$ Saved" metrics.
 
 ## 📚 Documentation
 - [ ] **Dedicated Troubleshooting Guide**: Create a specific section or file for common issues (e.g., header mismatches, D1 connection errors).

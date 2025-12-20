@@ -218,6 +218,7 @@ export interface UsageLogEntry {
   tokens_output: number;
   tokens_total: number;
   cost_usd: number;
+  potential_cost_usd: number; // What it would have cost without caching
   cached: boolean;
   latency_ms: number;
 }

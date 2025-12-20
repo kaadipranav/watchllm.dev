@@ -201,6 +201,11 @@ export async function handleCompletions(
         tokens_output: cachedResponse.tokens.output,
         tokens_total: cachedResponse.tokens.total,
         cost_usd: 0,
+        potential_cost_usd: calculateCost(
+          cachedResponse.model,
+          cachedResponse.tokens.input,
+          cachedResponse.tokens.output
+        ),
         cached: true,
         latency_ms: latency,
       });
@@ -237,6 +242,11 @@ export async function handleCompletions(
           tokens_output: semanticHit.entry.tokens.output,
           tokens_total: semanticHit.entry.tokens.total,
           cost_usd: 0,
+          potential_cost_usd: calculateCost(
+            semanticHit.entry.model,
+            semanticHit.entry.tokens.input,
+            semanticHit.entry.tokens.output
+          ),
           cached: true,
           latency_ms: latency,
         });
@@ -295,6 +305,7 @@ export async function handleCompletions(
       tokens_output: response.usage.completion_tokens,
       tokens_total: response.usage.total_tokens,
       cost_usd: cost,
+      potential_cost_usd: cost,
       cached: false,
       latency_ms: latency,
     });

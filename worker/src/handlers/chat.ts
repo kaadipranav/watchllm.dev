@@ -202,6 +202,11 @@ export async function handleChatCompletions(
         tokens_output: cachedResponse.tokens.output,
         tokens_total: cachedResponse.tokens.total,
         cost_usd: 0, // No cost for cached responses
+        potential_cost_usd: calculateCost(
+          cachedResponse.model,
+          cachedResponse.tokens.input,
+          cachedResponse.tokens.output
+        ), // What it would have cost
         cached: true,
         latency_ms: latency,
       });
@@ -241,6 +246,11 @@ export async function handleChatCompletions(
           tokens_output: semanticHit.entry.tokens.output,
           tokens_total: semanticHit.entry.tokens.total,
           cost_usd: 0,
+          potential_cost_usd: calculateCost(
+            semanticHit.entry.model,
+            semanticHit.entry.tokens.input,
+            semanticHit.entry.tokens.output
+          ),
           cached: true,
           latency_ms: latency,
         });
@@ -301,6 +311,7 @@ export async function handleChatCompletions(
       tokens_output: response.usage.completion_tokens,
       tokens_total: response.usage.total_tokens,
       cost_usd: cost,
+      potential_cost_usd: cost, // Same as actual cost for non-cached
       cached: false,
       latency_ms: latency,
     });
@@ -364,6 +375,7 @@ async function handleStreamingRequest(
       tokens_output: 0,
       tokens_total: 0,
       cost_usd: 0,
+      potential_cost_usd: 0,
       cached: false,
       latency_ms: latency,
     });
