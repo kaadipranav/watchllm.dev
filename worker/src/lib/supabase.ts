@@ -226,6 +226,48 @@ export class SupabaseClient {
   }
 
   /**
+   * Call a Supabase RPC function
+   */
+  async rpc<T = unknown>(
+    functionName: string,
+    params: Record<string, unknown> = {}
+  ): Promise<SupabaseResponse<T>> {
+    try {
+      const response = await fetch(`${this.url}/rest/v1/rpc/${functionName}`, {
+        method: 'POST',
+        headers: {
+          apikey: this.key,
+          Authorization: `Bearer ${this.key}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return {
+          data: null,
+          error: {
+            message: `RPC call failed: ${response.status} ${errorText}`,
+            code: response.status.toString(),
+          },
+        };
+      }
+
+      const data = await response.json();
+      return { data: data as T, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'RPC call failed',
+        },
+      };
+    }
+  }
+
+  /**
    * Health check - verify connection
    */
   async healthCheck(): Promise<boolean> {

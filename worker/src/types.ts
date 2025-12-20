@@ -38,8 +38,22 @@ export interface ProjectRecord {
   user_id: string;
   name: string;
   plan: 'free' | 'starter' | 'pro';
+  semantic_cache_threshold: number; // 0.50-0.99
+  ab_testing_enabled: boolean;
+  ab_testing_config: ABTestingConfig | null;
   created_at: string;
   updated_at: string;
+}
+
+// A/B Testing configuration
+export interface ABTestingConfig {
+  variants: ABTestVariant[];
+}
+
+export interface ABTestVariant {
+  name: string;
+  model: string;
+  weight: number; // Percentage (0-100)
 }
 
 // Provider key record from Supabase (BYOK)

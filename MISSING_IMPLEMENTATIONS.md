@@ -22,6 +22,6 @@
 - [x] **Provider Health Check**: ✅ IMPLEMENTED - Added `checkProviderHealth` that pings OpenRouter's models endpoint, integrated into `/health/detailed`.
 
 ## ✨ Nice-to-Haves (Future)
-- [ ] **Project-Level Thresholds**: Allow users to configure the semantic similarity threshold (e.g., 0.90 for banking, 0.70 for casual chat) in their project settings.
-- [ ] **A/B Testing Engine**: Logic to split-test different models (e.g., 50% Gpt-4o, 50% Claude-3.5) for performance comparison.
-- [ ] **Cost Forecasting**: Predictive analytics based on historical usage logs to estimate end-of-month spend.
+- [x] **Project-Level Thresholds**: ✅ IMPLEMENTED - Added `semantic_cache_threshold` column to projects table, integrated into chat/completions handlers.
+- [x] **A/B Testing Engine**: ✅ IMPLEMENTED - Created `abTesting.ts` with weighted variant selection, statistical significance calculation, and result aggregation.
+- [x] **Cost Forecasting**: ✅ IMPLEMENTED - Created `costForecasting.ts` with predictive analytics, trend analysis, anomaly detection, and optimization recommendations.

@@ -897,6 +897,79 @@ export default async function handler(req, res) {
 }
 ```
 
+### 8.5 Go Example
+
+**Install:**
+```bash
+go get github.com/sashabaranov/go-openai
+```
+
+**Usage:**
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/sashabaranov/go-openai"
+)
+
+func main() {
+	config := openai.DefaultConfig(os.Getenv("WatchLLM_API_KEY"))
+	config.BaseURL = "https://proxy.WatchLLM.com/v1"
+
+	client := openai.NewClientWithConfig(config)
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT4,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return
+	}
+
+	fmt.Println(resp.Choices[0].Message.Content)
+}
+```
+
+### 8.6 Ruby Example
+
+**Install:**
+```bash
+gem install ruby-openai
+```
+
+**Usage:**
+```ruby
+require 'openai'
+
+client = OpenAI::Client.new(
+    access_token: ENV['WatchLLM_API_KEY'],
+    uri_base: "https://proxy.WatchLLM.com/v1"
+)
+
+response = client.chat(
+    parameters: {
+        model: "gpt-4",
+        messages: [{ role: "user", content: "Hello!" }],
+        temperature: 0.7,
+    }
+)
+
+puts response.dig("choices", 0, "message", "content")
+```
+
 ---
 
 ## Support

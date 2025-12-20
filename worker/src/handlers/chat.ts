@@ -113,15 +113,27 @@ export async function handleChatCompletions(
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
   const semanticCache = new SemanticCache(d1, project.id);
-  const semanticThreshold =
-    typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
+
+  // Use project-level semantic cache threshold (with env fallback)
+  const semanticThreshold = project.semantic_cache_threshold ||
+    (typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
-      : 0.85; // Lowered from 0.95 for better semantic matching
+      : 0.85);
 
   try {
     // Parse and validate request body
     const body = await c.req.json();
-    const request = validateRequest(body);
+    let request = validateRequest(body);
+
+    // A/B Testing: Select model variant if enabled
+    if (project.ab_testing_enabled && project.ab_testing_config) {
+      const { selectABTestVariant } = await import('../lib/abTesting');
+      const selectedModel = selectABTestVariant(project.ab_testing_config, request.model);
+      if (selectedModel !== request.model) {
+        console.log(`A/B Test: Switching from ${request.model} to ${selectedModel}`);
+        request = { ...request, model: selectedModel };
+      }
+    }
 
     // Check rate limiting
     const rateLimitKey = `ratelimit:${keyRecord.id}:minute`;
