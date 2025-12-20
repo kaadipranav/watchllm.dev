@@ -5,9 +5,9 @@
 - [x] **Usage Alert Emails**: ✅ VERIFIED - Full implementation exists: worker triggers webhook at 80% usage, dashboard sends email via Resend.
 
 ## 🔑 Provider API Key Management (BYOK)
-- [ ] **User Key Storage**: Database schema and logic to allow users to save their own OpenAI/Anthropic/Groq keys.
-- [ ] **Encryption/Decryption**: `crypto.ts` needs AES-GCM implementation to secure user-provided keys before storage.
-- [ ] **BYOK Routing**: `providers.ts` needs to prioritize the user's decrypted key over the global OpenRouter fallback.
+- [x] **User Key Storage**: ✅ IMPLEMENTED - Database schema created with `provider_keys` table, RLS policies in place.
+- [x] **Encryption/Decryption**: ✅ IMPLEMENTED - AES-GCM encryption with PBKDF2 key derivation in `crypto.ts`.
+- [x] **BYOK Routing**: ✅ IMPLEMENTED - `providers.ts` prioritizes user's decrypted key over global OpenRouter fallback.
 
 ## 📊 Usage Tracking & Analytics
 - [ ] **Dashboard Aggregations**: Handlers log raw rows, but we need scheduled jobs or database functions to pre-calculate hourly/daily aggregations for fast dashboard loading.

@@ -9,13 +9,13 @@
 export async function generateSecureAPIKey(prefix: 'proj' | 'test' = 'proj'): Promise<string> {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  
+
   // Convert to URL-safe base64
   const base64 = btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
-  
+
   return `lgw_${prefix}_${base64}`;
 }
 
@@ -73,4 +73,136 @@ export function generateSecureToken(length: number = 32): string {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ============================================================================
+// AES-GCM Encryption for Provider Keys (BYOK)
+// ============================================================================
+
+/**
+ * Derive an encryption key from the master secret
+ * Uses PBKDF2 for key derivation
+ */
+async function deriveEncryptionKey(masterSecret: string, salt: Uint8Array): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(masterSecret),
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Encrypt a provider API key using AES-GCM
+ * Returns { encryptedKey: base64, iv: base64 }
+ */
+export async function encryptProviderKey(
+  plainKey: string,
+  masterSecret: string
+): Promise<{ encryptedKey: string; iv: string }> {
+  const encoder = new TextEncoder();
+
+  // Generate random IV (12 bytes for GCM)
+  const iv = new Uint8Array(12);
+  crypto.getRandomValues(iv);
+
+  // Generate random salt for key derivation
+  const salt = new Uint8Array(16);
+  crypto.getRandomValues(salt);
+
+  // Derive encryption key
+  const key = await deriveEncryptionKey(masterSecret, salt);
+
+  // Encrypt the API key
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv,
+    },
+    key,
+    encoder.encode(plainKey)
+  );
+
+  // Combine salt + encrypted data for storage
+  const combined = new Uint8Array(salt.length + encryptedBuffer.byteLength);
+  combined.set(salt, 0);
+  combined.set(new Uint8Array(encryptedBuffer), salt.length);
+
+  // Convert to base64 for storage
+  return {
+    encryptedKey: btoa(String.fromCharCode(...combined)),
+    iv: btoa(String.fromCharCode(...iv)),
+  };
+}
+
+/**
+ * Decrypt a provider API key using AES-GCM
+ * Returns the plaintext API key
+ */
+export async function decryptProviderKey(
+  encryptedKey: string,
+  iv: string,
+  masterSecret: string
+): Promise<string> {
+  try {
+    // Decode from base64
+    const combined = Uint8Array.from(atob(encryptedKey), c => c.charCodeAt(0));
+    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+
+    // Extract salt and encrypted data
+    const salt = combined.slice(0, 16);
+    const encryptedData = combined.slice(16);
+
+    // Derive the same encryption key
+    const key = await deriveEncryptionKey(masterSecret, salt);
+
+    // Decrypt
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: ivBytes,
+      },
+      key,
+      encryptedData
+    );
+
+    // Convert back to string
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    throw new Error('Failed to decrypt provider key');
+  }
+}
+
+/**
+ * Validate that an encrypted key can be decrypted
+ * Returns true if decryption succeeds
+ */
+export async function validateEncryptedKey(
+  encryptedKey: string,
+  iv: string,
+  masterSecret: string
+): Promise<boolean> {
+  try {
+    await decryptProviderKey(encryptedKey, iv, masterSecret);
+    return true;
+  } catch {
+    return false;
+  }
 }

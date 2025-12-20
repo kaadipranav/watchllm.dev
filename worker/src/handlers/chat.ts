@@ -259,7 +259,7 @@ export async function handleChatCompletions(
     }
 
     // Make request to provider
-    const response = await provider.chatCompletion(request);
+    const response = await provider.chatCompletion(request, project.id);
     const latency = Date.now() - startTime;
 
     // Calculate cost
@@ -350,7 +350,7 @@ async function handleStreamingRequest(
   const { keyRecord, project } = validatedKey;
 
   try {
-    const stream = await providerClient.streamChatCompletion(request);
+    const stream = await providerClient.streamChatCompletion(request, project.id);
     const latency = Date.now() - startTime;
 
     // Log usage (estimated for streaming)

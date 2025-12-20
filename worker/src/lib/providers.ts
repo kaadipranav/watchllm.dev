@@ -40,13 +40,52 @@ export function getProviderForModel(model: string): Provider {
 
 /**
  * Get API key and provider info
- * Since we are ONLY using OpenRouter, we simplify this logic significantly.
+ * Priority: User's BYOK key > Global OpenRouter key
  */
-function getAPIKeyAndProvider(env: Env, provider: Provider, model: string): { apiKey: string | null; effectiveProvider: Provider } {
-  // Always return OpenRouter key and provider
+async function getAPIKeyAndProvider(
+  env: Env,
+  provider: Provider,
+  model: string,
+  projectId?: string
+): Promise<{ apiKey: string | null; effectiveProvider: Provider; isUserKey: boolean }> {
+  // If we have a project ID, check for user-provided keys (BYOK)
+  if (projectId) {
+    const { createSupabaseClient } = await import('./supabase');
+    const { decryptProviderKey } = await import('./crypto');
+
+    const supabase = createSupabaseClient(env);
+    const providerKeys = await supabase.getProviderKeys(projectId);
+
+    // Find the key for the requested provider
+    const userKey = providerKeys.find(k => k.provider === provider && k.is_active);
+
+    if (userKey && env.ENCRYPTION_MASTER_SECRET) {
+      try {
+        // Decrypt the user's key
+        const decryptedKey = await decryptProviderKey(
+          userKey.encrypted_key,
+          userKey.encryption_iv,
+          env.ENCRYPTION_MASTER_SECRET
+        );
+
+        console.log(`Using BYOK key for provider: ${provider}`);
+        return {
+          apiKey: decryptedKey,
+          effectiveProvider: provider, // Use the actual provider when user has their own key
+          isUserKey: true,
+        };
+      } catch (error) {
+        console.error(`Failed to decrypt user key for ${provider}:`, error);
+        // Fall through to global key
+      }
+    }
+  }
+
+  // Fallback to global OpenRouter key
   return {
     apiKey: env.OPENROUTER_API_KEY || (env.OPENAI_API_KEY?.startsWith('sk-or-') ? env.OPENAI_API_KEY : null),
-    effectiveProvider: 'openrouter'
+    effectiveProvider: 'openrouter',
+    isUserKey: false,
   };
 }
 
@@ -128,10 +167,11 @@ export class ProviderClient {
    * Make a chat completion request
    */
   async chatCompletion(
-    request: ChatCompletionRequest
+    request: ChatCompletionRequest,
+    projectId?: string
   ): Promise<ChatCompletionResponse> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
+    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -211,19 +251,19 @@ export class ProviderClient {
   /**
    * Make a legacy completion request (OpenAI only)
    */
-  async completion(request: CompletionRequest): Promise<CompletionResponse> {
+  async completion(request: CompletionRequest, projectId?: string): Promise<CompletionResponse> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
+    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
     }
 
-    if (effectiveProvider !== 'openai') {
+    if (effectiveProvider !== 'openai' && effectiveProvider !== 'openrouter') {
       throw new Error('Legacy completions only supported for OpenAI models');
     }
 
-    const endpoint = PROVIDER_ENDPOINTS.openai;
+    const endpoint = PROVIDER_ENDPOINTS[effectiveProvider];
     const response = await fetch(`${endpoint}/completions`, {
       method: 'POST',
       headers: {
@@ -245,9 +285,9 @@ export class ProviderClient {
   /**
    * Make an embeddings request (OpenAI only)
    */
-  async embeddings(request: EmbeddingsRequest): Promise<EmbeddingsResponse> {
+  async embeddings(request: EmbeddingsRequest, projectId?: string): Promise<EmbeddingsResponse> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
+    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -280,10 +320,11 @@ export class ProviderClient {
    * Stream a chat completion (returns ReadableStream)
    */
   async streamChatCompletion(
-    request: ChatCompletionRequest
+    request: ChatCompletionRequest,
+    projectId?: string
   ): Promise<ReadableStream> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = getAPIKeyAndProvider(this.env, provider, request.model);
+    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);

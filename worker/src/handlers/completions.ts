@@ -255,7 +255,7 @@ export async function handleCompletions(
     }
 
     // Make request to provider
-    const response = await provider.completion(request);
+    const response = await provider.completion(request, project.id);
     const latency = Date.now() - startTime;
 
     // Calculate cost

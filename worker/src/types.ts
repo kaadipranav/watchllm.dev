@@ -17,6 +17,7 @@ export interface Env {
   EMAIL_TRIGGER_SECRET?: string;
   SENTRY_DSN?: string;
   SEMANTIC_CACHE_THRESHOLD?: string;
+  ENCRYPTION_MASTER_SECRET: string; // Master secret for encrypting user provider keys
   DB?: D1Database; // D1 database for semantic caching
 }
 
@@ -39,6 +40,20 @@ export interface ProjectRecord {
   plan: 'free' | 'starter' | 'pro';
   created_at: string;
   updated_at: string;
+}
+
+// Provider key record from Supabase (BYOK)
+export interface ProviderKeyRecord {
+  id: string;
+  project_id: string;
+  provider: 'openai' | 'anthropic' | 'groq';
+  encrypted_key: string;
+  encryption_iv: string;
+  name: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  last_used_at: string | null;
 }
 
 // Plan limits configuration

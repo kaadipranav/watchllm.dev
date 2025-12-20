@@ -6,6 +6,7 @@ import type {
   Env,
   APIKeyRecord,
   ProjectRecord,
+  ProviderKeyRecord,
   UsageLogEntry,
   ValidatedAPIKey,
 } from '../types';
@@ -201,6 +202,27 @@ export class SupabaseClient {
       console.error('Error getting monthly usage:', error);
       return 0;
     }
+  }
+
+  /**
+   * Get provider keys for a project (BYOK)
+   * Returns all active provider keys for the project
+   */
+  async getProviderKeys(projectId: string): Promise<ProviderKeyRecord[]> {
+    const result = await this.query<ProviderKeyRecord[]>('provider_keys', {
+      select: '*',
+      filters: {
+        project_id: `eq.${projectId}`,
+        is_active: 'eq.true',
+      },
+    });
+
+    if (result.error || !result.data) {
+      return [];
+    }
+
+    // Return as array (even if single result)
+    return Array.isArray(result.data) ? result.data : [result.data];
   }
 
   /**

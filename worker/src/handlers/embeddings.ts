@@ -172,7 +172,7 @@ export async function handleEmbeddings(
     }
 
     // Make request to provider
-    const response = await provider.embeddings(request);
+    const response = await provider.embeddings(request, project.id);
     const latency = Date.now() - startTime;
 
     // Calculate cost
@@ -198,7 +198,7 @@ export async function handleEmbeddings(
       cached: false,
       latency_ms: latency,
     });
-    
+
     await maybeSendUsageAlert(env, supabase, redis, project);
 
     return new Response(JSON.stringify(response), {
