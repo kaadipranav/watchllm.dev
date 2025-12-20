@@ -12,7 +12,7 @@ import { logger } from 'hono/logger';
 import { captureException } from './lib/sentry';
 
 import type { Env, ValidatedAPIKey, APIError } from './types';
-import { securityHeaders, getCORSConfig, isOriginAllowed } from './lib/security';
+import { securityHeaders, getCORSConfig, isOriginAllowed, ipRateLimitMiddleware, checkProviderHealth } from './lib/security';
 import { checkRequestSize, MAX_REQUEST_SIZE_BYTES } from './lib/validation';
 import { isValidAPIKeyFormat, maskAPIKey as maskKey } from './lib/crypto';
 import { createRedisClient } from './lib/redis';
@@ -69,6 +69,24 @@ app.use('*', async (c, next) => {
 
 // Security headers middleware
 app.use('*', securityHeaders());
+
+// IP-based rate limiting middleware (defense in depth)
+// Runs before API key rate limiting to prevent coordinated attacks
+app.use('*', async (c, next) => {
+  // Skip for non-API paths
+  if (!c.req.path.startsWith('/v1/')) {
+    return next();
+  }
+
+  const redis = createRedisClient(c.env);
+  const blocked = await ipRateLimitMiddleware(c, redis);
+
+  if (blocked) {
+    return blocked;
+  }
+
+  return next();
+});
 
 // Simple request logging
 app.use('*', logger());
@@ -223,12 +241,13 @@ app.get('/health/detailed', async (c) => {
   const redis = createRedisClient(c.env);
   const supabase = createSupabaseClient(c.env);
 
-  const [redisOk, supabaseOk] = await Promise.all([
+  const [redisOk, supabaseOk, providerHealth] = await Promise.all([
     redis.ping(),
     supabase.healthCheck(),
+    checkProviderHealth(c.env),
   ]);
 
-  const allHealthy = redisOk && supabaseOk;
+  const allHealthy = redisOk && supabaseOk && providerHealth.healthy;
 
   return c.json(
     {
@@ -239,6 +258,12 @@ app.get('/health/detailed', async (c) => {
       dependencies: {
         redis: redisOk ? 'healthy' : 'unhealthy',
         supabase: supabaseOk ? 'healthy' : 'unhealthy',
+        openrouter: {
+          status: providerHealth.healthy ? 'healthy' : 'unhealthy',
+          latencyMs: providerHealth.latencyMs,
+          modelsAvailable: providerHealth.modelsAvailable,
+          error: providerHealth.error,
+        },
       },
     },
     allHealthy ? 200 : 503

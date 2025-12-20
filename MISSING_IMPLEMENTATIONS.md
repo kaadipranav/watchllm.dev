@@ -17,9 +17,9 @@
 - [x] **Dedicated Troubleshooting Guide**: ✅ IMPLEMENTED - Created `docs/TROUBLESHOOTING.md` covering auth, D1, caching, and more.
 - [x] **Code Examples for Go/Ruby**: ✅ IMPLEMENTED - Added official examples to `docs/API.md`.
 
-## � Security
-- [ ] **IP-Based Rate Limiting**: Implement a secondary rate limit layer based on client IP to prevent coordinated attacks on a single project's API key.
-- [ ] **Provider Health Check**: Add a check to `health/detailed` that pings the OpenRouter status/models endpoint to verify provider availability.
+## 🔒 Security
+- [x] **IP-Based Rate Limiting**: ✅ IMPLEMENTED - Added secondary rate limit layer in `security.ts` with burst protection, suspicious activity detection, and IP blocking.
+- [x] **Provider Health Check**: ✅ IMPLEMENTED - Added `checkProviderHealth` that pings OpenRouter's models endpoint, integrated into `/health/detailed`.
 
 ## ✨ Nice-to-Haves (Future)
 - [ ] **Project-Level Thresholds**: Allow users to configure the semantic similarity threshold (e.g., 0.90 for banking, 0.70 for casual chat) in their project settings.
