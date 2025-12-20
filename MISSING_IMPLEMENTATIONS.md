@@ -14,8 +14,8 @@
 - [x] **Cache Cost Savings**: ✅ IMPLEMENTED - Added `potential_cost_usd` column to track "Potential Cost" vs "Actual Cost" for calculating "$ Saved" metrics.
 
 ## 📚 Documentation
-- [ ] **Dedicated Troubleshooting Guide**: Create a specific section or file for common issues (e.g., header mismatches, D1 connection errors).
-- [ ] **Code Examples for Go/Ruby**: Expand the `API.md` to include more language examples beyond JS/Python/cURL.
+- [x] **Dedicated Troubleshooting Guide**: ✅ IMPLEMENTED - Created `docs/TROUBLESHOOTING.md` covering auth, D1, caching, and more.
+- [x] **Code Examples for Go/Ruby**: ✅ IMPLEMENTED - Added official examples to `docs/API.md`.
 
 ## � Security
 - [ ] **IP-Based Rate Limiting**: Implement a secondary rate limit layer based on client IP to prevent coordinated attacks on a single project's API key.
