@@ -153,6 +153,34 @@ export async function handleCompletions(
       );
     }
 
+    // Check monthly quota
+    const monthlyUsage = await supabase.getMonthlyUsage(project.id);
+    if (monthlyUsage >= planLimits.requestsPerMonth) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: `Monthly quota exceeded. Your ${project.plan} plan allows ${planLimits.requestsPerMonth.toLocaleString()} requests/month. Upgrade your plan to continue.`,
+            type: 'quota_exceeded',
+            code: 'monthly_quota_exceeded',
+            details: {
+              plan: project.plan,
+              limit: planLimits.requestsPerMonth,
+              used: monthlyUsage,
+            },
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Quota-Limit': planLimits.requestsPerMonth.toString(),
+            'X-Quota-Used': monthlyUsage.toString(),
+            'X-Quota-Remaining': Math.max(0, planLimits.requestsPerMonth - monthlyUsage).toString(),
+          },
+        }
+      );
+    }
+
     // Streaming not supported for legacy completions in this implementation
     if (request.stream) {
       return errorResponse('Streaming not supported for legacy completions', 400);

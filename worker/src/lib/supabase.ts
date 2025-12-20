@@ -168,21 +168,39 @@ export class SupabaseClient {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const result = await this.query<Array<{ count: number }>>('usage_logs', {
-      select: 'count',
-      filters: {
-        project_id: `eq.${projectId}`,
-        created_at: `gte.${startOfMonth.toISOString()}`,
-      },
-    });
+    try {
+      // Use HEAD request with count to get total without fetching all rows
+      const url = new URL(`${this.url}/rest/v1/usage_logs`);
+      url.searchParams.set('project_id', `eq.${projectId}`);
+      url.searchParams.set('created_at', `gte.${startOfMonth.toISOString()}`);
+      url.searchParams.set('select', 'id'); // Minimal select for count
 
-    if (result.error || !result.data) {
+      const response = await fetch(url.toString(), {
+        method: 'HEAD',
+        headers: {
+          apikey: this.key,
+          Authorization: `Bearer ${this.key}`,
+          'Prefer': 'count=exact',
+        },
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to get usage count: ${response.status}`);
+        return 0;
+      }
+
+      const countHeader = response.headers.get('Content-Range');
+      if (!countHeader) {
+        return 0;
+      }
+
+      // Content-Range format: "0-9/100" where 100 is the total count
+      const match = countHeader.match(/\/(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    } catch (error) {
+      console.error('Error getting monthly usage:', error);
       return 0;
     }
-
-    // Supabase returns count in a different way via RPC
-    // For now, we'll count the array length or use aggregation
-    return Array.isArray(result.data) ? result.data.length : 0;
   }
 
   /**
