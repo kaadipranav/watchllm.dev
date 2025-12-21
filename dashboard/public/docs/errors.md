@@ -2,7 +2,7 @@
 
 > Diagnosing runtime issues faster with reproducible checks and screenshots.
 
-![Error dashboard placeholder](https://via.placeholder.com/900x360.png?text=Error+Dashboard+Placeholder)
+
 
 | Code | HTTP Status | What Happens | How to Fix it |
 |---|---|---|---|
@@ -39,3 +39,5 @@ Sentry.captureMessage("Docs walk-through check", { level: "info" });
 - Use feature flags (Supabase `projects.flags`) to gate critical caching changes.
 
 Every incident emits traces in Datadog and Sentry, so you can replay the issue with the exact payload that failed.
+
+

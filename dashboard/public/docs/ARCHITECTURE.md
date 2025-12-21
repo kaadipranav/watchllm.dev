@@ -48,3 +48,5 @@ Dashboard
 - Rate limit configuration lives in Supabase for each plan.
 - Adding a new AI provider requires wiring a new client + provider map entry.
 - Monitoring and CI are enforced via GitHub Actions `.github/workflows/test.yml` to keep quality gates consistent.
+
+

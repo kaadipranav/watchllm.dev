@@ -2,7 +2,7 @@
 
 > Replace your existing AI calls with these snippets to start caching instantly.
 
-![Code examples](https://via.placeholder.com/900x360.png?text=Code+Examples+Placeholder)
+
 
 ## cURL
 
@@ -61,3 +61,5 @@ print(resp.choices[0].message.content)
 ```
 
 Use the same client libraries you already trust—just swap the base URL and API key, and WatchLLM handles semantic caching, rate limiting, and logging for you.
+
+
