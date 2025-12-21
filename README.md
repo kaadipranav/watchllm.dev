@@ -10,6 +10,12 @@ Reduce your OpenAI costs by 40-70% through semantic caching. Built for ChatGPT w
 - Caches semantically similar prompts at the edge to deliver `HIT` responses that cost $0.
 - Dashboard insights, alerts, and structured logs make cost optimization visible to the whole team.
 
+## ⚠️ Beta Phase
+WatchLLM is currently in an active Beta phase. 
+- **Testing is FREE**: All tiers are currently open for testing.
+- **Billing Disabled**: Real payments are disabled until the public launch.
+- **Reporting**: Please report any bugs via the [Dashboard Support](https://watchllm.dev/dashboard/support) or via Twitter.
+
 ## Quick Start
 
 ```bash

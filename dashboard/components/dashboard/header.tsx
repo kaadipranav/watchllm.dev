@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
+import { APP_CONFIG } from "@/lib/config";
+
 export function Header() {
   const router = useRouter();
   const supabase = createClient();
@@ -44,17 +46,22 @@ export function Header() {
       {/* Search */}
       <div className="relative w-80">
         <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
-        <Input 
-          placeholder="Search..." 
+        <Input
+          placeholder="Search..."
           className="h-8 pl-9 text-sm bg-white/[0.04] border-white/[0.06] text-white/80 placeholder:text-white/30 focus:border-white/[0.12] focus:bg-white/[0.06] transition-all duration-100"
         />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {APP_CONFIG.isBeta && (
+          <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-blue-400 ring-1 ring-inset ring-blue-500/20">
+            Beta
+          </span>
+        )}
         {/* Notifications */}
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
           className="relative h-8 w-8"
         >
@@ -65,8 +72,8 @@ export function Header() {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="relative h-8 w-8 rounded-full p-0"
             >
               <Avatar className="h-7 w-7 border border-white/[0.08]">
@@ -77,9 +84,9 @@ export function Header() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            className="w-52 bg-[hsl(220_13%_12%)] border-white/[0.08] shadow-xl" 
-            align="end" 
+          <DropdownMenuContent
+            className="w-52 bg-[hsl(220_13%_12%)] border-white/[0.08] shadow-xl"
+            align="end"
             sideOffset={8}
           >
             <DropdownMenuLabel className="font-normal py-2">
@@ -93,20 +100,20 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/[0.06]" />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => router.push("/dashboard/settings")}
               className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100"
             >
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => router.push("/dashboard/billing")}
               className="text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-100"
             >
               Billing
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-white/[0.06]" />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={handleSignOut}
               className="text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors duration-100"
             >

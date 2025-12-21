@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { APP_CONFIG } from "@/lib/config";
 
 const plans = [
   {
@@ -97,71 +98,89 @@ function PricingCard({
         "relative flex h-full flex-col rounded-2xl border p-6 transition-all duration-300",
         plan.popular
           ? "border-transparent bg-white/[0.04]"
-          : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.04]"
+          : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.04]",
+        APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && "overflow-hidden"
       )}>
-        {/* Gradient overlay on hover */}
-        <div className={cn(
-          "absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
-          plan.gradient
-        )} />
-        
-        {/* Top shine */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent rounded-t-2xl" />
-
-        {/* Popular badge */}
-        {plan.popular && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-white shadow-lg shadow-violet-500/25">
-              Most Popular
-            </span>
+        {/* Coming Soon Overlay */}
+        {APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[hsl(222_47%_4%_/_0.7)] backdrop-blur-[2px]">
+            <div className="rounded-full bg-violet-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-violet-400 ring-1 ring-inset ring-violet-500/30">
+              Coming Soon
+            </div>
+            <p className="mt-2 text-[0.6rem] text-premium-text-muted font-medium uppercase tracking-widest text-center px-4">
+              Available after testing
+            </p>
           </div>
         )}
 
-        {/* Plan info */}
-        <div className="relative space-y-1 pt-2">
-          <h3 className="text-lg font-semibold text-premium-text-primary">
-            {plan.name}
-          </h3>
-          <p className="text-sm text-premium-text-muted">
-            {plan.description}
-          </p>
-        </div>
+        <div className={cn(
+          "flex flex-col h-full",
+          APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && "filter blur-sm grayscale-[0.3] opacity-40 pointer-events-none select-none"
+        )}>
+          {/* Gradient overlay on hover */}
+          <div className={cn(
+            "absolute inset-0 rounded-2xl bg-gradient-to-br opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+            plan.gradient
+          )} />
 
-        {/* Price */}
-        <div className="relative mt-6">
-          <span className="text-5xl font-bold tabular-nums text-premium-text-primary">
-            {plan.price}
-          </span>
-          <span className="ml-1 text-sm text-premium-text-muted">
-            {plan.period}
-          </span>
-        </div>
+          {/* Top shine */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent rounded-t-2xl" />
 
-        {/* Features */}
-        <ul className="relative mt-6 flex-1 space-y-3">
-          {plan.features.map((feature) => (
-            <li key={feature} className="flex items-start gap-3 text-sm">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-              <span className="text-premium-text-secondary">{feature}</span>
-            </li>
-          ))}
-        </ul>
+          {/* Popular badge */}
+          {plan.popular && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="rounded-full bg-gradient-to-r from-violet-500 to-purple-500 px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-white shadow-lg shadow-violet-500/25">
+                Most Popular
+              </span>
+            </div>
+          )}
 
-        {/* CTA */}
-        <div className="relative mt-6">
-          <Button
-            asChild
-            className={cn(
-              "w-full h-11 rounded-full text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
-              plan.popular
-                ? "bg-white text-[hsl(222_47%_4%)] hover:bg-white/90"
-                : "border border-white/[0.12] bg-transparent text-premium-text-primary hover:border-white/[0.2] hover:bg-white/[0.05]"
-            )}
-          >
-            <Link href={plan.href}>
-              {plan.cta}
-            </Link>
-          </Button>
+          {/* Plan info */}
+          <div className="relative space-y-1 pt-2">
+            <h3 className="text-lg font-semibold text-premium-text-primary">
+              {plan.name}
+            </h3>
+            <p className="text-sm text-premium-text-muted">
+              {plan.description}
+            </p>
+          </div>
+
+          {/* Price */}
+          <div className="relative mt-6">
+            <span className="text-5xl font-bold tabular-nums text-premium-text-primary">
+              {plan.price}
+            </span>
+            <span className="ml-1 text-sm text-premium-text-muted">
+              {plan.period}
+            </span>
+          </div>
+
+          {/* Features */}
+          <ul className="relative mt-6 flex-1 space-y-3">
+            {plan.features.map((feature) => (
+              <li key={feature} className="flex items-start gap-3 text-sm">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                <span className="text-premium-text-secondary">{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <div className="relative mt-6">
+            <Button
+              asChild
+              className={cn(
+                "w-full h-11 rounded-full text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
+                plan.popular
+                  ? "bg-white text-[hsl(222_47%_4%)] hover:bg-white/90"
+                  : "border border-white/[0.12] bg-transparent text-premium-text-primary hover:border-white/[0.2] hover:bg-white/[0.05]"
+              )}
+            >
+              <Link href={plan.href}>
+                {plan.cta}
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </motion.div>

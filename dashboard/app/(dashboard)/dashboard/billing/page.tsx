@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Check, CreditCard, ArrowRight, Loader2 } from "lucide-react";
-import { formatCurrency, formatNumber, PLAN_LIMITS, type Plan } from "@/lib/utils";
+import { formatCurrency, formatNumber, PLAN_LIMITS, type Plan, cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useSearchParams } from "next/navigation";
+import { APP_CONFIG } from "@/lib/config";
 
 const plans: { name: Plan; description: string; features: string[] }[] = [
   {
@@ -215,68 +216,85 @@ function BillingContent() {
             return (
               <Card
                 key={plan.name}
-                className="relative card-premium border border-premium-border-subtle bg-premium-bg-elevated p-0 shadow-premium-sm transition hover:shadow-premium-md"
-              >
-                {isCurrentPlan && (
-                  <Badge className="absolute left-4 top-3 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">
-                    Current
-                  </Badge>
+                className={cn(
+                  "relative card-premium border border-premium-border-subtle bg-premium-bg-elevated p-0 shadow-premium-sm transition hover:shadow-premium-md overflow-hidden",
+                  APP_CONFIG.showPricingComingSoon && plan.name !== "free" && "border-blue-500/20"
                 )}
-                <CardHeader className="px-6 pt-6">
-                  <CardTitle className="capitalize text-lg text-premium-text-primary">{plan.name}</CardTitle>
-                  <CardDescription className="text-premium-text-secondary">
-                    {plan.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 px-6 pb-6">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-premium-text-primary">
-                      {formatCurrency(planLimit.price)}
-                    </span>
-                    {planLimit.price > 0 && (
-                      <span className="text-sm text-premium-text-muted">/month</span>
-                    )}
+              >
+                {/* Coming Soon Overlay */}
+                {APP_CONFIG.showPricingComingSoon && plan.name !== "free" && (
+                  <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[hsl(220_13%_8%_/_0.8)] backdrop-blur-[1px]">
+                    <div className="rounded-full bg-blue-500/10 px-4 py-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-blue-400 ring-1 ring-inset ring-blue-500/30">
+                      Coming Soon
+                    </div>
                   </div>
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm text-premium-text-secondary">
-                        <Check className="h-4 w-4 text-premium-success" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="px-6 pb-6 pt-0">
-                  {isCurrentPlan ? (
-                    <Button
-                      className="w-full rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-secondary"
-                      variant="outline"
-                      disabled
-                    >
-                      Current Plan
-                    </Button>
-                  ) : plan.name === "free" ? (
-                    <Button
-                      className="w-full rounded-premium-md bg-premium-bg-primary text-premium-text-secondary"
-                      variant="outline"
-                      onClick={handleManageSubscription}
-                      disabled={loading}
-                    >
-                      Downgrade
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full rounded-premium-md bg-premium-accent text-white shadow-glow-accent hover:bg-premium-accent/90"
-                      onClick={() => handleUpgrade(plan.name)}
-                      disabled={loading}
-                      data-sa-event="upgrade"
-                      data-sa-plan={plan.name}
-                    >
-                      Upgrade
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
+                )}
+
+                <div className={cn(
+                  "flex flex-col h-full",
+                  APP_CONFIG.showPricingComingSoon && plan.name !== "free" && "filter blur-sm opacity-50 grayscale pointer-events-none select-none"
+                )}>
+                  {isCurrentPlan && (
+                    <Badge className="absolute left-4 top-3 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">
+                      Current
+                    </Badge>
                   )}
-                </CardFooter>
+                  <CardHeader className="px-6 pt-6">
+                    <CardTitle className="capitalize text-lg text-premium-text-primary">{plan.name}</CardTitle>
+                    <CardDescription className="text-premium-text-secondary">
+                      {plan.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 px-6 pb-6">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-premium-text-primary">
+                        {formatCurrency(planLimit.price)}
+                      </span>
+                      {planLimit.price > 0 && (
+                        <span className="text-sm text-premium-text-muted">/month</span>
+                      )}
+                    </div>
+                    <ul className="space-y-3">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-2 text-sm text-premium-text-secondary">
+                          <Check className="h-4 w-4 text-premium-success" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                  <CardFooter className="px-6 pb-6 pt-0">
+                    {isCurrentPlan ? (
+                      <Button
+                        className="w-full rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-secondary"
+                        variant="outline"
+                        disabled
+                      >
+                        Current Plan
+                      </Button>
+                    ) : plan.name === "free" ? (
+                      <Button
+                        className="w-full rounded-premium-md bg-premium-bg-primary text-premium-text-secondary"
+                        variant="outline"
+                        onClick={handleManageSubscription}
+                        disabled={loading}
+                      >
+                        Downgrade
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full rounded-premium-md bg-premium-accent text-white shadow-glow-accent hover:bg-premium-accent/90"
+                        onClick={() => handleUpgrade(plan.name)}
+                        disabled={loading}
+                        data-sa-event="upgrade"
+                        data-sa-plan={plan.name}
+                      >
+                        Upgrade
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    )}
+                  </CardFooter>
+                </div>
               </Card>
             );
           })}

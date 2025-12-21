@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Zap, CheckCircle, ExternalLink } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { APP_CONFIG } from "@/lib/config";
 
 /**
  * Metric card with OpenAI-inspired glass effect
@@ -172,7 +173,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <Link 
+            <Link
               href="#features"
               className="group inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm font-medium text-premium-text-muted transition-all duration-200 hover:border-white/[0.2] hover:bg-white/[0.05]"
             >
@@ -192,7 +193,7 @@ export function Hero() {
             <h1 className="text-6xl font-extrabold leading-[1.05] tracking-tight text-premium-text-primary sm:text-7xl lg:text-8xl pr-8">
               <span className="whitespace-nowrap">Real-time LLM</span>
               <br />
-              <motion.span 
+              <motion.span
                 className="inline-block overflow-visible leading-[1.05] pb-1 bg-gradient-to-r from-purple-400 via-blue-400 via-cyan-400 via-teal-400 via-green-400 via-lime-400 via-yellow-400 via-orange-400 to-purple-400 bg-clip-text text-transparent"
                 animate={{
                   backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
@@ -334,7 +335,7 @@ export function Hero() {
                   {"  "}
                   <span className="text-premium-text-muted">baseURL</span>
                   {": "}
-                  <span className="text-amber-400">&quot;https://proxy.watchllm.dev/v1&quot;</span>
+                  <span className="text-amber-400">&quot;{APP_CONFIG.workerUrl}/v1&quot;</span>
                   {",\n"}
                   {"});"}
                 </code>

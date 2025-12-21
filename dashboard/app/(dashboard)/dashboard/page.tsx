@@ -16,6 +16,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { APP_CONFIG } from "@/lib/config";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -275,7 +276,7 @@ export default function DashboardPage() {
                   </code>
                   <ArrowRight className="h-3 w-3 text-white/30" />
                   <code className="px-2 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-white/70 font-mono">
-                    api.watchllm.com
+                    {APP_CONFIG.workerUrl.replace(/^https?:\/\//, "")}
                   </code>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { APP_CONFIG } from "@/lib/config";
 
 export function Footer() {
   const productLinks = [
@@ -10,10 +11,10 @@ export function Footer() {
   ];
 
   const companyLinks = [
-    { href: "/about", label: "About" },
-    { href: "/blog", label: "Blog" },
-    { href: "/careers", label: "Careers" },
-    { href: "mailto:support@watchllm.com", label: "Contact" },
+    // { href: "/about", label: "About" },
+    // { href: "/blog", label: "Blog" },
+    // { href: "/careers", label: "Careers" },
+    { href: `mailto:${APP_CONFIG.supportEmail}`, label: "Contact" },
   ];
 
   const legalLinks = [
@@ -23,9 +24,9 @@ export function Footer() {
   ];
 
   const socialLinks = [
-    { href: "https://twitter.com/watchllm", label: "Twitter" },
-    { href: "https://github.com/watchllm", label: "GitHub" },
-    { href: "https://discord.gg/watchllm", label: "Discord" },
+    { href: APP_CONFIG.socials.twitter, label: "Twitter" },
+    { href: APP_CONFIG.socials.github, label: "GitHub" },
+    { href: APP_CONFIG.socials.discord, label: "Discord" },
   ];
 
   return (
