@@ -32,9 +32,17 @@ If you have A/B testing enabled for a project, the analytics dashboard will show
 ### Anomaly Detection
 The system automatically flags unusual spikes in cost or request volume. This is often an indicator of bot abuse or infinite loops in your application logic.
 
+## Improving Your Hit Rates
+
+To maximize the value of WatchLLM, consider the following strategies:
+
+1. **Deterministic Prompts**: Use lower temperatures (e.g., 0-0.3) for extraction, summarization, or classification tasks.
+2. **System Prompt Stability**: Keep your system prompts consistent across versions unless necessary. Minor wording changes can trigger cache misses.
+3. **Threshold Tuning**: Adjust the `SEMANTIC_CACHE_THRESHOLD` in your project settings. A lower threshold (e.g., 0.85) is more permissive and increases hit rate but may result in less precise matches for creative tasks.
+4. **Prompt Normalization**: WatchLLM handles whitespace and casing, but using consistent JSON structures or bulleted lists helps the semantic engine find better matches.
+
 ## Exporting Data
 You can export your raw usage logs as CSV for custom analysis in Excel or Google Sheets. Navigate to the **Projects > [Project Name] > Logs** tab to generate an export.
 
 ## Setting Up Alerts
 Configure cost and usage alerts in your Project Settings to receive notifications via email or webhook when certain thresholds are reached.
-

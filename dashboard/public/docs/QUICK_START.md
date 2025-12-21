@@ -1,47 +1,39 @@
-# Quickstart in 2 Minutes
+# Quick Start
 
-> Clone, run, and cache your first request before the coffee cools down.
+Get started with WatchLLM semantic caching in under 2 minutes.
 
+## 1. Get your API Key
 
+Sign up for a WatchLLM account and create a new project. You'll receive an API key starting with `lgw_`.
 
-1. **Clone the repo and install**
+## 2. Update your Base URL
 
-```bash
-git clone https://github.com/kaadipranav/WATCHLLM.git
-cd WATCHLLM
-pnpm install
-```
+Replace your existing AI provider URL with the WatchLLM proxy URL.
 
-2. **Run the worker + dashboard locally**
+| Provider | Original URL | WatchLLM Proxy URL |
+|----------|--------------|-------------------|
+| OpenAI   | `api.openai.com/v1` | `proxy.watchllm.dev/v1` |
+| Anthropic| `api.anthropic.com/v1` | `proxy.watchllm.dev/v1` |
 
-```bash
-pnpm --filter @watchllm/worker dev        # Cloudflare Worker proxy (use :node fallback on Windows if needed)
-pnpm --filter @watchllm/dashboard dev     # Next.js dashboard (opens on http://localhost:3000)
-```
-
-3. **Create a project and API key**
--+- Sign up at `http://localhost:3000/signup` and complete the onboarding flow.
-- Copy the `lgw_proj_...` key (store it securely in your secrets manager).
-
-4. **Point your client to WatchLLM**
+## 3. Implementation
 
 ```javascript
-import OpenAI from "openai";
+import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: "lgw_proj_example",
-  baseURL: "http://localhost:8787/v1"
+  apiKey: 'lgw_proj_your_key',
+  baseURL: 'https://proxy.watchllm.dev/v1'
 });
 ```
 
-5. **Confirm caching works**
-- Send the same prompt twice.
-- Inspect the response headers: `x-WatchLLM-cached: HIT` and `x-WatchLLM-cost-usd: 0.00` on the second call.
+## 4. Verify Caching
 
-6. **Prep for production**
-- Copy `.env.example` and fill in Supabase/Stripe/Resend secrets (see `DEPLOYMENT.md`).
-- Deploy the worker via `pnpm --filter @watchllm/worker deploy` and dashboard via Vercel.
+Send a request, wait for the response, and send the exact same request again. 
 
-When you’re ready to go live, sync Supabase, Stripe, and Resend by following the [Deployment guide](../../DEPLOYMENT.md).
+Check the response headers:
+- `x-watchllm-cached: HIT` (on the second request)
+- `x-watchllm-cost-usd: 0.00` (on the second request)
+
+You are now saving money on every repeat request!
 
 

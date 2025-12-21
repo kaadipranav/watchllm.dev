@@ -1,31 +1,45 @@
 # Deployment Guide
 
-Deploying WatchLLM involves a Cloudflare Worker proxy and a Next.js dashboard. Both rely on `pnpm` and the GitHub workspace.
+Deploy your own instance of WatchLLM at the edge.
 
-## Worker (Cloudflare)
-1. Install Wrangler and login if you haven’t: `pnpm --filter @watchllm/worker install wrangler` then `wrangler login`.
-2. Configure `wrangler.toml` (copy the sample from the repo) with `name = "watchllm-proxy"`, `compatibility_date`, and bindings for `SUPABASE_*`, `UPSTASH_*`, `OPENAI_*`, and `SENTRY_DSN`.
-3. Publish dry run: `pnpm --filter @watchllm/worker build`.
-4. Deploy: `pnpm --filter @watchllm/worker deploy` or `wrangler deploy --env production`.
-5. Add a custom domain in the Cloudflare dashboard (e.g., `proxy.watchllm.dev`).
-6. Verify health: `curl https://proxy.watchllm.dev/health` returns `status: ok`.
+## Edge Worker (Cloudflare)
+
+The proxy runs on Cloudflare Workers for global low-latency execution.
+
+1. **Prerequisites**: Install Wrangler and login:
+   ```bash
+   pnpm --filter @watchllm/worker install wrangler
+   wrangler login
+   ```
+2. **Configuration**: Copy the `wrangler.toml` sample and define your bindings:
+   - `SUPABASE_URL` & `SUPABASE_ANON_KEY`
+   - `UPSTASH_REDIS_REST_URL` & `TOKEN`
+   - `OPENROUTER_API_KEY`
+   - `SENTRY_DSN` (Optional)
+3. **Deployment**: Run the deploy command:
+   ```bash
+   pnpm --filter @watchllm/worker deploy
+   ```
+4. **Custom Domain**: Assign a domain (e.g., `proxy.yourdomain.com`) in the Cloudflare dashboard under **Workers > Triggers**.
 
 ## Dashboard (Next.js)
-1. Copy `.env.example` to `.env.local` and fill in Supabase, Stripe, Resend, Sentry, and `NEXT_PUBLIC_APP_URL`.
-2. Build locally for sanity: `pnpm --filter @watchllm/dashboard build`.
-3. Deploy via Vercel: connect the repo, set Environment Variables, and run `pnpm --filter @watchllm/dashboard build`.
-4. Populate Stripe webhook secrets under `dashboard/app/api/webhooks/stripe/route.ts` and verify in Stripe dashboard.
-5. Enable Sentry DSN using `NEXT_PUBLIC_SENTRY_DSN` for release tracking.
-6. After deployment, test the sign-up flow and checkout (Stripe) before announcing.
 
-## Shared Services
-- **Supabase**: ensure `api_keys`, `projects`, `usage_logs` tables exist; use Supabase CLI or SQL editor.
-- **Upstash Redis**: configure `UPSTASH_REDIS_REST_URL`/`TOKEN` in both worker and test environments.
-- **Stripe**: add webhook for `/api/webhooks/stripe` with secret in both `dashboard/.env` and Stripe dashboard.
+The management console for projects, API keys, and analytics.
 
-## Continuous Deployment
-- GitHub Actions run tests via `.github/workflows/test.yml` on every PR.
-- Merge triggers `pnpm build` (worker + dashboard) from the root `build` script.
-- Tag releases with `vX.Y.Z` to track Sentry deployments.
+1. **Environment**: Sync your `.env.local` using `.env.example`.
+2. **Setup Services**:
+   - **Stripe**: Configure webhooks for `/api/webhooks/stripe`.
+   - **Resend**: Add your API key for transactional emails.
+3. **Vercel Deployment**: 
+   - Connect your repository.
+   - Set the Root Directory to `dashboard`.
+   - Add all environment variables.
+   - Deploy.
 
+## Database Optimization
 
+WatchLLM uses Supabase (PostgreSQL) for persistence.
+
+- **Migrations**: Ensure you've run the scripts in `/supabase/migrations`.
+- **RLS**: Row-Level Security is enabled by default to protect project data.
+- **Indexes**: Critical indexes are provided for `usage_logs` to ensure fast analytics.

@@ -1,52 +1,43 @@
-# Architecture Overview
+# Architecture
 
-WatchLLM is purpose-built for semantic caching at the edge. The architecture splits into three logical layers:
+WatchLLM is built for high-performance semantic caching and observability at the global edge.
 
-1. **Edge Proxy** (Cloudflare Worker + Hono)
-   - Receives `/v1/*` OpenAI-compatible requests.
-   - Validates keys via Supabase and rate limits using Upstash Redis counters.
-   - Normalizes prompts, hashes payloads, and checks the semantic cache (embedded hashing + temperature + tool definitions).
-   - For cache misses, forwards requests to OpenAI, Anthropic, or Groq, caches responses, and emits structured logs to Supabase and Datadog.
-   - Instrumented with Sentry for errors and per-request metrics (latency, cache status, provider).
+## System Overview
 
-2. **Dashboard** (Next.js 14 App Router)
-   - Supabase-powered auth and session management with server actions.
-   - Billing flows wired to Stripe checkout + portal + webhook handlers for lifecycle events.
-   - Real-time charts derived from usage logs, cache hit rates, and cost savings to help teams monitor ROI.
-   - Public docs exposed under `/docs` (see `dashboard/public/docs`).
-   - Simple Analytics for lightweight tracking and Sentry for error insight.
+The system is architected to minimize latency while providing robust governance over AI usage.
 
-3. **Data & Infrastructure**
-   - **Supabase** holds `projects`, `api_keys`, `usage_logs`, and forms the source of truth for plan limits.
-   - **Upstash Redis** stores cache entries with TTLs (1h for completions, 24h for embeddings) and rate-limiting counters.
-   - **Stripe** manages products (Free, Starter, Pro) and notifies the dashboard via secure webhooks.
-   - **Resend** sends transactional emails (payment failed, usage alerts) through the shared `@watchllm/emails` package.
+### 1. Edge Proxy (Cloudflare Workers)
+The core "brain" of WatchLLM. It handles all incoming API requests under `/v1/*`.
+- **Validation**: Performs millisecond-latency API key validation and plan lookup via Supabase.
+- **Normalization**: Standardizes prompt message arrays and parameters into a canonical hash.
+- **Semantic Engine**: Integrates with Pinecone or D1-backed vector storage to perform semantic similarity checks on prompt embeddings.
+- **Provider Gateway**: A multi-client router that handles authentication and response mapping for OpenAI, Anthropic, and Groq.
+- **Streaming**: Implements a passthrough transformer to inject headers and log usage without blocking the initial byte delivery.
 
-### Workflow diagram
-```
-Client App
-   ↓ Authorization: Bearer lgw_key
-WatchLLM Worker (Edge)
-   ├─ Validate API key (Supabase)
-   ├─ Check cache (Upstash Redis)
-   │    └─ Cache hit? Return immediately
-   └─ Provider call (OpenAI/Anthropic/Groq)
-         └─ Cache result + log usage
-Dashboard
-   ├─ Manage projects & keys (Supabase)
-   ├─ Billing (Stripe)
-   └─ Docs & analytics
-```
+### 2. Management Console (Next.js)
+The unified dashboard for controlling your AI infrastructure.
+- **Project Governance**: Set per-project rate limits, semantic thresholds, and provider configurations.
+- **Observability**: Real-time visualization of usage logs powered by a highly-indexed PostgreSQL backend.
+- **A/B Engine**: Configure traffic splits and variant rules for live model testing.
+- **Billing & Subscriptions**: Integrated with Stripe for automated seat and usage-based billing.
 
-### Key guarantees
-- **Zero code changes** for clients: swap `baseURL` + API key and benefit from caching.
-- **Global edge execution** ensures <100ms cold-starts.
-- **Structured logs** (`logEvent`) ready for Datadog ingestion.
-- **Observability** via Sentry (worker + dashboard) plus Simple Analytics for privacy-first metrics.
+### 3. Data & Infrastructure Layer
+- **Persistent Source of Truth (Supabase)**: Stores project configurations, API keys, and detailed `usage_logs`.
+- **Global In-Memory Cache (Upstash Redis)**: Provides sub-10ms response times for deterministic prompt hits and rate-limiting counters.
+- **Vector Storage (Cloudflare D1)**: Stores prompt embeddings and their associated response data for semantic retrieval.
 
-### Scaling notes
-- Rate limit configuration lives in Supabase for each plan.
-- Adding a new AI provider requires wiring a new client + provider map entry.
-- Monitoring and CI are enforced via GitHub Actions `.github/workflows/test.yml` to keep quality gates consistent.
+## Data Flow (Request Lifecycle)
 
+1. **Ingress**: Client sends an OpenAI-compatible request to the Proxy domain.
+2. **Auth & Limits**: Proxy validates the `lgw_` key and checks rate limits in Redis.
+3. **Cache Lookup**: 
+   - **Step A**: Exact match check in Redis.
+   - **Step B**: (If Step A misses) Semantic similarity check in Vector store.
+4. **Upstream Call**: (If Cache misses) Proxy forwards the request to the configured provider.
+5. **Egress**: Proxy returns the response with `X-WatchLLM-*` headers and asynchronously logs the event for analytics.
 
+## Performance & Scaling
+
+- **Cold Start Optimization**: The worker package is minimized to ensure sub-100ms cold starts across the Cloudflare global network.
+- **Asynchronous Logging**: Usage logging happens "out-of-band" so it never blocks the prompt response to the client.
+- **Plan-Based Routing**: Traffic is prioritized based on the project's subscription tier.

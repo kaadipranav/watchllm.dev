@@ -227,9 +227,11 @@ export async function handleChatCompletions(
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'X-Cache': 'HIT',
-          'X-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
-          'X-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Cache': 'HIT',
+          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Provider': getProviderForModel(request.model),
+          'X-WatchLLM-Tokens-Saved': cachedResponse.tokens.total.toString(),
         },
       });
     }
@@ -271,10 +273,12 @@ export async function handleChatCompletions(
           status: 200,
           headers: {
             'Content-Type': 'application/json',
-            'X-Cache': 'HIT-SEM',
-            'X-Cache-Similarity': semanticHit.similarity.toFixed(4),
-            'X-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
-            'X-Latency-Ms': latency.toString(),
+            'X-WatchLLM-Cache': 'HIT-SEMANTIC',
+            'X-WatchLLM-Cache-Similarity': semanticHit.similarity.toFixed(4),
+            'X-WatchLLM-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
+            'X-WatchLLM-Latency-Ms': latency.toString(),
+            'X-WatchLLM-Provider': getProviderForModel(request.model),
+            'X-WatchLLM-Tokens-Saved': semanticHit.entry.tokens.total.toString(),
           },
         });
       }
@@ -334,10 +338,10 @@ export async function handleChatCompletions(
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'X-Cache': 'MISS',
-        'X-Latency-Ms': latency.toString(),
-        'X-Cost-USD': cost.toFixed(6),
-        'X-WatchLLM-Debug': `emb:${!!textEmbedding},d1:${!!d1},redis:${!!redis}`,
+        'X-WatchLLM-Cache': 'MISS',
+        'X-WatchLLM-Latency-Ms': latency.toString(),
+        'X-WatchLLM-Cost-USD': cost.toFixed(6),
+        'X-WatchLLM-Provider': getProviderForModel(request.model),
       },
     });
   } catch (error) {

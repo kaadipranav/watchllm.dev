@@ -58,11 +58,11 @@ WatchLLM attaches metadata to every proxy response.
 
 | Header | Description |
 |--------|-------------|
-| `x-watchllm-cached` | `HIT` or `MISS` |
-| `x-watchllm-cost-usd` | Estimated cost of the request |
-| `x-watchllm-latency-ms` | Total processing time |
-| `x-watchllm-provider` | The upstream provider (openai, anthropic, groq) |
-| `x-watchllm-tokens-saved` | Number of tokens served from cache |
+| `X-WatchLLM-Cache` | `HIT`, `HIT-SEMANTIC`, or `MISS`. |
+| `X-WatchLLM-Cost-USD` | Estimated cost of the request. |
+| `X-WatchLLM-Latency-Ms` | Total processing time in milliseconds. |
+| `X-WatchLLM-Provider` | The upstream provider (openai, anthropic, groq). |
+| `X-WatchLLM-Tokens-Saved` | Number of tokens served from cache. |
 
 ## Common Error Codes
 

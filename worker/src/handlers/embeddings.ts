@@ -169,9 +169,11 @@ export async function handleEmbeddings(
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'X-Cache': 'HIT',
-          'X-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
-          'X-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Cache': 'HIT',
+          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Provider': getProviderForModel(request.model),
+          'X-WatchLLM-Tokens-Saved': cachedResponse.tokens.total.toString(),
         },
       });
     }
@@ -211,9 +213,10 @@ export async function handleEmbeddings(
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'X-Cache': 'MISS',
-        'X-Latency-Ms': latency.toString(),
-        'X-Cost-USD': cost.toFixed(6),
+        'X-WatchLLM-Cache': 'MISS',
+        'X-WatchLLM-Latency-Ms': latency.toString(),
+        'X-WatchLLM-Cost-USD': cost.toFixed(6),
+        'X-WatchLLM-Provider': getProviderForModel(request.model),
       },
     });
   } catch (error) {
