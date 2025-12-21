@@ -46,8 +46,14 @@ export function Footer() {
               <span className="text-lg font-bold">WatchLLM</span>
             </Link>
             <p className="text-sm text-premium-text-muted leading-relaxed max-w-xs">
-              Reduce AI API costs by 40-70% with intelligent semantic caching. Built for developers who care about performance.
+              Reduce AI API costs by 40-70% with intelligent semantic caching. Built with passion by Pranav.
             </p>
+            <div className="pt-4">
+              <p className="text-xs text-premium-text-muted mb-2 uppercase tracking-widest font-bold">Direct Support</p>
+              <p className="text-sm text-premium-text-secondary">
+                Have a bug or feature request? Email me directly at <a href="mailto:kiwi092020@gmail.com" className="text-violet-400 hover:text-violet-300 underline underline-offset-4">kiwi092020@gmail.com</a>. No support tier bullsh*t, just me helping you build.
+              </p>
+            </div>
           </div>
 
           <div>

@@ -211,8 +211,12 @@ export function Hero() {
               </motion.span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-premium-text-secondary sm:text-xl">
-              Unify AI costs across OpenAI, Claude, and Groq. Let semantic caching surface the savings that matter.
-              <span className="text-premium-text-muted"> Instantly cut costs by 70%.</span>
+              Unify AI costs across OpenAI, Claude, and Groq via OpenRouter. Let semantic caching surface the savings that matter.
+              <br />
+              <span className="text-premium-text-muted mt-2 block">Instantly cut costs by 70%.</span>
+            </p>
+            <p className="text-xs text-premium-text-muted/60 mt-1 max-w-md italic">
+              * Currently optimized for OpenRouter. Use your own keys for access to premium model providers.
             </p>
             <div className="text-sm font-medium text-premium-text-muted">
               <div className="typing-effect text-white/80">
@@ -242,7 +246,7 @@ export function Hero() {
               variant="outline"
               className="h-12 rounded-full border-white/[0.12] bg-transparent px-7 text-base font-semibold text-premium-text-primary transition-all duration-200 hover:border-white/[0.2] hover:bg-white/[0.05] active:scale-[0.98]"
             >
-              <Link href="mailto:sales@watchllm.com">
+              <Link href={`mailto:${APP_CONFIG.salesEmail}`}>
                 Contact sales
               </Link>
             </Button>

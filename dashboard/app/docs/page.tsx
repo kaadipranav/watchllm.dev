@@ -111,7 +111,7 @@ export default function DocsIndexPage() {
                 Save more.
               </h1>
               <p className="text-lg text-premium-text-secondary mb-8">
-                Welcome to the WatchLLM documentation. Here you'll find everything you need to implement semantic caching at the edge.
+                Welcome to the WatchLLM documentation. Here you&apos;ll find everything you need to implement semantic caching at the edge.
               </p>
 
               <div className="grid gap-4">

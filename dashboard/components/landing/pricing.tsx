@@ -215,22 +215,6 @@ export function Pricing() {
           ))}
         </div>
 
-        {/* Custom plan CTA */}
-        <motion.p
-          className="mt-12 text-center text-sm text-premium-text-muted"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          Need a custom plan?{" "}
-          <Link
-            href="mailto:support@watchllm.com"
-            className="text-violet-400 hover:text-violet-300 transition-colors duration-150 underline underline-offset-4"
-          >
-            Contact us
-          </Link>
-        </motion.p>
       </div>
     </section>
   );

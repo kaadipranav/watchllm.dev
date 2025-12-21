@@ -1,9 +1,10 @@
 "use client";
 
 import { BarChart3, Code, Database, Globe, Shield, Zap } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRef } from "react";
 
 type Feature = {
   title: string;
@@ -52,8 +53,8 @@ const features: Feature[] = [
     gradient: "from-rose-500/30 via-pink-500/20 to-transparent",
   },
   {
-    title: "Multi-Provider",
-    description: "Unified API for OpenAI, Anthropic, Groq, and custom local models. Switch providers without rewriting call logic.",
+    title: "Multi-Provider Access",
+    description: "Unified API for OpenAI, Anthropic, and Groq via OpenRouter. Switch providers without rewriting call logic.",
     icon: Database,
     badge: "Provider neutral",
     gradient: "from-indigo-500/30 via-blue-500/20 to-transparent",
@@ -61,66 +62,76 @@ const features: Feature[] = [
 ];
 
 export function Features() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <section id="features" className="relative isolate py-24 sm:py-32">
-      <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_35%)]" />
-      <div className="absolute inset-x-0 top-2/3 h-[400px] bg-gradient-to-b from-transparent via-white/5 to-white/20 blur-3xl" />
+    <section id="features" ref={containerRef} className="relative isolate py-24 sm:py-32 overflow-visible">
+      <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_35%)] pointer-events-none" />
+
+      {/* Removed the white haze gradient from here per user request */}
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mx-auto mb-8 max-w-2xl text-center"
-        >
-          <h2 className="text-sm font-semibold leading-7 text-premium-text-muted tracking-widest uppercase mb-2">Features</h2>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-premium-text-primary mb-2">
-            Everything you need for
-            <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent">AI availability</span>
-          </h1>
-          <p className="mt-2 text-base text-premium-text-secondary">
-            A curated suite of controls that keep your AI layer reliable, observable, and cost-efficient.
-          </p>
-        </motion.div>
+        <div className="flex flex-col lg:flex-row gap-16 lg:items-start">
 
-        {/* Scrollable features container with left scrollbar */}
-        <div className="relative flex gap-6 mt-12 h-[600px]">
-          {/* Left scrollbar track */}
-          <div className="w-1 bg-white/10 rounded-full flex-shrink-0" />
-          
-          {/* Scrollable content */}
-          <div 
-            className="flex-1 overflow-y-scroll pr-4 space-y-6 scroll-smooth"
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(168, 85, 247, 0.6) rgba(255, 255, 255, 0.05)',
-            }}
-          >
+          {/* Sticky Left Header */}
+          <div className="lg:sticky lg:top-32 lg:w-1/2 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-sm font-semibold leading-7 text-premium-text-muted tracking-widest uppercase mb-2">Features</h2>
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-premium-text-primary mb-6">
+                Everything you need for
+                <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent">AI availability</span>
+              </h1>
+              <p className="max-w-md text-lg text-premium-text-secondary leading-relaxed">
+                A curated suite of controls that keep your AI layer reliable, observable, and cost-efficient. Experience the power of semantic intelligence at the edge.
+              </p>
+
+              <div className="pt-8 flex flex-col gap-4">
+                <div className="flex items-center gap-3 text-sm text-premium-text-muted">
+                  <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                  <span>Scroll through to explore all capabilities</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Scrolling Features List - No internal scrollbar, uses page scroll */}
+          <div className="lg:w-1/2 space-y-6">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, x: -24 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.05 }}
-                className="group flex gap-5 px-8 py-7 bg-white/[0.05] hover:bg-white/[0.08] rounded-3xl border border-white/[0.1] hover:border-white/[0.15] transition-all duration-300 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.1)]"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className="group relative flex gap-6 p-8 bg-white/[0.03] hover:bg-white/[0.06] rounded-[32px] border border-white/[0.08] hover:border-white/[0.12] transition-all duration-500 backdrop-blur-sm shadow-premium-sm"
               >
-                <span className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/30 to-yellow-400/15 text-2xl text-purple-300 group-hover:text-purple-200 transition-colors">
-                  <feature.icon />
-                </span>
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-base font-bold text-premium-text-primary group-hover:text-white transition-colors">
+                {/* Accent Background */}
+                <div className={cn(
+                  "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 bg-gradient-to-br rounded-[32px]",
+                  feature.gradient
+                )} />
+
+                <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/[0.05] border border-white/[0.1] text-purple-300 group-hover:scale-110 group-hover:text-purple-200 transition-all duration-500">
+                  <feature.icon className="h-6 w-6" />
+                </div>
+
+                <div className="relative z-10 flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-premium-text-primary group-hover:text-white transition-colors">
                       {feature.title}
                     </h3>
                     {feature.badge && (
-                      <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-yellow-300 animate-pulse">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full ring-1 ring-inset ring-violet-500/20">
                         {feature.badge}
                       </span>
                     )}
                   </div>
-                  <p className="text-premium-text-secondary text-sm leading-relaxed group-hover:text-premium-text-secondary/90 transition-colors">
+                  <p className="text-premium-text-secondary leading-relaxed text-sm">
                     {feature.description}
                   </p>
                 </div>
@@ -129,75 +140,6 @@ export function Features() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          width: 8px;
-        }
-        div::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-        div::-webkit-scrollbar-thumb {
-          background: rgba(168, 85, 247, 0.6);
-          border-radius: 10px;
-          transition: background 0.2s;
-        }
-        div::-webkit-scrollbar-thumb:hover {
-          background: rgba(168, 85, 247, 0.8);
-        }
-      `}</style>
     </section>
   );
 }
-
-function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
-  const accentDelay = index * 0.08;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: accentDelay, duration: 0.55 }}
-      className={cn(
-        "group relative isolate overflow-hidden rounded-[32px] border border-white/[0.05] bg-white/[0.03] p-6 sm:p-8 shadow-[0_25px_80px_rgba(15,23,42,0.35)] backdrop-blur",
-        feature.size === "wide" ? "lg:col-span-2" : "",
-        feature.size === "tall" ? "xl:row-span-2" : ""
-      )}
-    >
-      <div
-        className={cn(
-          "absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-br",
-          feature.gradient
-        )}
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
-
-      <div className="relative z-10 flex flex-col gap-4">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-premium-text-muted">
-          <span>Capability</span>
-          {feature.badge ? (
-            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-0.5 text-[0.65rem] font-semibold text-premium-text-primary">
-              {feature.badge}
-            </span>
-          ) : (
-            <span className="h-0.5 w-10 rounded-full bg-white/20" />
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.06]">
-            <feature.icon className="h-5 w-5 text-premium-text-secondary" />
-          </div>
-          <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
-        </div>
-
-        <p className="text-sm leading-relaxed text-premium-text-muted">{feature.description}</p>
-      </div>
-
-      <div className="pointer-events-none absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full border border-white/10 blur-3xl opacity-30" />
-    </motion.div>
-  );
-}
-
