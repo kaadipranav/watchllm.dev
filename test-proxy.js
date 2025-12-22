@@ -10,7 +10,7 @@
 
 // TODO: Set your API key and proxy endpoint here:
 const API_KEY = process.env.WATCHLLM_API_KEY || "lgw_proj_736654d6fa5db55ced40e67bde8b1818cdb293e91d21420bd6a1eb6fe46c7185";
-const PROXY_URL = process.env.WATCHLLM_PROXY_URL || "https://watchllm-worker.kiwi092020.workers.dev/v1/chat/completions";
+const PROXY_URL = process.env.WATCHLLM_PROXY_URL || "https://proxy.watchllm.dev/v1/chat/completions";
 const fetchFn = typeof fetch === "function" ? fetch : require("undici").fetch;
 
 if (API_KEY.includes("<") || PROXY_URL.includes("your-proxy-endpoint")) {

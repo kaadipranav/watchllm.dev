@@ -5,12 +5,25 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const plan = searchParams.get("plan");
+  const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+
+  // Handle auth errors
+  if (error) {
+    console.error("Auth callback error:", error, errorDescription);
+    return NextResponse.redirect(`${origin}/login?error=${error}&error_description=${errorDescription || ""}`);
+  }
 
   if (code) {
-    const supabase = createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
-    if (!error) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error("Error exchanging code for session:", error);
+        return NextResponse.redirect(`${origin}/login?error=exchange_code_failed&error_description=${error.message}`);
+      }
+      
       const { data } = await supabase.auth.getUser();
       const user = data?.user;
 
@@ -27,9 +40,12 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.redirect(`${origin}${target}`);
+    } catch (error) {
+      console.error("Auth callback exception:", error);
+      return NextResponse.redirect(`${origin}/login?error=callback_exception&error_description=${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
+  return NextResponse.redirect(`${origin}/login?error=auth_callback_error&error_description=No authorization code received`);
 }

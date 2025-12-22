@@ -14,7 +14,19 @@ export function AuthCallbackHandler() {
 
     useEffect(() => {
         const code = searchParams.get("code");
+        const error = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
+        
+        // Handle auth errors
+        if (error) {
+            console.error("Auth callback error:", error, errorDescription);
+            router.replace(`/login?error=${error}&error_description=${errorDescription || ""}`);
+            return;
+        }
+        
+        // Handle auth success
         if (code) {
+            console.log("Auth callback: detected code, redirecting to /auth/callback");
             // Reconstruct the full callback URL with all existing parameters
             const params = new URLSearchParams(searchParams.toString());
             router.replace(`/auth/callback?${params.toString()}`);

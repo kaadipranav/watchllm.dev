@@ -19,7 +19,7 @@ ADD COLUMN IF NOT EXISTS ab_testing_config JSONB DEFAULT NULL;
 
 COMMENT ON COLUMN projects.semantic_cache_threshold IS 'Similarity threshold for semantic caching (0.50-0.99). Higher = stricter matching.';
 COMMENT ON COLUMN projects.ab_testing_enabled IS 'Whether A/B testing is enabled for this project';
-COMMENT ON COLUMN projects.ab_testing_config IS 'A/B testing configuration: { "variants": [{"model": "gpt-4", "weight": 50}, ...] }';
+COMMENT ON COLUMN projects.ab_testing_config IS 'A  /B testing configuration: { "variants": [{"model": "gpt-4", "weight": 50}, ...] }';
 
 -- ----------------------------------------------------------------------------
 -- Step 2: Create A/B testing results table
