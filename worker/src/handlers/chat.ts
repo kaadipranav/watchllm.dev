@@ -205,9 +205,9 @@ export async function handleChatCompletions(
       const latency = Date.now() - startTime;
 
       // Log usage (cached)
-      const provider = getProviderForModel(request.model);
+      const modelProvider = getProviderForModel(request.model);
       // Map openrouter to openai for Supabase constraint compatibility
-      const logProvider = provider === 'openrouter' ? 'openai' : provider;
+      const logProvider = modelProvider === 'openrouter' ? 'openai' : modelProvider;
       await supabase.logUsage({
         project_id: project.id,
         api_key_id: keyRecord.id,
@@ -254,6 +254,9 @@ export async function handleChatCompletions(
         console.log(`Semantic cache HIT! Similarity: ${semanticHit.similarity.toFixed(4)}, Threshold: ${semanticThreshold}`);
         const latency = Date.now() - startTime;
 
+        const modelProvider = getProviderForModel(request.model);
+        // Map openrouter to openai for Supabase constraint compatibility  
+        const logProvider = modelProvider === 'openrouter' ? 'openai' : modelProvider;
         await supabase.logUsage({
           project_id: project.id,
           api_key_id: keyRecord.id,
@@ -321,9 +324,9 @@ export async function handleChatCompletions(
     }
 
     // Log usage
-    const provider = getProviderForModel(request.model);
+    const modelProvider = getProviderForModel(request.model);
     // Map openrouter to openai for Supabase constraint compatibility
-    const logProvider = provider === 'openrouter' ? 'openai' : provider;
+    const logProvider = modelProvider === 'openrouter' ? 'openai' : modelProvider;
     await supabase.logUsage({
       project_id: project.id,
       api_key_id: keyRecord.id,
@@ -387,9 +390,9 @@ async function handleStreamingRequest(
     const latency = Date.now() - startTime;
 
     // Log usage (estimated for streaming)
-    const provider = getProviderForModel(request.model);
+    const modelProvider = getProviderForModel(request.model);
     // Map openrouter to openai for Supabase constraint compatibility
-    const logProvider = provider === 'openrouter' ? 'openai' : provider;
+    const logProvider = modelProvider === 'openrouter' ? 'openai' : modelProvider;
     await supabase.logUsage({
       project_id: project.id,
       api_key_id: keyRecord.id,

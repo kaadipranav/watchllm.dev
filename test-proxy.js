@@ -32,7 +32,7 @@ async function makeRequest(i) {
             },
             body: JSON.stringify({
                 model: "mistralai/mistral-7b-instruct:free", // Using a lighter, faster free model
-                messages: [{ role: "user", content: "What is 2+2?" }], // Identical message for deterministic cache test
+                messages: [{ role: "user", content: "What is 7+8?" }], // New message for fresh test
                 temperature: 0 // Deterministic for caching
             })
         });
