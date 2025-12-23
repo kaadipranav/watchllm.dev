@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
+import { ProviderSettings } from "@/components/dashboard/provider-settings";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -128,10 +129,11 @@ export default function SettingsPage() {
 
       <div className="space-y-6 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-4">
+          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-5">
             {[
               { value: "profile", label: "Profile" },
               { value: "security", label: "Security" },
+              { value: "providers", label: "AI Providers" },
               { value: "notifications", label: "Notifications" },
               { value: "danger", label: "Danger" },
             ].map((tab) => (
@@ -182,6 +184,17 @@ export default function SettingsPage() {
             >
               {loading ? "Saving..." : "Save Changes"}
             </Button>
+          </TabsContent>
+
+          <TabsContent value="providers" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">AI Providers</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Manage your own API keys</h2>
+              <p className="text-premium-text-secondary">
+                Use your own accounts with OpenAI, Anthropic, or Groq to bypass global limits and use your own rates.
+              </p>
+            </div>
+            <ProviderSettings />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">

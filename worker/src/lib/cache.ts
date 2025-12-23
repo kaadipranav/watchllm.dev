@@ -136,7 +136,8 @@ export class CacheManager {
     }
 
     const key = generateChatCacheKey(request);
-    return this.redis.get<CacheEntry<ChatCompletionResponse>>(key);
+    const result = await this.redis.get<CacheEntry<ChatCompletionResponse>>(key);
+    return result;
   }
 
   /**
@@ -163,7 +164,8 @@ export class CacheManager {
       },
     };
 
-    return this.redis.set(key, entry, this.ttl);
+    const result = await this.redis.set(key, entry, this.ttl);
+    return result;
   }
 
   /**

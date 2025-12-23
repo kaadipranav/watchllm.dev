@@ -26,10 +26,20 @@ database_id = "05064211-5526-4438-8c68-f29824da1d60"
 
 [env.production]
 name = "watchllm-worker-production"
-# Custom domain will be configured via Cloudflare Dashboard
-# routes = [
-#   { pattern = "proxy.watchllm.dev/*", zone_name = "watchllm.dev" }
-# ]
+# Custom domain for production
+routes = [
+  { pattern = "proxy.watchllm.dev/*", zone_name = "watchllm.dev" }
+]
+
+# Inherit vars from top level for production
+[env.production.vars]
+# Same as top level vars
+
+# Inherit D1 database for production
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "watchllm-cache"
+database_id = "05064211-5526-4438-8c68-f29824da1d60"
 
 # [env.development]
 # name = "watchllm-worker-dev"

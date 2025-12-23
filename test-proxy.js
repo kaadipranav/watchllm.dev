@@ -21,11 +21,10 @@ if (API_KEY.includes("<") || PROXY_URL.includes("your-proxy-endpoint")) {
 async function makeRequest(i) {
     console.log(`\n--- Request ${i} ---`);
     const start = Date.now();
-
-
+    
     try {
         const res = await fetchFn(PROXY_URL, {
-            method: "POST",
+            method: 'POST',
             headers: {
                 "Authorization": `Bearer ${API_KEY}`,
                 "Content-Type": "application/json",
@@ -33,7 +32,7 @@ async function makeRequest(i) {
             },
             body: JSON.stringify({
                 model: "mistralai/mistral-7b-instruct:free", // Using a lighter, faster free model
-                messages: [{ role: "user", content: "What is 2+2?" }],
+                messages: [{ role: "user", content: "What is 2+2?" }], // Identical message for deterministic cache test
                 temperature: 0 // Deterministic for caching
             })
         });
@@ -48,33 +47,19 @@ async function makeRequest(i) {
             return;
         }
 
-        const duration = Date.now() - start;
-
-        // Check headers for cache hit
-
-        const cacheStatus = res.headers.get("x-cache") || "MISS";
-        const requestId = res.headers.get("x-request-id");
-        const usage = res.headers.get("x-watchllm-usage");
-        const debug = res.headers.get("x-watchllm-debug");
-
-        console.log(`Status: ${res.status}`);
-        console.log(`Time: ${duration}ms`);
-        console.log(`Cache: ${cacheStatus} ${cacheStatus === 'HIT' ? '✅ (MONEY SAVED)' : '❌ (COST INCURRED)'}`);
-        if (usage) console.log(`Usage: ${usage}`);
-        if (requestId) console.log(`Request ID: ${requestId}`);
-        if (debug) console.log(`Debug: ${debug}`);
-
-        console.log("Full Response Body:", JSON.stringify(data, null, 2));
-
-        console.log(`Response: ${data.choices?.[0]?.message?.content}`);
-
-    } catch (e) {
-        if (e.cause && e.cause.code === 'ECONNREFUSED') {
-            console.error("Error: Connection refused. Is the proxy server running on " + PROXY_URL + "?");
-            console.error("Tip: Run 'pnpm run dev' in the worker directory to start the server.");
-        } else {
-            console.error("Error:", e.message);
-        }
+        const cacheHeader = res.headers.get('X-WatchLLM-Cache');
+        const latency = res.headers.get('X-WatchLLM-Latency-Ms');
+        const cost = res.headers.get('X-WatchLLM-Cost-USD');
+        
+        console.log(`Status: ${res.status} | Cache: ${cacheHeader || 'MISS'} | Time: ${Date.now() - start}ms`);
+        if (cost) console.log(`Cost: $${cost}`);
+        if (latency) console.log(`Latency: ${latency}ms`);
+        
+        const responseText = data.choices?.[0]?.message?.content || data.error?.message || 'No response';
+        console.log(`Response: ${responseText.substring(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+        
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
     }
 }
 
@@ -93,52 +78,19 @@ async function checkHealth() {
 }
 
 async function run() {
-
     await checkHealth();
 
-    console.log("\n--- Testing Semantic Caching ---");
+    console.log("\n--- Testing Deterministic Caching ---");
 
-    // Request 1: Fresh prompt
-    console.log("Sending: 'Calculate 5 times 3'");
-    await makeRequestCustom("Calculate 5 times 3");
+    // Request 1: First request (should be MISS)
+    console.log("Sending first request...");
+    await makeRequest(1);
 
-    await new Promise(r => setTimeout(r, 2000)); // Wait for D1 write
+    await new Promise(r => setTimeout(r, 1000)); // Wait 1 second
 
-    // Request 2: Semantically similar variant
-    console.log("\nSending: 'What is 5 multiplied by 3?'");
-    await makeRequestCustom("What is 5 multiplied by 3?");
-}
-
-async function makeRequestCustom(prompt) {
-    const start = Date.now();
-    try {
-        const res = await fetchFn(PROXY_URL, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${API_KEY}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "mistralai/mistral-7b-instruct:free",
-                messages: [
-                    { role: "system", content: `Current time: ${Date.now()}` }, // Bypass simple cache
-                    { role: "user", content: prompt }
-                ],
-                temperature: 0
-            })
-        });
-
-        const data = await res.json();
-        const duration = Date.now() - start;
-        const cacheStatus = res.headers.get("x-cache") || "MISS";
-        const debug = res.headers.get("x-watchllm-debug");
-
-        console.log(`Status: ${res.status} | Cache: ${cacheStatus} | Time: ${duration}ms`);
-        if (debug) console.log(`Debug: ${debug}`);
-        console.log(`Response: ${data.choices?.[0]?.message?.content}`);
-    } catch (e) {
-        console.error("Error:", e.message);
-    }
+    // Request 2: Identical request (should be HIT)
+    console.log("\nSending identical request...");
+    await makeRequest(2);
 }
 
 run();

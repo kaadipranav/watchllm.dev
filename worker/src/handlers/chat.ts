@@ -205,11 +205,14 @@ export async function handleChatCompletions(
       const latency = Date.now() - startTime;
 
       // Log usage (cached)
+      const provider = getProviderForModel(request.model);
+      // Map openrouter to openai for Supabase constraint compatibility
+      const logProvider = provider === 'openrouter' ? 'openai' : provider;
       await supabase.logUsage({
         project_id: project.id,
         api_key_id: keyRecord.id,
         model: cachedResponse.model,
-        provider: getProviderForModel(request.model),
+        provider: logProvider,
         tokens_input: cachedResponse.tokens.input,
         tokens_output: cachedResponse.tokens.output,
         tokens_total: cachedResponse.tokens.total,
@@ -218,7 +221,7 @@ export async function handleChatCompletions(
           cachedResponse.model,
           cachedResponse.tokens.input,
           cachedResponse.tokens.output
-        ), // What it would have cost
+        ),
         cached: true,
         latency_ms: latency,
       });
@@ -255,7 +258,7 @@ export async function handleChatCompletions(
           project_id: project.id,
           api_key_id: keyRecord.id,
           model: semanticHit.entry.model,
-          provider: getProviderForModel(request.model),
+          provider: logProvider,
           tokens_input: semanticHit.entry.tokens.input,
           tokens_output: semanticHit.entry.tokens.output,
           tokens_total: semanticHit.entry.tokens.total,
@@ -318,11 +321,14 @@ export async function handleChatCompletions(
     }
 
     // Log usage
+    const provider = getProviderForModel(request.model);
+    // Map openrouter to openai for Supabase constraint compatibility
+    const logProvider = provider === 'openrouter' ? 'openai' : provider;
     await supabase.logUsage({
       project_id: project.id,
       api_key_id: keyRecord.id,
       model: response.model,
-      provider: getProviderForModel(request.model),
+      provider: logProvider,
       tokens_input: response.usage.prompt_tokens,
       tokens_output: response.usage.completion_tokens,
       tokens_total: response.usage.total_tokens,
@@ -381,12 +387,14 @@ async function handleStreamingRequest(
     const latency = Date.now() - startTime;
 
     // Log usage (estimated for streaming)
-    // Note: Actual token count isn't available until stream completes
+    const provider = getProviderForModel(request.model);
+    // Map openrouter to openai for Supabase constraint compatibility
+    const logProvider = provider === 'openrouter' ? 'openai' : provider;
     await supabase.logUsage({
       project_id: project.id,
       api_key_id: keyRecord.id,
       model: request.model,
-      provider: getProviderForModel(request.model),
+      provider: logProvider,
       tokens_input: 0, // Will be updated if we track stream
       tokens_output: 0,
       tokens_total: 0,

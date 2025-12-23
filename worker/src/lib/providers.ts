@@ -11,8 +11,8 @@ import type {
   EmbeddingsRequest,
   EmbeddingsResponse,
   Provider,
-  MODEL_PROVIDER_MAP,
 } from '../types';
+import { MODEL_PROVIDER_MAP } from '../types';
 
 // Provider API endpoints
 const PROVIDER_ENDPOINTS = {
@@ -27,14 +27,28 @@ const PROVIDER_ENDPOINTS = {
  */
 /**
  * Get provider for a given model
- * Modified to default to 'openrouter' for everything since user isn't using direct keys
  */
 export function getProviderForModel(model: string): Provider {
-  // Always map to openrouter as the underlying provider, but we keep the "logical" provider
-  // types (openai/anthropic/groq) for compatibility with the rest of the app's logic
-  // which might expect certain provider strings for logging/pricing.
+  // Check the model map first
+  if (MODEL_PROVIDER_MAP[model]) {
+    return MODEL_PROVIDER_MAP[model];
+  }
 
-  // However, for the purpose of making requests, we want everything to verify against OpenRouter settings.
+  // Handle common prefixes if model not explicitly in map
+  if (model.startsWith('gpt-')) {
+    return 'openai';
+  }
+  if (model.startsWith('text-embedding-')) {
+    return 'openrouter'; // Route embeddings to OpenRouter by default
+  }
+  if (model.startsWith('claude-')) {
+    return 'anthropic';
+  }
+  if (model.startsWith('llama') || model.startsWith('mixtral') || model.startsWith('gemma')) {
+    return 'groq';
+  }
+
+  // Default to openrouter for unknown models
   return 'openrouter';
 }
 
