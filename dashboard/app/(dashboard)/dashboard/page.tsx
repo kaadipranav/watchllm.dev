@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
         const { data: logs } = await supabase
           .from("usage_logs")
-          .select("created_at, tokens, cached, cost, savings")
+          .select("created_at, tokens_total, cached, cost_usd, potential_cost_usd")
           .gte("created_at", sevenDaysAgo.toISOString());
 
         // Process Stats
@@ -79,8 +79,16 @@ export default function DashboardPage() {
         const totalRequests = validLogs.length;
         const cachedRequests = validLogs.filter(l => l.cached).length;
         const cacheHitRate = totalRequests > 0 ? (cachedRequests / totalRequests) * 100 : 0;
-        const totalSavings = validLogs.reduce((acc, l) => acc + (l.savings || 0), 0);
-        const apiCost = validLogs.reduce((acc, l) => acc + (l.cost || 0), 0);
+
+        // Calculate savings (potential cost - actual cost)
+        const totalSavings = validLogs.reduce((acc, l) => {
+          const potential = l.potential_cost_usd || 0;
+          const actual = l.cost_usd || 0;
+          const savings = potential - actual;
+          return acc + (savings > 0 ? savings : 0);
+        }, 0);
+
+        const apiCost = validLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
 
         setStats({
           totalRequests,
@@ -108,8 +116,12 @@ export default function DashboardPage() {
             const entry = chartMap.get(dayName);
             entry.requests += 1;
             if (log.cached) entry.cached += 1;
-            entry.cost += (log.cost || 0);
-            entry.savings += (log.savings || 0);
+            entry.cost += (log.cost_usd || 0);
+
+            const potential = log.potential_cost_usd || 0;
+            const actual = log.cost_usd || 0;
+            const savings = potential - actual;
+            entry.savings += (savings > 0 ? savings : 0);
           }
         });
 
