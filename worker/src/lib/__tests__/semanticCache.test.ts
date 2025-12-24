@@ -4,6 +4,7 @@ import {
   embedText,
   flattenChatText,
   flattenCompletionText,
+  normalizePrompt,
   type SemanticCacheEntry,
 } from '../semanticCache';
 
@@ -63,18 +64,187 @@ describe('SemanticCache', () => {
 });
 
 describe('flatten helpers', () => {
-  it('flattens chat messages', () => {
+  it('flattens chat messages with normalization', () => {
     const out = flattenChatText([
       { role: 'system', content: 'You are helpful' },
       { role: 'user', content: 'Hello' },
     ]);
+    // Note: normalization converts to lowercase
+    expect(out).toContain('system:you are helpful');
+    expect(out).toContain('user:hello');
+  });
+
+  it('flattens chat messages without normalization when disabled', () => {
+    const out = flattenChatText([
+      { role: 'system', content: 'You are helpful' },
+      { role: 'user', content: 'Hello' },
+    ], false);
     expect(out).toContain('system:You are helpful');
     expect(out).toContain('user:Hello');
   });
 
-  it('flattens array prompts', () => {
-    const out = flattenCompletionText(['a', 'b']);
+  it('flattens array prompts with normalization', () => {
+    const out = flattenCompletionText(['A', 'B']);
+    // Normalization collapses whitespace (including newlines) to single spaces
+    expect(out).toBe('a b');
+  });
+
+  it('flattens array prompts without normalization when disabled', () => {
+    const out = flattenCompletionText(['a', 'b'], false);
     expect(out).toBe('a\nb');
+  });
+});
+
+describe('normalizePrompt', () => {
+  describe('basic transformations', () => {
+    it('converts to lowercase', () => {
+      expect(normalizePrompt('HELLO WORLD')).toBe('hello world');
+    });
+
+    it('removes extra whitespace', () => {
+      expect(normalizePrompt('hello    world')).toBe('hello world');
+      expect(normalizePrompt('  hello  world  ')).toBe('hello world');
+    });
+
+    it('trims leading/trailing whitespace', () => {
+      expect(normalizePrompt('  hello  ')).toBe('hello');
+    });
+
+    it('handles empty strings', () => {
+      expect(normalizePrompt('')).toBe('');
+      expect(normalizePrompt('   ')).toBe('');
+    });
+
+    it('handles null/undefined gracefully', () => {
+      expect(normalizePrompt(null as any)).toBe('');
+      expect(normalizePrompt(undefined as any)).toBe('');
+    });
+  });
+
+  describe('question pattern normalization', () => {
+    it('normalizes "what\'s" to "what is"', () => {
+      expect(normalizePrompt("What's the weather?")).toBe('what is the weather?');
+    });
+
+    it('normalizes "whats" to "what is"', () => {
+      expect(normalizePrompt('whats the weather?')).toBe('what is the weather?');
+    });
+
+    it('normalizes "how do i" to "how to"', () => {
+      expect(normalizePrompt('How do I cook pasta?')).toBe('how to cook pasta?');
+    });
+
+    it('normalizes "how can i" to "how to"', () => {
+      expect(normalizePrompt('How can I learn Python?')).toBe('how to learn python?');
+    });
+
+    it('normalizes "how would i" to "how to"', () => {
+      expect(normalizePrompt('How would I do this?')).toBe('how to do this?');
+    });
+  });
+
+  describe('filler word removal', () => {
+    it('removes "please"', () => {
+      expect(normalizePrompt('Please help me')).toBe('help me');
+    });
+
+    it('removes "kindly"', () => {
+      expect(normalizePrompt('Kindly explain this')).toBe('explain this');
+    });
+
+    it('removes "could you"', () => {
+      expect(normalizePrompt('Could you help me?')).toBe('help me?');
+    });
+
+    it('removes "can you"', () => {
+      expect(normalizePrompt('Can you explain this?')).toBe('explain this?');
+    });
+
+    it('removes "tell me"', () => {
+      expect(normalizePrompt('Tell me about dogs')).toBe('about dogs');
+    });
+
+    it('removes multiple filler words', () => {
+      expect(normalizePrompt('Please kindly tell me about dogs')).toBe('about dogs');
+    });
+  });
+
+  describe('punctuation normalization', () => {
+    it('reduces multiple question marks to single', () => {
+      expect(normalizePrompt('What???')).toBe('what?');
+      expect(normalizePrompt('Really??????')).toBe('really?');
+    });
+
+    it('reduces multiple exclamation marks to single', () => {
+      expect(normalizePrompt('Wow!!!')).toBe('wow!');
+    });
+
+    it('reduces multiple periods to single', () => {
+      expect(normalizePrompt('Hmm...')).toBe('hmm.');
+    });
+  });
+
+  describe('math operator normalization', () => {
+    it('normalizes "times" to ×', () => {
+      expect(normalizePrompt('5 times 3')).toBe('5 × 3');
+    });
+
+    it('normalizes "multiplied by" to ×', () => {
+      expect(normalizePrompt('5 multiplied by 3')).toBe('5 × 3');
+    });
+
+    it('normalizes "x" before numbers to ×', () => {
+      expect(normalizePrompt('5 x 3')).toBe('5 × 3');
+    });
+
+    it('normalizes "*" before numbers to ×', () => {
+      expect(normalizePrompt('5 * 3')).toBe('5 × 3');
+    });
+
+    it('normalizes "divided by" to ÷', () => {
+      expect(normalizePrompt('10 divided by 2')).toBe('10 ÷ 2');
+    });
+
+    it('normalizes "/" before numbers to ÷', () => {
+      expect(normalizePrompt('10 / 2')).toBe('10 ÷ 2');
+    });
+
+    it('normalizes "plus" to +', () => {
+      expect(normalizePrompt('5 plus 3')).toBe('5 + 3');
+    });
+
+    it('normalizes "minus" to −', () => {
+      expect(normalizePrompt('5 minus 3')).toBe('5 − 3');
+    });
+  });
+
+  describe('complex examples', () => {
+    it('normalizes math question with filler words', () => {
+      const input = "Please tell me what is 5 times 3";
+      const expected = "what is 5 × 3";
+      expect(normalizePrompt(input)).toBe(expected);
+    });
+
+    it('normalizes question with multiple transformations', () => {
+      const input = "What's 5 times 3???";
+      const expected = "what is 5 × 3?";
+      expect(normalizePrompt(input)).toBe(expected);
+    });
+
+    it('produces same output for semantically similar inputs', () => {
+      const inputs = [
+        "What's 5 times 3?",
+        "what is 5 times 3?",
+        "whats 5 multiplied by 3",
+        "What is 5 x 3???",
+      ];
+      const normalized = inputs.map(normalizePrompt);
+      // All should normalize to similar forms
+      expect(normalized[0]).toBe('what is 5 × 3?');
+      expect(normalized[1]).toBe('what is 5 × 3?');
+      expect(normalized[2]).toBe('what is 5 × 3');
+      expect(normalized[3]).toBe('what is 5 × 3?');
+    });
   });
 });
 

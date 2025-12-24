@@ -26,6 +26,7 @@ import {
   SemanticCacheEntry,
   embedText,
   flattenCompletionText,
+  normalizePrompt,
 } from '../lib/semanticCache';
 
 /**

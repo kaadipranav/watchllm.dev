@@ -26,6 +26,7 @@ import {
   SemanticCacheEntry,
   embedText,
   flattenChatText,
+  normalizePrompt,
 } from '../lib/semanticCache';
 
 /**
