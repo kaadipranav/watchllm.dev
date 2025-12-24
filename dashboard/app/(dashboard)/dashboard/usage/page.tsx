@@ -75,8 +75,11 @@ export default function UsagePage() {
         const totalRequests = validLogs.length;
         const cachedCount = validLogs.filter((l: any) => l.cached).length;
         const cacheHitRate = totalRequests > 0 ? (cachedCount / totalRequests) * 100 : 0;
-        const totalCost = validLogs.reduce((sum: number, l: any) => sum + (l.cost || 0), 0);
-        const totalSavings = validLogs.reduce((sum: number, l: any) => sum + (l.savings || 0), 0);
+        const totalCost = validLogs.reduce((sum: number, l: any) => sum + (Number(l.cost_usd) || 0), 0);
+        const totalSavings = validLogs.reduce((sum: number, l: any) => {
+          const savings = (Number(l.potential_cost_usd) || 0) - (Number(l.cost_usd) || 0);
+          return sum + (savings > 0 ? savings : 0);
+        }, 0);
 
         setStats({
           totalRequests,
@@ -97,7 +100,7 @@ export default function UsagePage() {
           }
           const entry = modelMap.get(model);
           entry.requests++;
-          entry.cost += (log.cost || 0);
+          entry.cost += (Number(log.cost_usd) || 0);
           if (log.cached) entry.cached_count++;
         });
 
@@ -125,8 +128,13 @@ export default function UsagePage() {
             const entry = chartMap.get(key);
             entry.requests++;
             if (log.cached) entry.cached++;
-            entry.cost += (log.cost || 0);
-            entry.savings += (log.savings || 0);
+
+            const cost = Number(log.cost_usd) || 0;
+            const potentialCost = Number(log.potential_cost_usd) || 0;
+            const savings = potentialCost - cost;
+
+            entry.cost += cost;
+            entry.savings += (savings > 0 ? savings : 0);
           }
         });
 
@@ -191,7 +199,7 @@ export default function UsagePage() {
               <SelectValue placeholder="Time range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="24h">Last 24 hours</SelectItem> {/* Note used simplified int parse for now, can fix if needed, 24 -> 24 days effectively but labeled hours. Adjust logic if strictly hours needed */}
+              <SelectItem value="1">Last 24 hours</SelectItem>
               <SelectItem value="7">Last 7 days</SelectItem>
               <SelectItem value="30">Last 30 days</SelectItem>
               <SelectItem value="90">Last 90 days</SelectItem>
@@ -231,19 +239,19 @@ export default function UsagePage() {
             <TabsList className="grid grid-cols-3 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
               <TabsTrigger
                 value="requests"
-                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
               >
                 Requests
               </TabsTrigger>
               <TabsTrigger
                 value="cost"
-                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
               >
                 Cost
               </TabsTrigger>
               <TabsTrigger
                 value="savings"
-                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-premium-accent/80 data-[state=active]:to-premium-accent/30 data-[state=active]:text-white"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
               >
                 Savings
               </TabsTrigger>
@@ -337,10 +345,10 @@ export default function UsagePage() {
                         {log.cached ? "Cached" : "API"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_in)}</TableCell>
-                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_out)}</TableCell>
-                    <TableCell className="text-right text-premium-text-secondary">{formatCurrency(log.cost)}</TableCell>
-                    <TableCell className="text-right text-premium-text-secondary">{log.latency}ms</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_input)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatNumber(log.tokens_output)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{formatCurrency(log.cost_usd)}</TableCell>
+                    <TableCell className="text-right text-premium-text-secondary">{log.latency_ms}ms</TableCell>
                     <TableCell className="text-right text-premium-text-muted">
                       {formatRelativeTime(log.created_at)}
                     </TableCell>
