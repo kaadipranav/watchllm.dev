@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FolderOpen, Plus, RefreshCw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 interface Project {
   id: string;
@@ -32,7 +34,13 @@ interface APIKey {
   project_id: string;
 }
 
-export default function APIKeysPage() {
+import { ProviderSettings } from "@/components/dashboard/provider-settings";
+
+function APIKeysContent() {
+  const searchParams = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "active";
+
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [projects, setProjects] = useState<Project[]>([]);
   const [keys, setKeys] = useState<APIKey[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("all");
@@ -77,6 +85,14 @@ export default function APIKeysPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Sync tab with URL if it changes
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && (tab === "active" || tab === "revoked" || tab === "providers")) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const filteredKeys = selectedProject === "all"
     ? keys
@@ -133,7 +149,7 @@ export default function APIKeysPage() {
         </p>
         <h1 className="text-4xl font-bold text-premium-text-primary">API Keys</h1>
         <p className="text-lg text-premium-text-secondary">
-          Manage keys, monitor activity, and revoke what you don&apos;t need.
+          Manage WatchLLM keys and connect your own AI provider keys (BYOK).
         </p>
       </header>
 
@@ -183,19 +199,25 @@ export default function APIKeysPage() {
       </section>
 
       <section className="space-y-4">
-        <Tabs defaultValue="active">
-          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-1 text-sm">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 gap-2 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-1 text-sm">
             <TabsTrigger
               value="active"
               className="rounded-[10px] bg-transparent px-4 py-2 font-semibold text-premium-text-secondary transition duration-base data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
             >
-              Active <Badge className="ml-2 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">{activeKeys.length}</Badge>
+              Active Keys <Badge className="ml-2 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">{activeKeys.length}</Badge>
             </TabsTrigger>
             <TabsTrigger
               value="revoked"
               className="rounded-[10px] bg-transparent px-4 py-2 font-semibold text-premium-text-secondary transition duration-base data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
             >
               Revoked <Badge className="ml-2 rounded-full bg-premium-bg-primary px-2 py-0.5 text-xs text-premium-text-secondary">{revokedKeys.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger
+              value="providers"
+              className="rounded-[10px] bg-transparent px-4 py-2 font-semibold text-premium-text-secondary transition duration-base data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
+            >
+              Provider Keys (BYOK)
             </TabsTrigger>
           </TabsList>
 
@@ -234,8 +256,36 @@ export default function APIKeysPage() {
               <APIKeyList projectId={selectedProject} keys={revokedKeys} onRefresh={fetchData} />
             )}
           </TabsContent>
+
+          <TabsContent
+            value="providers"
+            className="space-y-6 rounded-premium-lg border border-premium-border-subtle bg-premium-bg-elevated p-6 shadow-premium-sm"
+          >
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-premium-text-primary">Connect Your Providers</h3>
+                <p className="text-sm text-premium-text-secondary">
+                  Provide your own API keys for OpenAI, Anthropic, or Groq to use your own quotas and rates.
+                </p>
+              </div>
+              <ProviderSettings />
+            </div>
+          </TabsContent>
         </Tabs>
       </section>
     </div>
+  );
+}
+
+export default function APIKeysPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-6 p-8">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    }>
+      <APIKeysContent />
+    </Suspense>
   );
 }

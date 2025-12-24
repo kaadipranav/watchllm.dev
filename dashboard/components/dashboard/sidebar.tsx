@@ -20,6 +20,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
   { name: "API Keys", href: "/dashboard/api-keys", icon: Key },
+  { name: "Provider Keys", href: "/dashboard/api-keys?tab=providers", icon: Key },
   { name: "Usage", href: "/dashboard/usage", icon: BarChart3 },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -60,9 +61,9 @@ export function Sidebar() {
       {/* Navigation - anchored active states */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || 
+          const isActive = pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          
+
           return (
             <Link
               key={item.name}
@@ -79,7 +80,7 @@ export function Sidebar() {
                 isActive ? "text-premium-accent" : "text-premium-text-muted group-hover:text-premium-text-secondary"
               )} />
               <span>{item.name}</span>
-              
+
               {/* Active indicator bar */}
               {isActive && (
                 <div className="ml-auto w-0.5 h-4 rounded-full bg-premium-accent" />
