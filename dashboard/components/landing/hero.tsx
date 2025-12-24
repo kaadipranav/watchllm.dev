@@ -346,27 +346,6 @@ export function Hero() {
               </pre>
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Cache hit", value: "68%" },
-                { label: "Regions", value: "240+" },
-                { label: "Avg RT", value: "47ms" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 text-center"
-                >
-                  <p className="text-[0.55rem] font-medium uppercase tracking-[0.15em] text-premium-text-muted">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-premium-text-primary">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-
             {/* Footer bar */}
             <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-premium-text-muted">
               <span>Global semantic cache</span>

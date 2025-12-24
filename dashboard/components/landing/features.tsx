@@ -48,15 +48,15 @@ const features: Feature[] = [
   },
   {
     title: "Enterprise Security",
-    description: "SOC 2 ready with end-to-end encryption, audit logs, and secrets rotation baked-in.",
+    description: "End-to-end encryption, audit logs, and secrets rotation baked-in.",
     icon: Shield,
     gradient: "from-rose-500/30 via-pink-500/20 to-transparent",
   },
   {
     title: "Multi-Provider Access",
-    description: "Unified API for OpenAI, Anthropic, and Groq via OpenRouter. Switch providers without rewriting call logic.",
+    description: "BYOK support for OpenAI, Anthropic, and Groq. Unified API via OpenRouter for additional providers.",
     icon: Database,
-    badge: "Provider neutral",
+    badge: "BYOK enabled",
     gradient: "from-indigo-500/30 via-blue-500/20 to-transparent",
   },
 ];

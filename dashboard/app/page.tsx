@@ -119,10 +119,8 @@ export default function HomePage() {
         </Suspense>
         <Hero />
         <Providers />
-        <LiveFlow />
         <HowItWorks />
         <Features />
-        <Testimonials />
         <Pricing />
         <FAQ />
       </main>

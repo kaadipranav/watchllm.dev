@@ -3,12 +3,10 @@
 import { motion } from "framer-motion";
 
 const providers = [
-  { name: "OpenAI", logo: "openai" },
-  { name: "Anthropic", logo: "anthropic" },
-  { name: "Groq", logo: "groq" },
-  { name: "Cohere", logo: "cohere" },
-  { name: "AWS", logo: "aws" },
-  { name: "Google", logo: "google" },
+  { name: "OpenAI", logo: "openai", byok: true },
+  { name: "Anthropic", logo: "anthropic", byok: true },
+  { name: "Groq", logo: "groq", byok: true },
+  { name: "OpenRouter", logo: "openrouter", byok: false },
 ];
 
 export function Providers() {
@@ -24,7 +22,7 @@ export function Providers() {
           className="text-center"
         >
           <p className="text-sm font-medium text-premium-text-muted">
-            Drop-in compatible with leading AI providers
+            Bring Your Own Key (BYOK) support for direct API access
           </p>
         </motion.div>
         
@@ -45,9 +43,16 @@ export function Providers() {
               transition={{ duration: 0.3, delay: index * 0.05 }}
               className="group flex items-center justify-center"
             >
-              <span className="text-xl font-semibold tracking-tight text-white/40 transition-all duration-300 group-hover:text-white/80">
-                {provider.name}
-              </span>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xl font-semibold tracking-tight text-white/40 transition-all duration-300 group-hover:text-white/80">
+                  {provider.name}
+                </span>
+                {provider.byok && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    BYOK
+                  </span>
+                )}
+              </div>
             </motion.div>
           ))}
         </motion.div>

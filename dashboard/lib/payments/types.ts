@@ -132,7 +132,7 @@ export const PLAN_CONFIGS: Record<Plan, PlanConfig> = {
   },
   pro: {
     name: "pro",
-    price: 99,
+    price: 49,
     interval: "month",
     features: [
       "1,000,000 requests/month",

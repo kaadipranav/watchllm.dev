@@ -17,6 +17,26 @@ All requests require a Bearer token in the Authorization header.
 Authorization: Bearer lgw_proj_...
 ```
 
+## Model Names
+
+### BYOK (Bring Your Own Key) Models
+When using your own API keys, use native provider model names:
+
+| Provider | Model Examples |
+|----------|----------------|
+| **OpenAI** | `gpt-4o`, `gpt-4-turbo`, `gpt-3.5-turbo` |
+| **Anthropic** | `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307` |
+| **Groq** | `llama2-70b-4096`, `mixtral-8x7b-32768`, `gemma-7b-it` |
+
+### OpenRouter Models
+For broader access without BYOK setup:
+
+| Provider | Model Examples |
+|----------|----------------|
+| **OpenAI** | `openai/gpt-4o`, `openai/gpt-3.5-turbo` |
+| **Anthropic** | `anthropic/claude-3-opus`, `anthropic/claude-3-sonnet` |
+| **Others** | `meta-llama/llama-2-70b`, `google/gemini-pro` |
+
 ## SDK Integration
 
 ### Node.js (OpenAI SDK)
@@ -29,10 +49,17 @@ const client = new OpenAI({
   baseURL: 'https://proxy.watchllm.dev/v1'
 });
 
+// BYOK models (requires provider keys configured)
 const response = await client.chat.completions.create({
-  model: 'gpt-4o',
+  model: 'gpt-4o', // Direct OpenAI
   messages: [{ role: 'user', content: 'Hello' }],
   temperature: 0.7
+});
+
+// OpenRouter models (works without BYOK)
+const orResponse = await client.chat.completions.create({
+  model: 'anthropic/claude-3-sonnet',
+  messages: [{ role: 'user', content: 'Hello' }]
 });
 ```
 
@@ -46,8 +73,15 @@ client = OpenAI(
     base_url="https://proxy.watchllm.dev/v1"
 )
 
+# BYOK models
 response = client.chat.completions.create(
-    model="gpt-4o",
+    model="claude-3-sonnet-20240229",  # Direct Anthropic
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# OpenRouter models
+or_response = client.chat.completions.create(
+    model="openai/gpt-4o",
     messages=[{"role": "user", "content": "Hello"}]
 )
 ```
@@ -64,6 +98,25 @@ WatchLLM attaches metadata to every proxy response.
 | `X-WatchLLM-Provider` | The upstream provider (openai, anthropic, groq). |
 | `X-WatchLLM-Tokens-Saved` | Number of tokens served from cache. |
 
+## Semantic Caching Configuration
+
+### Threshold Settings
+Adjust similarity thresholds in project settings:
+
+| Use Case | Threshold | Description |
+|----------|-----------|-------------|
+| **Strict** | `0.95` | Only near-identical prompts match |
+| **Balanced** | `0.85` | Good balance of hits vs accuracy |
+| **Permissive** | `0.75` | Catches more variations |
+
+### Prompt Normalization Features
+WatchLLM automatically normalizes:
+- **Case**: `HELLO` → `hello`
+- **Whitespace**: Multiple spaces → single space
+- **Punctuation**: Smart removal of filler punctuation
+- **Questions**: `What is X?` → `what is x`
+- **Math**: `2 + 2 = ?` → `2+2=?`
+
 ## Common Error Codes
 
 | Code | Status | Description |
@@ -72,16 +125,38 @@ WatchLLM attaches metadata to every proxy response.
 | `rate_limit_exceeded` | 429 | Your project or IP has reached its rate limit. |
 | `insufficient_quota` | 403 | Your monthly usage limit has been reached. |
 | `provider_error` | 502 | Upstream AI provider returned an error. |
+| `model_not_found` | 404 | Model name not recognized (check BYOK setup). |
 
-## CLI / cURL Example
+## CLI / cURL Examples
 
+### BYOK Request
 ```bash
 curl https://proxy.watchllm.dev/v1/chat/completions \
   -H "Authorization: Bearer lgw_proj_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello"}]
+    "messages": [{"role": "user", "content": "Hello from BYOK"}]
   }'
+```
+
+### OpenRouter Request
+```bash
+curl https://proxy.watchllm.dev/v1/chat/completions \
+  -H "Authorization: Bearer lgw_proj_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "anthropic/claude-3-sonnet",
+    "messages": [{"role": "user", content": "Hello from OpenRouter"}]
+  }'
+```
+
+### Check Cache Status
+```bash
+curl -I https://proxy.watchllm.dev/v1/chat/completions \
+  -H "Authorization: Bearer lgw_proj_..." \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "Test"}]}'
+# Look for X-WatchLLM-Cache header in response
 ```
 
