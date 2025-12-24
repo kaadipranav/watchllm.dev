@@ -58,7 +58,7 @@ export default function PrivacyPage() {
             </ul>
 
             <div>
-              <strong className="font-bold text-white">Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a>.
+              <strong className="font-bold text-white">Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a>.
             </div>
 
             <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">SUMMARY OF KEY POINTS</h2>
@@ -305,7 +305,7 @@ export default function PrivacyPage() {
             </div>
 
             <div><strong className="font-bold text-white"><em>In Short:</em></strong><em> We do not knowingly collect data from or market to children under 18 years of age or the equivalent age as specified by law in your jurisdiction.</em></div>
-            <div>We do not knowingly collect, solicit data from, or market to children under 18 years of age or the equivalent age as specified by law in your jurisdiction, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or the equivalent age as specified by law in your jurisdiction or that you are the parent or guardian of such a minor and consent to such minor dependent&apos;s use of the Services. If we learn that personal information from users less than 18 years of age or the equivalent age as specified by law in your jurisdiction has been collected, we will deactivate the account and take reasonable measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18 or the equivalent age as specified by law in your jurisdiction, please contact us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a>.</div>
+            <div>We do not knowingly collect, solicit data from, or market to children under 18 years of age or the equivalent age as specified by law in your jurisdiction, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or the equivalent age as specified by law in your jurisdiction or that you are the parent or guardian of such a minor and consent to such minor dependent&apos;s use of the Services. If we learn that personal information from users less than 18 years of age or the equivalent age as specified by law in your jurisdiction has been collected, we will deactivate the account and take reasonable measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18 or the equivalent age as specified by law in your jurisdiction, please contact us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a>.</div>
             <div id="privacyrights">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">12. WHAT ARE YOUR PRIVACY RIGHTS?</h2>
             </div>
@@ -327,7 +327,7 @@ export default function PrivacyPage() {
 
             <div>Upon your request to terminate your account, we will deactivate or delete your account and information from our active databases. However, we may retain some information in our files to prevent fraud, troubleshoot problems, assist with any investigations, enforce our legal terms and/or comply with applicable legal requirements.</div>
             <div><strong className="font-bold text-white"><u>Cookies and similar technologies:</u></strong> Most Web browsers are set to accept cookies by default. If you prefer, you can usually choose to set your browser to remove cookies and to reject cookies. If you choose to remove cookies or reject cookies, this could affect certain features or services of our Services. For further information, please see our Cookie Notice: watchllm.dev/cookies.</div>
-            <div>If you have questions or comments about your privacy rights, you may email us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a>.</div>
+            <div>If you have questions or comments about your privacy rights, you may email us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a>.</div>
             <div id="DNT">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">13. CONTROLS FOR DO-NOT-TRACK FEATURES</h2>
             </div>
@@ -470,7 +470,7 @@ export default function PrivacyPage() {
 
             <h3 className="text-white text-xl font-semibold mb-4 mt-6">How to Exercise Your Rights</h3>
 
-            <div>To exercise these rights, you can contact us by submitting a <a href="https://app.termly.io/dsar/28c10cd6-940d-46f4-8145-df2ea69ce8ae" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">data subject access request</a>, by emailing us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a>, email to <a href="mailto:caprillix49@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">caprillix49@gmail.com</a>, or by referring to the contact details at the bottom of this document.</div>
+            <div>To exercise these rights, you can contact us by submitting a <a href="https://app.termly.io/dsar/28c10cd6-940d-46f4-8145-df2ea69ce8ae" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">data subject access request</a>, by emailing us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a>, or by referring to the contact details at the bottom of this document.</div>
             <div>Under certain US state data protection laws, you can designate an authorized agent to make a request on your behalf. We may deny a request from an authorized agent that does not submit proof that they have been validly authorized to act on your behalf in accordance with applicable laws.</div>
             <h3 className="text-white text-xl font-semibold mb-4 mt-6">Request Verification</h3>
 
@@ -478,7 +478,7 @@ export default function PrivacyPage() {
             <div>If you submit the request through an authorized agent, we may need to collect additional information to verify your identity before processing your request and the agent will need to provide a written and signed permission from you to submit such request on your behalf.</div>
             <h3 className="text-white text-xl font-semibold mb-4 mt-6">Appeals</h3>
 
-            <div>Under certain US state data protection laws, if we decline to take action regarding your request, you may appeal our decision by emailing us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a>. We will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of the reasons for the decisions. If your appeal is denied, you may submit a complaint to your state attorney general.</div>
+            <div>Under certain US state data protection laws, if we decline to take action regarding your request, you may appeal our decision by emailing us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a>. We will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of the reasons for the decisions. If your appeal is denied, you may submit a complaint to your state attorney general.</div>
             <h3 className="text-white text-xl font-semibold mb-4 mt-6">California &quot;Shine The Light&quot; Law</h3>
 
             <div>California Civil Code Section 1798.83, also known as the &quot;Shine The Light&quot; law, permits our users who are California residents to request and obtain from us, once a year and free of charge, information about categories of personal information (if any) we disclosed to third parties for direct marketing purposes and the names and addresses of all third parties with which we shared personal information in the immediately preceding calendar year. If you are a California resident and would like to make such a request, please submit your request in writing to us by using the contact details provided in the section &quot;<button onClick={() => scrollToSection('contact')} className="text-blue-400 hover:text-blue-300 underline cursor-pointer">HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</button>&quot;</div>
@@ -492,11 +492,9 @@ export default function PrivacyPage() {
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">16. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</h2>
             </div>
 
-            <div>If you have questions or comments about this notice, you may email us at <a href="mailto:kiwi092020@gmail.com" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">kiwi092020@gmail.com</a> or contact us by post at:</div>
+            <div>If you have questions or comments about this notice, you may email us at <a href="mailto:support@watchllm.dev" className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">support@watchllm.dev</a> or contact us by post at:</div>
             <div>WatchLLM</div>
-            <div>Mantri Synergy, Padur, Tamil Nadu 603103, India</div>
-            <div>Padur, Tamil Nadu 603103</div>
-            <div>India</div>
+            <div>Tamil Nadu, India</div>
 
             <div id="request">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">17. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</h2>

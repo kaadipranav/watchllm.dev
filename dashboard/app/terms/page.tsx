@@ -51,9 +51,9 @@ export default function TermsPage() {
           <div className="prose prose-invert max-w-none space-y-4 text-premium-text-secondary leading-relaxed text-sm sm:text-base">
             <div id="agreement">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">AGREEMENT TO OUR LEGAL TERMS</h2>
-              <p>We are WatchLLM (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; &quot;our&quot;).</p>
+              <p>WatchLLM operates as a sole proprietorship (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; &quot;our&quot;).</p>
               <p>We operate the WatchLLM platform, as well as any other related products and services that refer or link to these legal terms (the &quot;Legal Terms&quot;) (collectively, the &quot;Services&quot;).</p>
-              <p>You can contact us by email at kiwi092020@gmail.com or by phone at (IN)9052276401.</p>
+              <p>You can contact us by email at support@watchllm.dev.</p>
               <p>These Legal Terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity (&quot;you&quot;), and WatchLLM, concerning your access to and use of the Services. You agree that by accessing the Services, you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE WITH ALL OF THESE LEGAL TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY.</p>
               <p>Supplemental terms and conditions or documents that may be posted on the Services from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Legal Terms at any time and for any reason. We will alert you about any changes by updating the &quot;Last updated&quot; date of these Legal Terms, and you waive any right to receive specific notice of each such change. It is your responsibility to periodically review these Legal Terms to stay informed of updates. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Legal Terms by your continued use of the Services after the date such revised Legal Terms are posted.</p>
               <p>We recommend that you print a copy of these Legal Terms for your records.</p>
@@ -103,7 +103,7 @@ export default function TermsPage() {
                 <li>download or print a copy of any portion of the Content to which you have properly gained access, solely for your personal, non-commercial use or internal business purpose.</li>
               </ul>
               <p>Except as set out in this section or elsewhere in our Legal Terms, no part of the Services and no Content or Marks may be copied, reproduced, aggregated, republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed, sold, licensed, or otherwise exploited for any commercial purpose whatsoever, without our express prior written permission.</p>
-              <p>If you wish to make any use of the Services, Content, or Marks other than as set out in this section or elsewhere in our Legal Terms, please address your request to: kiwi092020@gmail.com. If we ever grant you the permission to post, reproduce, or publicly display any part of our Services or Content, you must identify us as the owners or licensors of the Services, Content, or Marks and ensure that any copyright or proprietary notice appears or is visible on posting, reproducing, or displaying our Content.</p>
+              <p>If you wish to make any use of the Services, Content, or Marks other than as set out in this section or elsewhere in our Legal Terms, please address your request to: support@watchllm.dev. If we ever grant you the permission to post, reproduce, or publicly display any part of our Services or Content, you must identify us as the owners or licensors of the Services, Content, or Marks and ensure that any copyright or proprietary notice appears or is visible on posting, reproducing, or displaying our Content.</p>
               <p>We reserve all rights not expressly granted to you in and to the Services, Content, and Marks.</p>
               <p>Any breach of these Intellectual Property Rights will constitute a material breach of our Legal Terms and your right to use our Services will terminate immediately.</p>
 
@@ -211,16 +211,10 @@ export default function TermsPage() {
             <div id="dispute-resolution">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">11. DISPUTE RESOLUTION</h2>
               <h3 className="text-white text-xl font-semibold mb-4">Informal Negotiations</h3>
-              <p>To expedite resolution and control the cost of any dispute, controversy, or claim related to these Legal Terms (each a &quot;Dispute&quot; and collectively, the &quot;Disputes&quot;) brought by either you or us (individually, a &quot;Party&quot; and collectively, the &quot;Parties&quot;), the Parties agree to first attempt to negotiate any Dispute (except those Disputes expressly provided below) informally for at least thirty (30) days before initiating arbitration. Such informal negotiations commence upon written notice from one Party to the other Party.</p>
+              <p>To expedite resolution and control the cost of any dispute, we agree to first attempt to negotiate any dispute informally for at least thirty (30) days before taking legal action.</p>
 
-              <h3 className="text-white text-xl font-semibold mb-4">Binding Arbitration</h3>
-              <p>Any dispute arising out of or in connection with these Legal Terms, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by the International Commercial Arbitration Court under the European Arbitration Chamber (Belgium, Brussels, ICC Belgium) according to the Rules of this ICAC, which, as a result of referring to it, is considered as the part of this clause. The number of arbitrators shall be three (3). The seat, or legal place, or arbitration shall be Chennai, India. The language of the proceedings shall be English. The governing law of these Legal Terms shall be the substantive law of India.</p>
-
-              <h3 className="text-white text-xl font-semibold mb-4">Restrictions</h3>
-              <p>The Parties agree that any arbitration shall be limited to the Dispute between the Parties individually. To the full extent permitted by law, (a) no arbitration shall be joined with any other proceeding; (b) there is no right or authority for any Dispute to be arbitrated on a class-action basis or to utilize class action procedures; and (c) there is no right or authority for any Dispute to be brought in a purported representative capacity on behalf of the general public or any other persons.</p>
-
-              <h3 className="text-white text-xl font-semibold mb-4">Exceptions to Informal Negotiations and Arbitration</h3>
-              <p>The Parties agree that the following Disputes are not subject to the above provisions concerning informal negotiations binding arbitration: (a) any Disputes seeking to enforce or protect, or concerning the validity of, any of the intellectual property rights of a Party; (b) any Dispute related to, or arising from, allegations of theft, piracy, invasion of privacy, or unauthorized use; and (c) any claim for injunctive relief. If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling within that portion of this provision found to be illegal or unenforceable and such Dispute shall be decided by a court of competent jurisdiction within the courts listed for jurisdiction above, and the Parties agree to submit to the personal jurisdiction of that court.</p>
+              <h3 className="text-white text-xl font-semibold mb-4">Governing Law and Jurisdiction</h3>
+              <p>These Legal Terms are governed by the laws of India. Any disputes will be subject to the exclusive jurisdiction of the courts in Chennai, Tamil Nadu, India.</p>
             </div>
 
             <div id="corrections">
@@ -235,7 +229,7 @@ export default function TermsPage() {
 
             <div id="liability-limitations">
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">14. LIMITATIONS OF LIABILITY</h2>
-              <p>IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE OF THE SERVICES, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. NOTWITHSTANDING ANYTHING TO THE CONTRARY CONTAINED HEREIN, OUR LIABILITY TO YOU FOR ANY CAUSE WHATSOEVER AND REGARDLESS OF THE FORM OF THE ACTION, WILL AT ALL TIMES BE LIMITED TO THE LESSER OF THE AMOUNT PAID, IF ANY, BY YOU TO US DURING THE SIX (6) MONTH PERIOD PRIOR TO ANY CAUSE OF ACTION ARISING OR $500.00 USD. CERTAIN US STATE LAWS AND INTERNATIONAL LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MAY HAVE ADDITIONAL RIGHTS.</p>
+              <p>IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE OF THE SERVICES, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. NOTWITHSTANDING ANYTHING TO THE CONTRARY CONTAINED HEREIN, OUR LIABILITY TO YOU FOR ANY CAUSE WHATSOEVER AND REGARDLESS OF THE FORM OF THE ACTION, WILL AT ALL TIMES BE LIMITED TO THE LESSER OF THE AMOUNT PAID BY YOU TO US IN THE SIX (6) MONTHS PRIOR TO ANY CAUSE OF ACTION ARISING. CERTAIN US STATE LAWS AND INTERNATIONAL LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MAY HAVE ADDITIONAL RIGHTS.</p>
             </div>
 
             <div id="indemnification">
@@ -262,9 +256,8 @@ export default function TermsPage() {
               <h2 className="text-white text-2xl font-semibold mb-6 mt-10 border-b border-white/20 pb-2">19. CONTACT US</h2>
               <p>In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, please contact us at:</p>
               <p><strong>WatchLLM</strong></p>
-              <p>Padur, Tamil Nadu 603103, India</p>
-              <p>Phone: (IN)9052276401</p>
-              <p>Email: kiwi092020@gmail.com</p>
+              <p>Tamil Nadu, India</p>
+              <p>Email: support@watchllm.dev</p>
             </div>
           </div>
         </motion.div>

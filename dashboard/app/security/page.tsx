@@ -62,7 +62,7 @@ export default function SecurityPage() {
                     <div className="prose prose-invert max-w-none text-premium-text-secondary leading-relaxed text-sm">
                         <h2 className="text-white text-xl font-semibold mb-4">Vulnerability Disclosure</h2>
                         <p>
-                            If you believe you have found a security vulnerability in WatchLLM, please report it to us at <a href="mailto:security@watchllm.com" className="text-violet-400 hover:underline">security@watchllm.com</a>. We will respond as quickly as possible.
+                            If you believe you have found a security vulnerability in WatchLLM, please report it to us at <a href="mailto:support@watchllm.dev" className="text-violet-400 hover:underline">support@watchllm.dev</a>. We will respond as quickly as possible.
                         </p>
                     </div>
                 </motion.div>
