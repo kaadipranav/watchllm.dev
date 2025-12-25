@@ -53,15 +53,27 @@ export function getProviderForModel(model: string): Provider {
 }
 
 /**
+ * Models that are allowed to run on the global OpenRouter key (Free models)
+ */
+const FREE_MODELS = [
+  'mistralai/mistral-7b-instruct:free',
+  'google/gemma-7b-it:free',
+  'openchat/openchat-7b:free',
+  'huggingfaceh4/zephyr-7b-beta:free',
+];
+
+/**
  * Get API key and provider info
- * Priority: User's BYOK key > Global OpenRouter key
+ * Priority: User's BYOK key > Global OpenRouter key (Free models only)
  */
 async function getAPIKeyAndProvider(
   env: Env,
   provider: Provider,
   model: string,
   projectId?: string
-): Promise<{ apiKey: string | null; effectiveProvider: Provider; isUserKey: boolean }> {
+): Promise<{ apiKey: string | null; effectiveProvider: Provider; isUserKey: boolean; isFreeModel: boolean }> {
+  const isFreeModel = FREE_MODELS.includes(model) || model.endsWith(':free');
+
   // If we have a project ID, check for user-provided keys (BYOK)
   if (projectId) {
     const { createSupabaseClient } = await import('./supabase');
@@ -85,21 +97,29 @@ async function getAPIKeyAndProvider(
         console.log(`Using BYOK key for provider: ${provider}`);
         return {
           apiKey: decryptedKey,
-          effectiveProvider: provider, // Use the actual provider when user has their own key
+          effectiveProvider: provider,
           isUserKey: true,
+          isFreeModel
         };
       } catch (error) {
         console.error(`Failed to decrypt user key for ${provider}:`, error);
-        // Fall through to global key
       }
     }
   }
 
-  // Fallback to global OpenRouter key
+  // No user key found. Only allow if it's a free model.
+  if (!isFreeModel) {
+    throw new Error(
+      `BYOK Required: The model "${model}" is a paid model. To use paid models, please add your own API key in the WatchLLM dashboard (Bring Your Own Key). For free testing, use "mistralai/mistral-7b-instruct:free".`
+    );
+  }
+
+  // Fallback to global OpenRouter key for free models
   return {
     apiKey: env.OPENROUTER_API_KEY || (env.OPENAI_API_KEY?.startsWith('sk-or-') ? env.OPENAI_API_KEY : null),
     effectiveProvider: 'openrouter',
     isUserKey: false,
+    isFreeModel
   };
 }
 
@@ -183,9 +203,9 @@ export class ProviderClient {
   async chatCompletion(
     request: ChatCompletionRequest,
     projectId?: string
-  ): Promise<ChatCompletionResponse> {
+  ): Promise<ChatCompletionResponse & { _isFreeModel?: boolean }> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
+    const { apiKey, effectiveProvider, isFreeModel } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -193,27 +213,13 @@ export class ProviderClient {
 
     // Handle Anthropic separately due to different API format
     if (effectiveProvider === 'anthropic') {
-      return this.anthropicChatCompletion(request, apiKey);
+      const resp = await this.anthropicChatCompletion(request, apiKey);
+      return { ...resp, _isFreeModel: isFreeModel };
     }
 
     // OpenAI and Groq use the same format
-    // OpenAI and Groq use the same format (and OpenRouter too)
     const endpoint = PROVIDER_ENDPOINTS[effectiveProvider];
-
-    // Auto-map model names to OpenRouter format if needed
-    let model = request.model;
-    if (effectiveProvider === 'openrouter' && !model.includes('/')) {
-      if (model.startsWith('gpt-')) {
-        model = `openai/${model}`;
-      } else if (model.startsWith('claude-')) {
-        model = `anthropic/${model}`;
-      } else if (model.startsWith('llama') || model.startsWith('mixtral')) {
-        // Best guess for others, though risky. Better to stick to obvious ones.
-        // Groq models on OR usually utilize their full names.
-      }
-    }
-
-    const payload = { ...request, model };
+    const payload = { ...request };
 
     const response = await fetch(`${endpoint}/chat/completions`, {
       method: 'POST',
@@ -265,9 +271,9 @@ export class ProviderClient {
   /**
    * Make a legacy completion request (OpenAI only)
    */
-  async completion(request: CompletionRequest, projectId?: string): Promise<CompletionResponse> {
+  async completion(request: CompletionRequest, projectId?: string): Promise<CompletionResponse & { _isFreeModel?: boolean }> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
+    const { apiKey, effectiveProvider, isFreeModel } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -293,15 +299,16 @@ export class ProviderClient {
       throw new Error(`OpenAI error: ${response.status} - ${error}`);
     }
 
-    return response.json() as Promise<CompletionResponse>;
+    const data = await response.json() as CompletionResponse;
+    return { ...data, _isFreeModel: isFreeModel };
   }
 
   /**
    * Make an embeddings request (OpenAI only)
    */
-  async embeddings(request: EmbeddingsRequest, projectId?: string): Promise<EmbeddingsResponse> {
+  async embeddings(request: EmbeddingsRequest, projectId?: string): Promise<EmbeddingsResponse & { _isFreeModel?: boolean }> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
+    const { apiKey, effectiveProvider, isFreeModel } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -327,7 +334,8 @@ export class ProviderClient {
       throw new Error(`OpenAI error: ${response.status} - ${error}`);
     }
 
-    return response.json() as Promise<EmbeddingsResponse>;
+    const data = await response.json() as EmbeddingsResponse;
+    return { ...data, _isFreeModel: isFreeModel };
   }
 
   /**
@@ -336,9 +344,9 @@ export class ProviderClient {
   async streamChatCompletion(
     request: ChatCompletionRequest,
     projectId?: string
-  ): Promise<ReadableStream> {
+  ): Promise<{ stream: ReadableStream; isFreeModel: boolean }> {
     const provider = getProviderForModel(request.model);
-    const { apiKey, effectiveProvider } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
+    const { apiKey, effectiveProvider, isFreeModel } = await getAPIKeyAndProvider(this.env, provider, request.model, projectId);
 
     if (!apiKey) {
       throw new Error(`API key not configured for provider: ${provider}`);
@@ -368,7 +376,7 @@ export class ProviderClient {
       throw new Error('No response body for streaming');
     }
 
-    return response.body;
+    return { stream: response.body, isFreeModel };
   }
 }
 

@@ -198,7 +198,40 @@ export async function handleChatCompletions(
 
     // Handle streaming requests
     if (request.stream) {
-      return handleStreamingRequest(c, request, validatedKey, provider, supabase, startTime);
+      const { stream, isFreeModel } = await provider.streamChatCompletion(request, project.id);
+      const latency = Date.now() - startTime;
+
+      // Log usage (estimated for streaming)
+      const logProvider = getProviderForModel(request.model);
+      await supabase.logUsage({
+        project_id: project.id,
+        api_key_id: keyRecord.id,
+        model: request.model,
+        provider: logProvider,
+        tokens_input: 0,
+        tokens_output: 0,
+        tokens_total: 0,
+        cost_usd: 0,
+        potential_cost_usd: 0,
+        cached: false,
+        latency_ms: latency,
+      });
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'X-WatchLLM-Latency-Ms': latency.toString(),
+      };
+
+      if (isFreeModel) {
+        headers['X-WatchLLM-Fallback-Notice'] = 'Using shared Free model infrastructure. Bring your own key for paid models.';
+      }
+
+      return new Response(stream, {
+        status: 200,
+        headers,
+      });
     }
 
     // Check deterministic cache first
@@ -298,29 +331,30 @@ export async function handleChatCompletions(
     // Make request to provider
     const response = await provider.chatCompletion(request, project.id);
     const latency = Date.now() - startTime;
+    const { _isFreeModel, ...cleanResponse } = response;
 
     // Calculate cost
     const cost = calculateCost(
-      response.model,
-      response.usage.prompt_tokens,
-      response.usage.completion_tokens
+      cleanResponse.model,
+      cleanResponse.usage.prompt_tokens,
+      cleanResponse.usage.completion_tokens
     );
 
     // Cache the response
-    await cache.setChatCompletion(request, response);
+    await cache.setChatCompletion(request, cleanResponse);
 
     // Store semantic entry if embedding is available
     if (textEmbedding) {
       console.log(`Saving semantic cache entry for: "${textForEmbedding.substring(0, 50)}..."`);
       const entry: SemanticCacheEntry<ChatCompletionResponse> = {
         embedding: textEmbedding,
-        data: response,
+        data: cleanResponse,
         model: cacheKeyModel, // Store model:hash
         timestamp: Date.now(),
         tokens: {
-          input: response.usage.prompt_tokens,
-          output: response.usage.completion_tokens,
-          total: response.usage.total_tokens,
+          input: cleanResponse.usage.prompt_tokens,
+          output: cleanResponse.usage.completion_tokens,
+          total: cleanResponse.usage.total_tokens,
         },
         text: textForEmbedding,
       };
@@ -333,11 +367,11 @@ export async function handleChatCompletions(
     await supabase.logUsage({
       project_id: project.id,
       api_key_id: keyRecord.id,
-      model: response.model,
+      model: cleanResponse.model,
       provider: logProvider,
-      tokens_input: response.usage.prompt_tokens,
-      tokens_output: response.usage.completion_tokens,
-      tokens_total: response.usage.total_tokens,
+      tokens_input: cleanResponse.usage.prompt_tokens,
+      tokens_output: cleanResponse.usage.completion_tokens,
+      tokens_total: cleanResponse.usage.total_tokens,
       cost_usd: cost,
       potential_cost_usd: cost, // Same as actual cost for non-cached
       cached: false,
@@ -346,15 +380,21 @@ export async function handleChatCompletions(
 
     await maybeSendUsageAlert(env, supabase, redis, project);
 
-    return new Response(JSON.stringify(response), {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-WatchLLM-Cache': 'MISS',
+      'X-WatchLLM-Latency-Ms': latency.toString(),
+      'X-WatchLLM-Cost-USD': cost.toFixed(6),
+      'X-WatchLLM-Provider': getProviderForModel(request.model),
+    };
+
+    if (_isFreeModel) {
+      headers['X-WatchLLM-Fallback-Notice'] = 'Using shared Free model infrastructure. Bring your own key for paid models.';
+    }
+
+    return new Response(JSON.stringify(cleanResponse), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-WatchLLM-Cache': 'MISS',
-        'X-WatchLLM-Latency-Ms': latency.toString(),
-        'X-WatchLLM-Cost-USD': cost.toFixed(6),
-        'X-WatchLLM-Provider': getProviderForModel(request.model),
-      },
+      headers,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -362,7 +402,7 @@ export async function handleChatCompletions(
 
     // Determine appropriate status code
     let status = 500;
-    if (errorMessage.includes('Invalid') || errorMessage.includes('required')) {
+    if (errorMessage.includes('Invalid') || errorMessage.includes('required') || errorMessage.includes('BYOK Required')) {
       status = 400;
     } else if (errorMessage.includes('API key not configured')) {
       status = 503;
@@ -372,54 +412,5 @@ export async function handleChatCompletions(
       errorMessage, // Unmasked for debugging
       status
     );
-  }
-}
-
-/**
- * Handle streaming chat completion request
- */
-async function handleStreamingRequest(
-  c: AppContext,
-  request: ChatCompletionRequest,
-  validatedKey: ValidatedAPIKey,
-  providerClient: ReturnType<typeof getSharedProviderClient>,
-  supabase: ReturnType<typeof createSupabaseClient>,
-  startTime: number
-): Promise<Response> {
-  const { keyRecord, project } = validatedKey;
-
-  try {
-    const stream = await providerClient.streamChatCompletion(request, project.id);
-    const latency = Date.now() - startTime;
-
-    // Log usage (estimated for streaming)
-    const logProvider = getProviderForModel(request.model);
-    await supabase.logUsage({
-      project_id: project.id,
-      api_key_id: keyRecord.id,
-      model: request.model,
-      provider: logProvider,
-      tokens_input: 0, // Will be updated if we track stream
-      tokens_output: 0,
-      tokens_total: 0,
-      cost_usd: 0,
-      potential_cost_usd: 0,
-      cached: false,
-      latency_ms: latency,
-    });
-
-    return new Response(stream, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-        'X-Latency-Ms': latency.toString(),
-      },
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Streaming error';
-    console.error('Streaming error:', errorMessage);
-    return errorResponse('Failed to stream response', 500);
   }
 }
