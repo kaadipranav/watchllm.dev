@@ -195,7 +195,7 @@ export default function UsagePage() {
             </p>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[160px] rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-sm font-semibold text-premium-text-primary">
+            <SelectTrigger className="w-[160px] rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-sm font-semibold text-premium-text-primary">
               <SelectValue placeholder="Time range" />
             </SelectTrigger>
             <SelectContent>
@@ -230,16 +230,16 @@ export default function UsagePage() {
               <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Traffic</p>
               <h2 className="text-lg font-semibold text-premium-text-primary">Trends</h2>
             </div>
-            <div className="flex items-center gap-2 rounded-premium-md bg-premium-bg-secondary px-3 py-1 text-xs font-semibold text-premium-text-muted">
+            <div className="flex items-center gap-2 rounded-premium-md bg-premium-bg-elevated border border-premium-border-subtle px-3 py-1 text-xs font-semibold text-premium-text-muted">
               <span className="h-2 w-2 rounded-full bg-premium-accent" />
               Live
             </div>
           </div>
           <Tabs defaultValue="requests" className="space-y-4">
-            <TabsList className="grid grid-cols-3 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
+            <TabsList className="grid grid-cols-3 gap-2 rounded-premium-md bg-premium-bg-primary border border-premium-border-subtle p-1 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted">
               <TabsTrigger
                 value="requests"
-                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-premium-bg-primary data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
+                className="rounded-premium-md border border-transparent bg-transparent px-2 py-2 data-[state=active]:bg-white/10 data-[state=active]:text-premium-text-primary data-[state=active]:shadow-glow-accent"
               >
                 Requests
               </TabsTrigger>

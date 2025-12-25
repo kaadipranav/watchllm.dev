@@ -129,7 +129,7 @@ export default function SettingsPage() {
 
       <div className="space-y-6 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-secondary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-5">
+          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-primary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-5 border border-premium-border-subtle">
             {[
               { value: "profile", label: "Profile" },
               { value: "security", label: "Security" },
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                   type="email"
                   value={email}
                   disabled
-                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-muted"
+                  className="rounded-premium-md border border-premium-border-subtle bg-white/5 text-premium-text-muted"
                 />
                 <p className="text-xs text-premium-text-muted">
                   Contact support to change the email address associated with your account.
@@ -211,7 +211,7 @@ export default function SettingsPage() {
                   type="password"
                   minLength={8}
                   required
-                  className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary focus:border-premium-accent/70 focus:ring-0"
+                  className="rounded-premium-md border border-premium-border-subtle bg-white/5 text-premium-text-primary focus:border-premium-accent/70 focus:ring-0"
                 />
               </div>
               <div className="space-y-2">
@@ -234,7 +234,7 @@ export default function SettingsPage() {
               </Button>
             </form>
 
-            <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-secondary p-6 shadow-premium-sm">
+            <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-lg font-semibold text-premium-text-primary">Two-Factor Authentication</p>

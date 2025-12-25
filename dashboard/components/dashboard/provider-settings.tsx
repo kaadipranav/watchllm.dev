@@ -30,10 +30,30 @@ interface ProviderKeyState {
 }
 
 const PROVIDERS = [
-    { id: "openai", name: "OpenAI", placeholder: "sk-..." },
-    { id: "anthropic", name: "Anthropic", placeholder: "sk-ant-..." },
-    { id: "groq", name: "Groq", placeholder: "gsk_..." },
-    { id: "openrouter", name: "OpenRouter", placeholder: "sk-or-v1-..." },
+    {
+        id: "openai",
+        name: "OpenAI",
+        placeholder: "sk-...",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg"
+    },
+    {
+        id: "anthropic",
+        name: "Anthropic",
+        placeholder: "sk-ant-...",
+        logo: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/anthropic.svg"
+    },
+    {
+        id: "groq",
+        name: "Groq",
+        placeholder: "gsk_...",
+        logo: "https://groq.com/wp-content/uploads/2024/03/favicon.png"
+    },
+    {
+        id: "openrouter",
+        name: "OpenRouter",
+        placeholder: "sk-or-v1-...",
+        logo: "https://openrouter.ai/static/favicon/favicon-32x32.png"
+    },
 ] as const;
 
 export function ProviderSettings() {
@@ -148,7 +168,7 @@ export function ProviderSettings() {
 
     if (projects.length === 0) {
         return (
-            <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-secondary p-8 text-center">
+            <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center text-white">
                 <AlertCircle className="mx-auto h-12 w-12 text-premium-text-muted mb-4" />
                 <h3 className="text-lg font-semibold text-premium-text-primary">No Projects Found</h3>
                 <p className="text-premium-text-secondary mt-2">
@@ -167,7 +187,7 @@ export function ProviderSettings() {
                 <div className="flex flex-col gap-2">
                     <Label htmlFor="project-select" className="text-xs uppercase tracking-widest text-premium-text-muted">Target Project</Label>
                     <Select value={selectedProject} onValueChange={setSelectedProject}>
-                        <SelectTrigger className="w-full md:w-[300px] border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary">
+                        <SelectTrigger className="w-full md:w-[300px] border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary">
                             <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                         <SelectContent className="bg-premium-bg-primary border-premium-border-subtle text-premium-text-primary">
@@ -192,8 +212,12 @@ export function ProviderSettings() {
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-premium-bg-secondary border border-premium-border-subtle">
-                                        <Key className="h-5 w-5 text-premium-accent" />
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-premium-bg-primary border border-premium-border-subtle overflow-hidden p-1.5">
+                                        <img
+                                            src={p.logo}
+                                            alt={p.name}
+                                            className={`h-full w-full object-contain ${p.id === 'openai' || p.id === 'anthropic' ? 'invert opacity-90' : ''}`}
+                                        />
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-semibold text-premium-text-primary">{p.name}</h3>
@@ -234,12 +258,12 @@ export function ProviderSettings() {
                                             ...prev,
                                             [p.id]: { ...prev[p.id], key: e.target.value }
                                         }))}
-                                        className="flex-1 border-premium-border-subtle bg-premium-bg-secondary text-premium-text-primary focus:border-premium-accent/60"
+                                        className="flex-1 border-white/5 bg-white/5 text-premium-text-primary focus:border-premium-accent/60 h-10 placeholder:text-premium-text-muted/50"
                                     />
                                     <Button
                                         onClick={() => handleSave(p.id)}
                                         disabled={!state.key || state.loading}
-                                        className="bg-premium-accent hover:bg-premium-accent/90 shadow-glow-accent min-w-[100px]"
+                                        className="bg-premium-accent hover:bg-premium-accent/90 shadow-glow-accent min-w-[100px] h-10"
                                     >
                                         {state.loading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
