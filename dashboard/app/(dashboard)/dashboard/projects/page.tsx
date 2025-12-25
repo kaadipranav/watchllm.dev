@@ -36,11 +36,43 @@ export default function ProjectsPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
+  const [projectLimit, setProjectLimit] = useState(3); // Default to Free tier limit
+  const [userPlan, setUserPlan] = useState("free");
   const supabase = createClient();
   const { toast } = useToast();
 
   const fetchProjects = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 1. Fetch Subscription to determine plan & limits
+      // This query assumes a standard Supabase Stripe schema structure
+      const { data: subscription } = await supabase
+        .from("subscriptions")
+        .select("*, prices(*, products(*))")
+        .eq("user_id", user.id)
+        .in("status", ["trialing", "active"])
+        .single();
+
+      let limit = 3;
+      let planName = "free";
+
+      if (subscription?.prices?.products?.name) {
+        const name = subscription.prices.products.name.toLowerCase();
+        if (name.includes("pro")) {
+          limit = Infinity;
+          planName = "pro";
+        } else if (name.includes("starter")) {
+          limit = 10;
+          planName = "starter";
+        }
+      }
+
+      setProjectLimit(limit);
+      setUserPlan(planName);
+
+      // 2. Fetch Projects
       const { data, error } = await supabase
         .from("projects")
         .select("*")
@@ -48,13 +80,11 @@ export default function ProjectsPage() {
 
       if (error) throw error;
 
-      if (error) throw error;
-
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      // Fetch API key counts and stats for each project
+      // 3. Fetch Usage Stats
       const projectsWithStats = await Promise.all((data || []).map(async (p) => {
         const { count: apiKeysCount } = await supabase
           .from("api_keys")
@@ -78,7 +108,7 @@ export default function ProjectsPage() {
           ? ((cachedRequests || 0) / monthlyRequests) * 100
           : 0;
 
-        const limits: Record<string, number> = {
+        const requestLimits: Record<string, number> = {
           free: 50000,
           starter: 250000,
           pro: 1000000
@@ -88,7 +118,7 @@ export default function ProjectsPage() {
           ...p,
           api_keys_count: apiKeysCount || 0,
           requests_this_month: monthlyRequests || 0,
-          requests_limit: limits[p.plan] || 50000,
+          requests_limit: requestLimits[planName] || 50000, // Use the user's plan for request limits too
           cache_hit_rate: hitRate,
         };
       }));
@@ -107,6 +137,14 @@ export default function ProjectsPage() {
 
   const handleCreate = async () => {
     if (!newProjectName.trim()) return;
+    if (projects.length >= projectLimit) {
+      toast({
+        title: "Limit Reached",
+        description: `You have reached the limit of ${projectLimit} projects for the ${userPlan} plan. Upgrade to create more.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setCreating(true);
     try {
@@ -121,6 +159,7 @@ export default function ProjectsPage() {
         name: newProjectName,
         slug,
         user_id: user?.id,
+        plan: userPlan, // Store the user's plan on the project (optional redundancy but useful)
       });
 
       if (error) throw error;
@@ -169,20 +208,28 @@ export default function ProjectsPage() {
     p.slug.toLowerCase().includes(search.toLowerCase())
   );
 
+  const isLimitReached = projects.length >= projectLimit;
+
   return (
     <div className="space-y-10 p-8">
       <header className="space-y-1">
         <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Projects</p>
         <div className="flex items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-bold text-premium-text-primary">Projects</h1>
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-4xl font-bold text-premium-text-primary">Projects</h1>
+              <span className="text-lg text-premium-text-secondary font-medium">
+                {projects.length} / {projectLimit === Infinity ? "∞" : projectLimit}
+              </span>
+            </div>
             <p className="text-lg text-premium-text-secondary">
               Manage your projects and their API keys
             </p>
           </div>
           <Button
             onClick={() => setShowDialog(true)}
-            className="flex items-center gap-2 rounded-premium-md bg-premium-accent px-5 py-2 text-sm font-semibold text-white shadow-glow-accent transition duration-base hover:bg-premium-accent/90"
+            disabled={isLimitReached}
+            className="flex items-center gap-2 rounded-premium-md bg-premium-accent px-5 py-2 text-sm font-semibold text-white shadow-glow-accent transition duration-base hover:bg-premium-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4" />
             New Project
@@ -220,7 +267,8 @@ export default function ProjectsPage() {
           {!search && (
             <Button
               onClick={() => setShowDialog(true)}
-              className="flex items-center justify-center gap-2 rounded-premium-md bg-premium-accent px-4 py-2 text-sm font-semibold text-white shadow-glow-accent"
+              disabled={isLimitReached}
+              className="flex items-center justify-center gap-2 rounded-premium-md bg-premium-accent px-4 py-2 text-sm font-semibold text-white shadow-glow-accent disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="h-4 w-4" />
               Create Your First Project
@@ -245,7 +293,9 @@ export default function ProjectsPage() {
           <DialogHeader>
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
-              Projects help you organize your API keys and track usage separately.
+              {isLimitReached
+                ? `You have reached the limit of ${projectLimit} projects for your plan.`
+                : "Projects help you organize your API keys and track usage separately."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -257,6 +307,7 @@ export default function ProjectsPage() {
                 className="rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary focus:border-premium-accent/60 focus:ring-0"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
+                disabled={isLimitReached}
               />
             </div>
           </div>
@@ -270,7 +321,7 @@ export default function ProjectsPage() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={creating || !newProjectName.trim()}
+              disabled={creating || !newProjectName.trim() || isLimitReached}
               className="rounded-premium-md bg-premium-accent text-white shadow-glow-accent hover:bg-premium-accent/90"
             >
               {creating ? "Creating..." : "Create Project"}
