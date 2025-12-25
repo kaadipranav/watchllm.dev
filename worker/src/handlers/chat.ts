@@ -27,6 +27,7 @@ import {
   embedText,
   flattenChatText,
   normalizePrompt,
+  calculateContextHash
 } from '../lib/semanticCache';
 
 /**
@@ -243,11 +244,17 @@ export async function handleChatCompletions(
     console.log(`Attempting to embed text: "${textForEmbedding.substring(0, 50)}..."`);
     const textEmbedding = await embedText(provider, textForEmbedding);
     console.log(`Embedding result: ${textEmbedding ? `success (${textEmbedding.length} dims)` : 'failed'}`);
+
+    // Calculate context hash for strict matching of tools/format
+    const contextHash = await calculateContextHash(request);
+    const cacheKeyModel = `${request.model}:${contextHash}`;
+
     if (textEmbedding) {
       const semanticHit = await semanticCache.findSimilar<ChatCompletionResponse>(
         'chat',
         textEmbedding,
-        semanticThreshold
+        semanticThreshold,
+        cacheKeyModel // Filter by model+context
       );
       if (semanticHit) {
         console.log(`Semantic cache HIT! Similarity: ${semanticHit.similarity.toFixed(4)}, Threshold: ${semanticThreshold}`);
@@ -257,14 +264,14 @@ export async function handleChatCompletions(
         await supabase.logUsage({
           project_id: project.id,
           api_key_id: keyRecord.id,
-          model: semanticHit.entry.model,
+          model: semanticHit.entry.model.split(':')[0], // Log original model name
           provider: logProvider,
           tokens_input: semanticHit.entry.tokens.input,
           tokens_output: semanticHit.entry.tokens.output,
           tokens_total: semanticHit.entry.tokens.total,
           cost_usd: 0,
           potential_cost_usd: calculateCost(
-            semanticHit.entry.model,
+            semanticHit.entry.model.split(':')[0],
             semanticHit.entry.tokens.input,
             semanticHit.entry.tokens.output
           ),
@@ -307,7 +314,7 @@ export async function handleChatCompletions(
       const entry: SemanticCacheEntry<ChatCompletionResponse> = {
         embedding: textEmbedding,
         data: response,
-        model: response.model,
+        model: cacheKeyModel, // Store model:hash
         timestamp: Date.now(),
         tokens: {
           input: response.usage.prompt_tokens,

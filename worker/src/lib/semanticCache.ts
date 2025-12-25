@@ -12,7 +12,7 @@ import type {
 } from '../types';
 import type { ProviderClient } from './providers';
 
-const DEFAULT_THRESHOLD = 0.95;
+const DEFAULT_THRESHOLD = 0.90;
 const MAX_ENTRIES = 50;
 
 export type SemanticKind = 'chat' | 'completion';
@@ -47,6 +47,28 @@ function cosineSimilarity(a: number[], b: number[]): number {
   }
   if (magA === 0 || magB === 0) return 0;
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+/**
+ * Calculate a hash of the execution context to ensure strict caching
+ * for parameters that change the output structure (tools, json mode, etc).
+ */
+export async function calculateContextHash(request: any): Promise<string> {
+  const context = {
+    tools: request.tools || [],
+    tool_choice: request.tool_choice || 'auto',
+    response_format: request.response_format || null,
+    seed: request.seed || null,
+    json_schema: request.json_schema || null, // For structured outputs
+  };
+
+  // Sort keys to ensure deterministic hash
+  const canonical = JSON.stringify(context, Object.keys(context).sort());
+
+  const msgBuffer = new TextEncoder().encode(canonical);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 12); // Short hash
 }
 
 export class SemanticCache {
@@ -85,24 +107,31 @@ export class SemanticCache {
   async findSimilar<T>(
     kind: SemanticKind,
     embedding: number[],
-    threshold: number = DEFAULT_THRESHOLD
+    threshold: number = DEFAULT_THRESHOLD,
+    filterModel?: string // strict model+context match
   ): Promise<SemanticHit<T> | null> {
     if (!this.db || !embedding || embedding.length === 0) return null;
 
     try {
       const entries = await this.load<T>(kind);
-      console.log(`Semantic cache: Comparing against ${entries.length} entries, threshold: ${threshold}`);
+      // console.log(`Semantic cache: Comparing against ${entries.length} entries`); // Reduced logging
+
       let best: SemanticHit<T> | null = null;
+
       for (const entry of entries) {
+        // Enforce strict model/context matching if provided
+        if (filterModel && entry.model !== filterModel) {
+          continue;
+        }
+
         const sim = cosineSimilarity(embedding, entry.embedding);
         if (sim >= threshold && (!best || sim > best.similarity)) {
           best = { entry, similarity: sim };
         }
       }
+
       if (best) {
-        console.log(`Best match: similarity=${best.similarity.toFixed(4)}`);
-      } else {
-        console.log('No semantic match found above threshold');
+        // console.log(`Best match: similarity=${best.similarity.toFixed(4)}`);
       }
       return best;
     } catch (error) {
@@ -123,7 +152,7 @@ export class SemanticCache {
         text: entry.text,
         embedding: JSON.stringify(entry.embedding),
         response: JSON.stringify(entry.data),
-        model: entry.model,
+        model: entry.model, // This now includes the context hash
         tokens_input: entry.tokens.input,
         tokens_output: entry.tokens.output,
         tokens_total: entry.tokens.total,
@@ -178,12 +207,12 @@ export async function embedText(
  */
 export function normalizePrompt(text: string): string {
   if (!text || typeof text !== 'string') return '';
-  
+
   let normalized = text;
-  
+
   // Convert to lowercase
   normalized = normalized.toLowerCase();
-  
+
   // Remove filler words/phrases (do this before other transformations)
   const fillerPatterns = [
     /\bplease\b/gi,
@@ -200,7 +229,7 @@ export function normalizePrompt(text: string): string {
   for (const pattern of fillerPatterns) {
     normalized = normalized.replace(pattern, '');
   }
-  
+
   // Normalize common question patterns
   normalized = normalized.replace(/\bwhat's\b/g, 'what is');
   normalized = normalized.replace(/\bwhats\b/g, 'what is');
@@ -209,7 +238,7 @@ export function normalizePrompt(text: string): string {
   normalized = normalized.replace(/\bhow would i\b/g, 'how to');
   normalized = normalized.replace(/\bwhere can i\b/g, 'where to');
   normalized = normalized.replace(/\bwhere do i\b/g, 'where to');
-  
+
   // Normalize math operators (word forms to symbols)
   normalized = normalized.replace(/\btimes\b/g, '×');
   normalized = normalized.replace(/\bmultiplied by\b/g, '×');
@@ -224,18 +253,18 @@ export function normalizePrompt(text: string): string {
   normalized = normalized.replace(/\bminus\b/g, '−');
   normalized = normalized.replace(/\bsubtract(?:ed)?\s+(?:from)?/g, '−');
   normalized = normalized.replace(/-(?=\s*\d)/g, '−'); // '-' before a number (use proper minus sign)
-  
+
   // Normalize punctuation - remove excessive question/exclamation marks
   normalized = normalized.replace(/\?{2,}/g, '?');
   normalized = normalized.replace(/!{2,}/g, '!');
   normalized = normalized.replace(/\.{2,}/g, '.');
-  
+
   // Remove extra whitespace (multiple spaces → single space)
   normalized = normalized.replace(/\s+/g, ' ');
-  
+
   // Trim leading/trailing whitespace
   normalized = normalized.trim();
-  
+
   return normalized;
 }
 
@@ -251,18 +280,16 @@ export function flattenChatText(messages: ChatMessage[], enableNormalization: bo
   const raw = messages
     .map((m) => `${m.role}:${(m.content || '').trim()}`)
     .join('\n');
-  
+
   if (!enableNormalization) return raw;
-  
+
   const normalized = normalizePrompt(raw);
-  
+
   // Log normalization for debugging/analytics
   if (raw !== normalized) {
-    console.log(`[Normalization] Chat text transformed:`);
-    console.log(`  Original (${raw.length} chars): "${raw.substring(0, 100)}${raw.length > 100 ? '...' : ''}"`);
-    console.log(`  Normalized (${normalized.length} chars): "${normalized.substring(0, 100)}${normalized.length > 100 ? '...' : ''}"`);
+    // console.log(`[Normalization] Transformed input`);
   }
-  
+
   return normalized;
 }
 
@@ -276,17 +303,10 @@ export function flattenChatText(messages: ChatMessage[], enableNormalization: bo
  */
 export function flattenCompletionText(prompt: string | string[], enableNormalization: boolean = true): string {
   const raw = Array.isArray(prompt) ? prompt.join('\n') : prompt;
-  
+
   if (!enableNormalization) return raw;
-  
+
   const normalized = normalizePrompt(raw);
-  
-  // Log normalization for debugging/analytics
-  if (raw !== normalized) {
-    console.log(`[Normalization] Completion text transformed:`);
-    console.log(`  Original (${raw.length} chars): "${raw.substring(0, 100)}${raw.length > 100 ? '...' : ''}"`);
-    console.log(`  Normalized (${normalized.length} chars): "${normalized.substring(0, 100)}${normalized.length > 100 ? '...' : ''}"`);
-  }
-  
+
   return normalized;
 }
