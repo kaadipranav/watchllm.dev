@@ -103,6 +103,15 @@ export default function DocsIndexPage() {
           {/* Hero Section */}
           <div className="lg:w-1/3">
             <div className="sticky top-12">
+              {/* Robot Illustration */}
+              <div className="mb-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl">
+                <img 
+                  src="/illustrations/taxi-robot-searching-for-information-on-website.svg"
+                  alt="AI Documentation Search"
+                  className="w-full h-auto"
+                />
+              </div>
+              
               <div className="mb-6 inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400 backdrop-blur-sm">
                 <span>Developer Hub</span>
               </div>
@@ -111,7 +120,7 @@ export default function DocsIndexPage() {
                 Save more.
               </h1>
               <p className="text-lg text-premium-text-secondary mb-8">
-                Welcome to the WatchLLM documentation. Here you&apos;ll find everything you need to implement semantic caching at the edge.
+                Welcome to WatchLLM documentation. Here you&apos;ll find everything you need to implement semantic caching at the edge.
               </p>
 
               <div className="grid gap-4">
@@ -120,8 +129,8 @@ export default function DocsIndexPage() {
                     <Zap className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">Join the Discord</p>
-                    <p className="text-xs text-premium-text-muted">Get help from the community</p>
+                    <p className="text-sm font-semibold text-white">Join Discord</p>
+                    <p className="text-xs text-premium-text-muted">Get help from community</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex items-center gap-4 group hover:bg-white/[0.05] transition-colors cursor-pointer">

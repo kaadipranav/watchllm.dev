@@ -89,56 +89,73 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[hsl(220_13%_8%)] px-4 py-12 text-white">
-      <Card className="w-full max-w-xl bg-white/5 border-white/10">
-        <CardHeader>
-          <CardTitle className="text-xl">Welcome to WatchLLM</CardTitle>
-          <CardDescription className="text-white/60">
-            A few quick details to personalize your dashboard and invoices.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full name</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your name"
-                required
-              />
-            </div>
+      <div className="w-full max-w-4xl grid lg:grid-cols-2 gap-8 items-center">
+        {/* Left side - Form */}
+        <Card className="w-full bg-white/5 border-white/10">
+          <CardHeader>
+            <CardTitle className="text-xl">Welcome to WatchLLM</CardTitle>
+            <CardDescription className="text-white/60">
+              A few quick details to personalize your dashboard and invoices.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full name</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="company">Company (optional)</Label>
-              <Input
-                id="company"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Company or project name"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="company">Company (optional)</Label>
+                <Input
+                  id="company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Company or project name"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Role (optional)</Label>
-              <Input
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                placeholder="Founder, Engineer, Product, etc."
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role (optional)</Label>
+                <Input
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="Founder, Engineer, Product, etc."
+                />
+              </div>
 
-            <div className="flex items-center justify-between text-xs text-white/50">
-              <span>Used for personalization and billing context.</span>
-            </div>
+              <div className="flex items-center justify-between text-xs text-white/50">
+                <span>Used for personalization and billing context.</span>
+              </div>
 
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Saving..." : "Save and continue"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <Button type="submit" className="w-full" disabled={saving}>
+                {saving ? "Saving..." : "Save and continue"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Right side - Illustration */}
+        <div className="hidden lg:block">
+          <div className="rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl">
+            <img 
+              src="/illustrations/taxi-website-development-desktop-coffee-and-hotdog.svg"
+              alt="Development Workspace"
+              className="w-full h-auto"
+            />
+          </div>
+          <p className="mt-4 text-sm text-white/50 text-center">
+            Join thousands of developers optimizing their AI costs
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

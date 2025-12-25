@@ -282,22 +282,36 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Right side - Code preview panel */}
+        {/* Right side - Illustration and Code preview */}
         <motion.div
           className="relative w-full max-w-xl"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          {/* Highlight stats moved here - above code panel */}
+          {/* Highlight stats moved here - above illustration */}
           <div className="pointer-events-none absolute -top-40 left-0 right-0 hidden w-full flex-col gap-3 lg:flex">
             {highlightStats.map((stat) => (
               <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
             ))}
           </div>
 
-          {/* Card with OpenAI-style glass effect */}
-          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow mt-40">
+          {/* UI Illustration */}
+          <motion.div 
+            className="relative mb-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <img 
+              src="/illustrations/experimental-user-interface-in-website-design.svg"
+              alt="WatchLLM Dashboard Interface"
+              className="w-full h-auto"
+            />
+          </motion.div>
+
+          {/* Code preview panel - moved below illustration */}
+          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow">
             {/* Inner glow at top */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent" />
 

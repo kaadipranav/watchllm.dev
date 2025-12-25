@@ -90,6 +90,15 @@ export function Features() {
                 A curated suite of controls that keep your AI layer reliable, observable, and cost-efficient. Experience the power of semantic intelligence at the edge.
               </p>
 
+              {/* Design Tools Illustration */}
+              <div className="mt-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl">
+                <img 
+                  src="/illustrations/taxi-website-pages-and-designing-tools.svg"
+                  alt="Design and Development Tools"
+                  className="w-full h-auto"
+                />
+              </div>
+
               <div className="pt-8 flex flex-col gap-4">
                 <div className="flex items-center gap-3 text-sm text-premium-text-muted">
                   <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
