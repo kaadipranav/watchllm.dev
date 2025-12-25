@@ -164,9 +164,9 @@ export function Hero() {
     <section className="relative pt-32 pb-32 sm:pt-40 sm:pb-40">
       <div className="pointer-events-none absolute inset-0 hero-grid opacity-70" />
 
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-24 px-4 lg:flex-row lg:items-center">
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-24 px-4 lg:flex-row lg:items-start">
         {/* Left content */}
-        <div className="max-w-2xl space-y-12">
+        <div className="flex-1 space-y-12 pr-8 lg:max-w-3xl xl:max-w-4xl">
           {/* Dovetail-style announcement badge */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -178,7 +178,7 @@ export function Hero() {
               className="group inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm font-medium text-premium-text-muted transition-all duration-200 hover:border-white/[0.2] hover:bg-white/[0.05]"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-violet-500" />
-              <span>Watch the 2025 launch keynote</span>
+              <span>Watch 2025 launch keynote</span>
               <ExternalLink className="h-3.5 w-3.5 opacity-50 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </motion.div>
@@ -211,7 +211,7 @@ export function Hero() {
               </motion.span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-premium-text-secondary sm:text-xl">
-              Unify AI costs across OpenAI, Claude, and Groq via OpenRouter. Let semantic caching surface the savings that matter.
+              Unify AI costs across OpenAI, Claude, and Groq via OpenRouter. Let semantic caching surface savings that matter.
               <br />
               <span className="text-premium-text-muted mt-2 block">Instantly cut costs by 70%.</span>
             </p>
@@ -269,12 +269,84 @@ export function Hero() {
             </span>
           </motion.div>
 
+          {/* Stats + Code Panel - Side by Side on large screens */}
+          <motion.div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-8"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {/* Highlight Stats */}
+            <div className="space-y-3">
+              {highlightStats.map((stat) => (
+                <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
+              ))}
+            </div>
+
+            {/* Code Preview Panel */}
+            <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow">
+              {/* Inner glow at top */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <LiveIndicator />
+                <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.15em] text-emerald-400">
+                  99.9% up
+                </Badge>
+              </div>
+
+              {/* Code block - terminal style */}
+              <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[hsl(222_47%_3%)]">
+                {/* Terminal header */}
+                <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <span className="h-3 w-3 rounded-full bg-red-500/60" />
+                    <span className="h-3 w-3 rounded-full bg-yellow-500/60" />
+                    <span className="h-3 w-3 rounded-full bg-green-500/60" />
+                  </div>
+                  <span className="ml-2 text-[0.7rem] font-medium text-premium-text-muted">
+                    integration.ts
+                  </span>
+                </div>
+                {/* Code content */}
+                <pre className="overflow-x-auto px-4 py-5 text-[13px] leading-relaxed">
+                  <code className="text-premium-text-secondary">
+                    <span className="text-violet-400">const</span>{" "}
+                    <span className="text-premium-text-primary">client</span>{" "}
+                    <span className="text-violet-400">=</span>{" "}
+                    <span className="text-violet-400">new</span>{" "}
+                    <span className="text-cyan-400">WatchLLM</span>
+                    {"({\n"}
+                    {"  "}
+                    <span className="text-premium-text-muted">apiKey</span>
+                    {": "}
+                    <span className="text-emerald-400">process.env.WATCHLLM_KEY</span>
+                    {",\n"}
+                    {"  "}
+                    <span className="text-premium-text-muted">baseURL</span>
+                    {": "}
+                    <span className="text-amber-400">&quot;{APP_CONFIG.workerUrl}/v1&quot;</span>
+                    {",\n"}
+                    {"});"}
+                  </code>
+                </pre>
+              </div>
+
+              {/* Footer bar */}
+              <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-premium-text-muted">
+                <span>Global semantic cache</span>
+                <span className="text-premium-text-secondary">OpenAI / Claude / Groq</span>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Metrics - tighter grid */}
           <motion.div
             className="grid grid-cols-3 gap-4 pt-8"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 0.5, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <MetricCard label="Free Requests" value="50K" />
             <MetricCard label="Latency" value="<50ms" />
@@ -282,91 +354,22 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Right side - Illustration and Code preview */}
-        <motion.div
-          className="relative w-full max-w-xl"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-        >
-          {/* Highlight stats moved here - above illustration */}
-          <div className="pointer-events-none absolute -top-40 left-0 right-0 hidden w-full flex-col gap-3 lg:flex">
-            {highlightStats.map((stat) => (
-              <HighlightCard key={stat.label} stat={stat} reduceMotion={Boolean(reduceMotion)} />
-            ))}
-          </div>
-
-          {/* UI Illustration */}
-          <motion.div 
-            className="relative mb-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-xl"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+        {/* Right side - Only Illustration */
+        }
+        <div className="flex-1 flex items-center justify-center lg:justify-end">
+          <motion.div
+            className="w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <img 
-              src="/illustrations/experimental-user-interface-in-website-design.svg"
+              src="/illustrations/hero-image.csv"
               alt="WatchLLM Dashboard Interface"
               className="w-full h-auto"
             />
           </motion.div>
-
-          {/* Code preview panel - moved below illustration */}
-          <div className="relative space-y-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 backdrop-blur-xl card-glow">
-            {/* Inner glow at top */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.15] to-transparent" />
-
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <LiveIndicator />
-              <Badge className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[0.6rem] font-medium uppercase tracking-[0.15em] text-emerald-400">
-                99.9% up
-              </Badge>
-            </div>
-
-            {/* Code block - terminal style */}
-            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[hsl(222_47%_3%)]">
-              {/* Terminal header */}
-              <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
-                <div className="flex gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-red-500/60" />
-                  <span className="h-3 w-3 rounded-full bg-yellow-500/60" />
-                  <span className="h-3 w-3 rounded-full bg-green-500/60" />
-                </div>
-                <span className="ml-2 text-[0.7rem] font-medium text-premium-text-muted">
-                  integration.ts
-                </span>
-              </div>
-              {/* Code content */}
-              <pre className="overflow-x-auto px-4 py-5 text-[13px] leading-relaxed">
-                <code className="text-premium-text-secondary">
-                  <span className="text-violet-400">const</span>{" "}
-                  <span className="text-premium-text-primary">client</span>{" "}
-                  <span className="text-violet-400">=</span>{" "}
-                  <span className="text-violet-400">new</span>{" "}
-                  <span className="text-cyan-400">WatchLLM</span>
-                  {"({\n"}
-                  {"  "}
-                  <span className="text-premium-text-muted">apiKey</span>
-                  {": "}
-                  <span className="text-emerald-400">process.env.WATCHLLM_KEY</span>
-                  {",\n"}
-                  {"  "}
-                  <span className="text-premium-text-muted">baseURL</span>
-                  {": "}
-                  <span className="text-amber-400">&quot;{APP_CONFIG.workerUrl}/v1&quot;</span>
-                  {",\n"}
-                  {"});"}
-                </code>
-              </pre>
-            </div>
-
-            {/* Footer bar */}
-            <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[0.65rem] font-medium uppercase tracking-[0.12em] text-premium-text-muted">
-              <span>Global semantic cache</span>
-              <span className="text-premium-text-secondary">OpenAI / Claude / Groq</span>
-            </div>
-          </div>
-        </motion.div>
+        </div>
 
       </div>
     </section>
