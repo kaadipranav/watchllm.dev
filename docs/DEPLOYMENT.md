@@ -1,29 +1,78 @@
-# Deployment Guide
+# Going to Production
 
-Deploying WatchLLM involves a Cloudflare Worker proxy and a Next.js dashboard. Both rely on `pnpm` and the GitHub workspace.
+When you're ready to deploy your application using WatchLLM to production, follow these best practices to ensure reliability, security, and optimal performance.
 
-## Worker (Cloudflare)
-1. Install Wrangler and login if you haven’t: `pnpm --filter @watchllm/worker install wrangler` then `wrangler login`.
-2. Configure `wrangler.toml` (copy the sample from the repo) with `name = "watchllm-proxy"`, `compatibility_date`, and bindings for `SUPABASE_*`, `UPSTASH_*`, `OPENAI_*`, and `SENTRY_DSN`.
-3. Publish dry run: `pnpm --filter @watchllm/worker build`.
-4. Deploy: `pnpm --filter @watchllm/worker deploy` or `wrangler deploy --env production`.
-5. Add a custom domain in the Cloudflare dashboard (e.g., `proxy.watchllm.dev`).
-6. Verify health: `curl https://proxy.watchllm.dev/health` returns `status: ok`.
+---
 
-## Dashboard (Next.js)
-1. Copy `.env.example` to `.env.local` and fill in Supabase, Stripe, Resend, Sentry, and `NEXT_PUBLIC_APP_URL`.
-2. Build locally for sanity: `pnpm --filter @watchllm/dashboard build`.
-3. Deploy via Vercel: connect the repo, set Environment Variables, and run `pnpm --filter @watchllm/dashboard build`.
-4. Populate Stripe webhook secrets under `dashboard/app/api/webhooks/stripe/route.ts` and verify in Stripe dashboard.
-5. Enable Sentry DSN using `NEXT_PUBLIC_SENTRY_DSN` for release tracking.
-6. After deployment, test the sign-up flow and checkout (Stripe) before announcing.
+## 1. Environment Variables
 
-## Shared Services
-- **Supabase**: ensure `api_keys`, `projects`, `usage_logs` tables exist; use Supabase CLI or SQL editor.
-- **Upstash Redis**: configure `UPSTASH_REDIS_REST_URL`/`TOKEN` in both worker and test environments.
-- **Stripe**: add webhook for `/api/webhooks/stripe` with secret in both `dashboard/.env` and Stripe dashboard.
+**Never hardcode your API keys.** Always use environment variables in your deployment platform (Vercel, AWS, Heroku, etc.).
 
-## Continuous Deployment
-- GitHub Actions run tests via `.github/workflows/test.yml` on every PR.
-- Merge triggers `pnpm build` (worker + dashboard) from the root `build` script.
-- Tag releases with `vX.Y.Z` to track Sentry deployments.
+- **Good:** `apiKey: process.env.WATCHLLM_API_KEY`
+- **Bad:** `apiKey: "lgw_123456789"`
+
+### Recommended Setup
+
+| Variable | Description |
+|----------|-------------|
+| `WATCHLLM_API_KEY` | Your project-specific API Key. |
+| `OPENAI_BASE_URL` | Set to `https://proxy.watchllm.dev/v1` to easily toggle caching on/off. |
+
+---
+
+## 2. Separate Development & Production
+
+We strongly recommend creating separate **Projects** in the WatchLLM dashboard for different environments. This allows you to:
+
+1. **Track costs separately** (know exactly what Prod vs. Dev is spending).
+2. **Isolate keys** (if a Dev key leaks, your Prod app isn't compromised).
+3. **Analyze cache hit rates** accurately (Dev testing often skews cache stats).
+
+**Example:**
+- Project: `MyApp (Prod)` -> Key: `lgw_prod_...`
+- Project: `MyApp (Dev)` -> Key: `lgw_dev_...`
+
+---
+
+## 3. Handling Timeouts & Latency
+
+WatchLLM adds minimal latency (typically <20ms) for proxying, and saves significant time (hundreds of ms) on cache hits. However, networks are unpredictable.
+
+Ensure your HTTP client has appropriate timeout settings:
+
+```typescript
+const client = new OpenAI({
+  apiKey: process.env.WATCHLLM_API_KEY,
+  baseURL: "https://proxy.watchllm.dev/v1",
+  timeout: 30000, // 30 seconds
+  maxRetries: 2,
+});
+```
+
+---
+
+## 4. Reliability & Failover
+
+WatchLLM is designed for high availability with global edge replication. However, for mission-critical applications, you may want to implement client-side failover.
+
+If `proxy.watchllm.dev` returns a 5xx error (rare), your code can fallback to the direct OpenAI API:
+
+```typescript
+try {
+  // Try WatchLLM first
+  return await watchllmClient.chat.completions.create({...});
+} catch (error) {
+  // If 500/502/503, fallback to direct
+  console.warn("WatchLLM unavailable, using direct fallback");
+  return await directOpenAIClient.chat.completions.create({...});
+}
+```
+
+---
+
+## 5. Rate Limiting
+
+WatchLLM enforces rate limits based on your plan (e.g., Free, Starter, Pro).
+If you hit a limit, you will receive a `429 Too Many Requests` response.
+
+**Best Practice:** Implement exponential backoff in your application to handle 429s gracefully, or upgrade your plan if you consistently hit limits.

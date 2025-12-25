@@ -20,7 +20,7 @@
 
 ### Get Your API Key
 
-1. Sign up at https://WatchLLM.com/signup
+1. Sign up at https://watchllm.dev/signup
 2. Create a project
 3. Copy your API key (starts with `lgw_`)
 
@@ -28,7 +28,7 @@
 
 **cURL:**
 ```bash
-curl https://proxy.WatchLLM.com/v1/chat/completions \
+curl https://proxy.watchllm.dev/v1/chat/completions \
   -H "Authorization: Bearer lgw_your_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -43,7 +43,7 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({
   apiKey: 'lgw_your_api_key_here', // Your WatchLLM key
-  baseURL: 'https://proxy.WatchLLM.com/v1'
+  baseURL: 'https://proxy.watchllm.dev/v1'
 });
 
 const response = await openai.chat.completions.create({
@@ -60,7 +60,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key='lgw_your_api_key_here',
-    base_url='https://proxy.WatchLLM.com/v1'
+    base_url='https://proxy.watchllm.dev/v1'
 )
 
 response = client.chat.completions.create(
@@ -101,7 +101,7 @@ Authorization: Bearer lgw_your_api_key_here
 
 ## 3. Proxy API Endpoints
 
-Base URL: `https://proxy.WatchLLM.com`
+Base URL: `https://proxy.watchllm.dev`
 
 ### 3.1 Chat Completions
 
@@ -175,7 +175,7 @@ OpenAI-compatible chat endpoint. Supports all OpenAI parameters.
 Set `"stream": true` to receive Server-Sent Events (SSE):
 
 ```javascript
-const response = await fetch('https://proxy.WatchLLM.com/v1/chat/completions', {
+const response = await fetch('https://proxy.watchllm.dev/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer lgw_xxx',
@@ -299,7 +299,7 @@ Check if proxy is operational.
 
 ## 4. Dashboard API Endpoints
 
-Base URL: `https://WatchLLM.com/api`
+Base URL: `https://watchllm.dev/api`
 
 Authentication: Session cookie (automatically handled by Supabase)
 
@@ -529,8 +529,8 @@ Add or update provider API key.
 **Request:**
 ```json
 {
-  "provider": "openai",
-  "api_key": "sk-your-actual-openai-key"
+  "provider": "openai", // or "anthropic", "groq", "openrouter"
+  "api_key": "sk-your-actual-key"
 }
 ```
 
@@ -616,7 +616,7 @@ Get current subscription details.
 
 ### 5.1 Stripe Webhooks
 
-**Endpoint:** `https://WatchLLM.com/api/webhooks/stripe`
+**Endpoint:** `https://watchllm.dev/api/webhooks/stripe`
 
 **Events Handled:**
 
@@ -759,7 +759,7 @@ X-RateLimit-Reset: 1702377660
 ### Handling Rate Limits
 
 ```javascript
-const response = await fetch('https://proxy.WatchLLM.com/v1/chat/completions', {
+const response = await fetch('https://proxy.watchllm.dev/v1/chat/completions', {
   /* ... */
 });
 
@@ -791,7 +791,7 @@ import OpenAI from 'openai';
 
 const client = new OpenAI({
   apiKey: process.env.WatchLLM_API_KEY,
-  baseURL: 'https://proxy.WatchLLM.com/v1'
+  baseURL: 'https://proxy.watchllm.dev/v1'
 });
 
 // Chat completion
@@ -825,7 +825,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key=os.environ['WatchLLM_API_KEY'],
-    base_url='https://proxy.WatchLLM.com/v1'
+    base_url='https://proxy.watchllm.dev/v1'
 )
 
 # Chat completion
@@ -851,7 +851,7 @@ for chunk in stream:
 
 **Chat completion:**
 ```bash
-curl https://proxy.WatchLLM.com/v1/chat/completions \
+curl https://proxy.watchllm.dev/v1/chat/completions \
   -H "Authorization: Bearer $WatchLLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -862,7 +862,7 @@ curl https://proxy.WatchLLM.com/v1/chat/completions \
 
 **Embeddings:**
 ```bash
-curl https://proxy.WatchLLM.com/v1/embeddings \
+curl https://proxy.watchllm.dev/v1/embeddings \
   -H "Authorization: Bearer $WatchLLM_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -879,7 +879,7 @@ import OpenAI from 'openai';
 
 const client = new OpenAI({
   apiKey: process.env.WatchLLM_API_KEY,
-  baseURL: 'https://proxy.WatchLLM.com/v1'
+  baseURL: 'https://proxy.watchllm.dev/v1'
 });
 
 export default async function handler(req, res) {
@@ -919,7 +919,7 @@ import (
 
 func main() {
 	config := openai.DefaultConfig(os.Getenv("WatchLLM_API_KEY"))
-	config.BaseURL = "https://proxy.WatchLLM.com/v1"
+	config.BaseURL = "https://proxy.watchllm.dev/v1"
 
 	client := openai.NewClientWithConfig(config)
 	resp, err := client.CreateChatCompletion(
@@ -957,7 +957,7 @@ require 'openai'
 
 client = OpenAI::Client.new(
     access_token: ENV['WatchLLM_API_KEY'],
-    uri_base: "https://proxy.WatchLLM.com/v1"
+    uri_base: "https://proxy.watchllm.dev/v1"
 )
 
 response = client.chat(
@@ -975,10 +975,10 @@ puts response.dig("choices", 0, "message", "content")
 
 ## Support
 
-- **Documentation:** https://docs.WatchLLM.com
-- **API Status:** https://status.WatchLLM.com
-- **Email:** support@WatchLLM.com
-- **Discord:** https://discord.gg/WatchLLM
+- **Documentation:** https://docs.watchllm.dev
+- **API Status:** https://status.watchllm.dev
+- **Email:** support@watchllm.dev
+- **Discord:** https://discord.gg/watchllm
 
 ---
 

@@ -1,4 +1,4 @@
-# Troubleshooting Guide - WatchLLM
+# Troubleshooting Guide
 
 > **Purpose:** A centralized guide to help you resolve common issues when integrating or using WatchLLM.
 
@@ -21,16 +21,15 @@
 
 ---
 
-## 2. Worker & Proxy Errors
+## 2. API & Proxy Errors
 
 ### `500 Internal Server Error`
 **Symptoms:** A generic error message from the proxy.
-- **Cause:** Often related to background services like D1 (Database) or Redis (Cache) being unavailable.
+- **Cause:** A temporary issue with the WatchLLM edge network or upstream provider connectivity.
 - **Solution:**
-    1. Check the [Service Status Page](https://status.WatchLLM.com).
-    2. If you are self-hosting:
-        - Verify `wrangler d1` credentials are correct.
-        - Ensure Upstash Redis URL/Token is properly set in `wrangler.toml` secrets.
+    1. Check our [Service Status Page](https://status.watchllm.dev).
+    2. Retry the request with exponential backoff.
+    3. If persistent, contact support.
 
 ### `502 Bad Gateway` - Provider Error
 **Symptoms:** WatchLLM is working, but the upstream AI provider is failing.
@@ -42,19 +41,17 @@
 
 ---
 
-## 3. Caching & Persistence
+## 3. Caching Issues
 
 ### Cache Misses when Cache should be Hit
-**Symptoms:** `x-WatchLLM-cached` header returns `false` repeatedly for the same query.
+**Symptoms:** `x-watchllm-cached` header returns `MISS` repeatedly for the same query.
 - **Cause:** 
-    1. **Non-deterministic parameters:** If `temperature` is high, semantic caching might require a higher similarity threshold.
-    2. **Streaming:** Caching behavior differs slightly for streaming responses.
-- **Solution:** Check your `wrangler.toml` for `SEMANTIC_CACHE_THRESHOLD`. Lowering it (e.g., to `0.85`) increases hit rate but may reduce answer precision.
-
-### D1 Connection Errors
-**Symptoms:** Logs show "D1_ERROR" or "Database not found".
-- **Cause:** The Cloudflare D1 database binding name does not match what is in `worker/src/lib/d1.ts`.
-- **Solution:** Ensure your `wrangler.toml` has `[[d1_databases]]` with `binding = "DB"`.
+    1. **Exact Matching:** If you are using simple caching, even a single whitespace difference causes a miss.
+    2. **Semantic Threshold:** If utilizing semantic caching (Pro plan), the queries might not be "similar" enough (default threshold is 0.95).
+    3. **Streaming:** Caching behavior differs slightly for streaming responses (we cache the full stream after completion).
+- **Solution:** 
+    - Verify your prompt inputs are identical.
+    - Check the `x-watchllm-cache-similarity` header on the response to see how close the match was.
 
 ---
 
@@ -69,22 +66,18 @@
 
 ---
 
-## 5. Development & Local Debugging
+## 5. Debugging
 
-### Wrangler Preview Issues
-- **Problem:** Environmental variables (`OPENROUTER_API_KEY`, etc.) aren't loading locally.
-- **Fix:** Create a `.dev.vars` file in the `worker` directory with your secrets (format: `KEY=VALUE`).
+### Inspecting Headers
+To confirm WatchLLM is working, inspect the response headers in your application logs or browser DevTools network tab.
 
-### Logs Tracking
-To see live logs from your deployed worker:
-```bash
-wrangler tail
-```
-This is the fastest way to identify the exact line of code causing a `500` error.
+Look for:
+- `x-watchllm-cache`: `HIT`, `MISS`, or `HIT-SEMANTIC`
+- `x-watchllm-latency-ms`: How long the request took.
+- `x-watchllm-cost-usd`: The estimated cost of the request.
 
 ---
 
 ## Still having issues?
-- **GitHub Issues:** [WatchLLM/Issues](https://github.com/kaadipranav/WATCHLLM/issues)
-- **Discord Support:** [Join our community](https://discord.gg/WatchLLM)
-- **Email:** support@WatchLLM.com
+- **Discord Support:** [Join our community](https://discord.gg/watchllm)
+- **Email:** support@watchllm.dev
