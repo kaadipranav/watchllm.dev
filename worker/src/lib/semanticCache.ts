@@ -54,12 +54,15 @@ function cosineSimilarity(a: number[], b: number[]): number {
  * for parameters that change the output structure (tools, json mode, etc).
  */
 export async function calculateContextHash(request: any): Promise<string> {
+  const systemMessage = request.messages?.find((m: any) => m.role === 'system')?.content || '';
+
   const context = {
     tools: request.tools || [],
     tool_choice: request.tool_choice || 'auto',
     response_format: request.response_format || null,
     seed: request.seed || null,
     json_schema: request.json_schema || null, // For structured outputs
+    system: systemMessage, // Persona/instructions are strict context
   };
 
   // Sort keys to ensure deterministic hash

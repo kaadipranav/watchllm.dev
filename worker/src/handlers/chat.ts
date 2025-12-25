@@ -248,6 +248,7 @@ export async function handleChatCompletions(
     // Calculate context hash for strict matching of tools/format
     const contextHash = await calculateContextHash(request);
     const cacheKeyModel = `${request.model}:${contextHash}`;
+    console.log(`[Semantic Cache] Key: ${cacheKeyModel}`);
 
     if (textEmbedding) {
       const semanticHit = await semanticCache.findSimilar<ChatCompletionResponse>(

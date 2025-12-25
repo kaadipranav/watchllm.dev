@@ -66,10 +66,12 @@ async function runTests() {
     console.log("🚀 STARTING COMPREHENSIVE SEMANTIC CACHE TESTS");
     console.log("=".repeat(60));
 
-    // Generate a random topic/suffix to ensure we don't hit previous run's cache
+    // Generate a unique entity to ensure a fresh cache baseline
+    const topics = ["Japan", "Brazil", "Canada", "Germany", "India", "Egypt", "Norway", "Australia"];
+    const topic = topics[Math.floor(Math.random() * topics.length)];
     const runId = Math.random().toString(36).substring(7);
-    const entity = `France-${runId}`;
-    console.log(`ℹ️  Run ID: ${runId} (Using entity "${entity}" to bypass existing cache)`);
+    const entity = `${topic}-${runId}`;
+    console.log(`ℹ️  Run ID: ${runId} | Topic: ${topic} (Using entity "${entity}" to ensure Phase 1 MISS)`);
 
     // 1. Baseline Request
     console.log("\n--- PHASE 1: Baseline ---");
