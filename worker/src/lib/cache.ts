@@ -51,7 +51,7 @@ export function generateChatCacheKey(request: ChatCompletionRequest): string {
   // Extract relevant parts for caching
   const model = request.model;
   const temperature = (request.temperature ?? 1).toFixed(2);
-  
+
   // Normalize and concatenate messages
   const messagesKey = request.messages
     .map((m) => {
@@ -68,10 +68,13 @@ export function generateChatCacheKey(request: ChatCompletionRequest): string {
   const toolsKey = request.tools
     ? JSON.stringify(request.tools)
     : '';
+  const responseFormatKey = request.response_format
+    ? JSON.stringify(request.response_format)
+    : '';
 
-  const keyData = `${model}:${temperature}:${messagesKey}:${functionsKey}:${toolsKey}`;
+  const keyData = `${model}:${temperature}:${messagesKey}:${functionsKey}:${toolsKey}:${responseFormatKey}`;
   const hash = hashString(keyData);
-  
+
   return `${CACHE_PREFIX}chat:${hash}`;
 }
 
@@ -81,7 +84,7 @@ export function generateChatCacheKey(request: ChatCompletionRequest): string {
 export function generateCompletionCacheKey(request: CompletionRequest): string {
   const model = request.model;
   const temperature = (request.temperature ?? 1).toFixed(2);
-  
+
   // Normalize prompt
   const prompt = Array.isArray(request.prompt)
     ? request.prompt.map(normalizeText).join('|')
@@ -89,7 +92,7 @@ export function generateCompletionCacheKey(request: CompletionRequest): string {
 
   const keyData = `${model}:${temperature}:${prompt}`;
   const hash = hashString(keyData);
-  
+
   return `${CACHE_PREFIX}completion:${hash}`;
 }
 
@@ -98,17 +101,17 @@ export function generateCompletionCacheKey(request: CompletionRequest): string {
  */
 export function generateEmbeddingsCacheKey(request: EmbeddingsRequest): string {
   const model = request.model;
-  
+
   // Normalize input
   const input = Array.isArray(request.input)
     ? request.input.map(normalizeText).join('|')
     : normalizeText(request.input);
 
   const dimensions = request.dimensions ?? '';
-  
+
   const keyData = `${model}:${input}:${dimensions}`;
   const hash = hashString(keyData);
-  
+
   return `${CACHE_PREFIX}embedding:${hash}`;
 }
 

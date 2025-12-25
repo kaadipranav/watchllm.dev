@@ -139,6 +139,7 @@ export interface ChatCompletionRequest {
     };
   }>;
   tool_choice?: 'none' | 'auto' | { type: 'function'; function: { name: string } };
+  response_format?: { type: 'text' | 'json_object' };
 }
 
 // Chat completion response
