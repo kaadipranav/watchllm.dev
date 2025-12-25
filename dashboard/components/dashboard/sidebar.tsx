@@ -11,6 +11,7 @@ import {
   CreditCard,
   Settings,
   LogOut,
+  FileText,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -20,10 +21,10 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
   { name: "API Keys", href: "/dashboard/api-keys", icon: Key },
-  { name: "Provider Keys", href: "/dashboard/api-keys?tab=providers", icon: Key },
   { name: "Usage", href: "/dashboard/usage", icon: BarChart3 },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Documentation", href: "/docs", icon: FileText },
 ];
 
 export function Sidebar() {

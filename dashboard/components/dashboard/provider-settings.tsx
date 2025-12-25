@@ -22,7 +22,7 @@ interface Project {
 }
 
 interface ProviderKeyState {
-    provider: "openai" | "anthropic" | "groq";
+    provider: "openai" | "anthropic" | "groq" | "openrouter";
     key: string;
     loading: boolean;
     isSet: boolean;
@@ -33,6 +33,7 @@ const PROVIDERS = [
     { id: "openai", name: "OpenAI", placeholder: "sk-..." },
     { id: "anthropic", name: "Anthropic", placeholder: "sk-ant-..." },
     { id: "groq", name: "Groq", placeholder: "gsk_..." },
+    { id: "openrouter", name: "OpenRouter", placeholder: "sk-or-v1-..." },
 ] as const;
 
 export function ProviderSettings() {
@@ -42,6 +43,7 @@ export function ProviderSettings() {
         openai: { provider: "openai", key: "", loading: false, isSet: false, lastUsedAt: null },
         anthropic: { provider: "anthropic", key: "", loading: false, isSet: false, lastUsedAt: null },
         groq: { provider: "groq", key: "", loading: false, isSet: false, lastUsedAt: null },
+        openrouter: { provider: "openrouter", key: "", loading: false, isSet: false, lastUsedAt: null },
     });
     const [fetching, setFetching] = useState(true);
     const supabase = createClient();
@@ -85,7 +87,7 @@ export function ProviderSettings() {
         loadKeys();
     }, [selectedProject]);
 
-    const handleSave = async (provider: "openai" | "anthropic" | "groq") => {
+    const handleSave = async (provider: "openai" | "anthropic" | "groq" | "openrouter") => {
         const key = keysState[provider].key;
         if (!key) return;
 
@@ -264,8 +266,8 @@ export function ProviderSettings() {
                     <div className="text-sm text-violet-300">
                         <p className="font-semibold mb-1">How BYOK Works</p>
                         <p>
-                            When a key is provided, WatchLLM will route requests for that provider directly to their official API endpoints using your key.
-                            This allows you to use your own negotiated rates and free tiers. Caching and logging still apply.
+                            When a key is provided, WatchLLM will route requests for that provider directly to their official API endpoints (or OpenRouter) using your key.
+                            This allows you to use your own negotiated rates, free tiers, and avoids global rate limits. Caching and logging still apply.
                         </p>
                     </div>
                 </div>

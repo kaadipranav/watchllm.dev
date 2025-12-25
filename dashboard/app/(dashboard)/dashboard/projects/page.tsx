@@ -50,20 +50,46 @@ export default function ProjectsPage() {
 
       if (error) throw error;
 
-      // Fetch API key counts for each project
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      // Fetch API key counts and stats for each project
       const projectsWithStats = await Promise.all((data || []).map(async (p) => {
         const { count: apiKeysCount } = await supabase
           .from("api_keys")
           .select("*", { count: "exact", head: true })
           .eq("project_id", p.id);
 
-        // For now, we'll set usage to 0. In a real app, this would come from a materialized view or fast cache.
+        const { count: monthlyRequests } = await supabase
+          .from("usage_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("project_id", p.id)
+          .gte("created_at", startOfMonth.toISOString());
+
+        const { count: cachedRequests } = await supabase
+          .from("usage_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("project_id", p.id)
+          .eq("cached", true)
+          .gte("created_at", startOfMonth.toISOString());
+
+        const hitRate = monthlyRequests && monthlyRequests > 0
+          ? ((cachedRequests || 0) / monthlyRequests) * 100
+          : 0;
+
+        const limits: Record<string, number> = {
+          free: 50000,
+          starter: 250000,
+          pro: 1000000
+        };
+
         return {
           ...p,
           api_keys_count: apiKeysCount || 0,
-          requests_this_month: 0,
-          requests_limit: 50000, // Default limit
-          cache_hit_rate: 0,
+          requests_this_month: monthlyRequests || 0,
+          requests_limit: limits[p.plan] || 50000,
+          cache_hit_rate: hitRate,
         };
       }));
 

@@ -47,18 +47,50 @@ export default function DashboardPage() {
           .order("created_at", { ascending: false })
           .limit(4);
 
-        // Fetch API Key counts for these projects
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        // Fetch API Key counts and usage stats for these projects
         const projectsWithCounts = await Promise.all((projectsData || []).map(async (p) => {
-          const { count } = await supabase
+          // Count active keys
+          const { count: keyCount } = await supabase
             .from("api_keys")
             .select("*", { count: "exact", head: true })
             .eq("project_id", p.id);
+
+          // Get monthly requests
+          const { count: monthlyRequests } = await supabase
+            .from("usage_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("project_id", p.id)
+            .gte("created_at", startOfMonth.toISOString());
+
+          // Get cached requests for hit rate
+          const { count: cachedRequests } = await supabase
+            .from("usage_logs")
+            .select("*", { count: "exact", head: true })
+            .eq("project_id", p.id)
+            .eq("cached", true)
+            .gte("created_at", startOfMonth.toISOString());
+
+          const hitRate = monthlyRequests && monthlyRequests > 0
+            ? ((cachedRequests || 0) / monthlyRequests) * 100
+            : 0;
+
+          // Define limits based on plan
+          const limits: Record<string, number> = {
+            free: 50000,
+            starter: 250000,
+            pro: 1000000
+          };
+
           return {
             ...p,
-            api_keys_count: count || 0,
-            requests_this_month: 0, // Placeholder
-            requests_limit: 50000,
-            cache_hit_rate: 0
+            api_keys_count: keyCount || 0,
+            requests_this_month: monthlyRequests || 0,
+            requests_limit: limits[p.plan] || 50000,
+            cache_hit_rate: hitRate
           };
         }));
         setProjects(projectsWithCounts);

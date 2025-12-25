@@ -26,7 +26,7 @@ const steps = [
     icon: Zap,
     title: "Cache Hit (or Miss)",
     step: "03",
-    description: "If found, we return the cached response instantly (50ms). If not, we forward to OpenAI/Anthropic and cache the result for next time.",
+    description: "If found, we return the cached response instantly (50ms). If not, we forward to your provider (OpenAI, Anthropic, OpenRouter, etc.) and cache it.",
     gradient: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-400",
     accentColor: "bg-amber-500",
@@ -70,7 +70,7 @@ export function HowItWorks() {
               >
                 {/* Gradient overlay */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                
+
                 {/* Top accent line */}
                 <div className={`absolute top-0 left-0 right-0 h-px ${step.accentColor} opacity-50`} />
 
@@ -79,7 +79,7 @@ export function HowItWorks() {
                   <span className="text-[0.7rem] font-bold uppercase tracking-[0.3em] text-premium-text-muted mb-4">
                     Step {step.step}
                   </span>
-                  
+
                   {/* Icon */}
                   <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.05] border border-white/[0.08]">
                     <step.icon className={`h-6 w-6 ${step.iconColor}`} />

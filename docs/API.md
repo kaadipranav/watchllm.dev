@@ -166,8 +166,9 @@ OpenAI-compatible chat endpoint. Supports all OpenAI parameters.
 | Provider | Models |
 |----------|--------|
 | OpenAI | `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo` |
-| Anthropic | `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku` |
-| Groq | `llama-3-70b`, `mixtral-8x7b` |
+| Anthropic | `claude-3-haiku`, `claude-3-5-sonnet`, `claude-3-opus` |
+| Groq | `llama-3-8b`, `llama-3-70b`, `mixtral-8x7b` |
+| OpenRouter | All models (via `openrouter/` prefix or automatic mapping) |
 
 **Streaming:**
 

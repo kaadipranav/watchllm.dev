@@ -54,7 +54,7 @@ const features: Feature[] = [
   },
   {
     title: "Multi-Provider Access",
-    description: "BYOK support for OpenAI, Anthropic, and Groq. Unified API via OpenRouter for additional providers.",
+    description: "BYOK support for OpenAI, Anthropic, Groq, and OpenRouter. Unified API for simplified multi-model deployments.",
     icon: Database,
     badge: "BYOK enabled",
     gradient: "from-indigo-500/30 via-blue-500/20 to-transparent",

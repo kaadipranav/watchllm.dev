@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export async function saveProviderKey(
     projectId: string,
-    provider: "openai" | "anthropic" | "groq",
+    provider: "openai" | "anthropic" | "groq" | "openrouter",
     apiKey: string
 ) {
     const supabase = createClient();

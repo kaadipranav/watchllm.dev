@@ -60,7 +60,7 @@ export interface ABTestVariant {
 export interface ProviderKeyRecord {
   id: string;
   project_id: string;
-  provider: 'openai' | 'anthropic' | 'groq';
+  provider: 'openai' | 'anthropic' | 'groq' | 'openrouter';
   encrypted_key: string;
   encryption_iv: string;
   name: string | null;
