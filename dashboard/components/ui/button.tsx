@@ -4,22 +4,34 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(220_13%_8%)] disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98] select-none",
+  "inline-flex items-center justify-center whitespace-nowrap font-medium transition-all duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] select-none",
   {
     variants: {
       variant: {
-        default: "bg-white text-[hsl(220_13%_8%)] hover:bg-white/90 shadow-sm",
-        destructive: "bg-red-500/90 text-white hover:bg-red-500 shadow-sm",
-        outline: "border border-white/[0.1] bg-transparent hover:bg-white/[0.04] text-white/80 hover:text-white",
-        secondary: "bg-white/[0.06] text-white/80 hover:bg-white/[0.1] hover:text-white",
-        ghost: "hover:bg-white/[0.04] text-white/60 hover:text-white/90",
-        link: "text-white/70 underline-offset-4 hover:underline hover:text-white",
+        // Primary Button: gradient background with glow
+        default: 
+          "bg-gradient-to-br from-accent-primary to-accent-primary-hover text-white rounded-sm shadow-subtle hover:shadow-glow-primary hover:scale-[1.02] hover:brightness-110",
+        // Secondary Button: bordered with hover fill
+        secondary: 
+          "border border-border-default bg-transparent text-text-primary rounded-sm hover:border-accent-primary hover:bg-accent-primary/10",
+        // Ghost Button: transparent with subtle hover
+        ghost: 
+          "bg-transparent text-text-secondary rounded-sm hover:bg-white/5 hover:text-text-primary",
+        // Outline variant
+        outline: 
+          "border border-border-default bg-transparent text-text-primary rounded-sm hover:bg-bg-elevated hover:border-border-hover",
+        // Destructive
+        destructive: 
+          "bg-accent-error text-white rounded-sm shadow-subtle hover:bg-accent-error/90",
+        // Link
+        link: 
+          "text-accent-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-lg px-6",
-        icon: "h-9 w-9",
+        default: "h-10 px-6 py-3 text-sm",
+        sm: "h-8 px-4 py-2 text-xs rounded-xs",
+        lg: "h-12 px-8 py-4 text-base rounded-md",
+        icon: "h-8 w-8 rounded-sm",
       },
     },
     defaultVariants: {

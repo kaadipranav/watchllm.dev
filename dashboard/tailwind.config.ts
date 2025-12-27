@@ -17,9 +17,36 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
       },
       colors: {
+        // WatchLLM Design System - Based on ui.md specification
+        
+        // Background colors
+        'bg-primary': '#0A0A0A',
+        'bg-surface': '#111111',
+        'bg-elevated': '#1A1A1A',
+        
+        // Border colors
+        'border-subtle': '#222222',
+        'border-default': '#2A2A2A',
+        'border-hover': '#333333',
+        
+        // Accent colors
+        'accent-primary': '#3B82F6',
+        'accent-primary-hover': '#2563EB',
+        'accent-success': '#10B981',
+        'accent-warning': '#F59E0B',
+        'accent-error': '#EF4444',
+        'accent-purple': '#A855F7',
+        
+        // Text colors
+        'text-primary': '#FAFAFA',
+        'text-secondary': '#A1A1A1',
+        'text-tertiary': '#737373',
+        'text-muted': '#525252',
+
         // Legacy compatibility
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -87,13 +114,14 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        'premium-sm': 'var(--radius-sm)',
-        'premium-md': 'var(--radius-md)',
-        'premium-lg': 'var(--radius-lg)',
-        'premium-xl': 'var(--radius-xl)',
+        // WatchLLM Design System
+        'xs': '4px',
+        'sm': '6px',
+        'md': '8px',
+        'lg': '12px',
+        'xl': '16px',
+        '2xl': '24px',
+        'full': '9999px',
       },
       spacing: {
         '18': '4.5rem',   // 72px
@@ -106,16 +134,23 @@ const config: Config = {
         'premium-lg': 'var(--shadow-lg)',
         'glow-accent': 'var(--shadow-glow-accent)',
         'glow-success': 'var(--shadow-glow-success)',
+        // WatchLLM Design System
+        'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.5)',
+        'small': '0 2px 8px 0 rgba(0, 0, 0, 0.6)',
+        'medium': '0 4px 16px 0 rgba(0, 0, 0, 0.7)',
+        'large': '0 8px 32px 0 rgba(0, 0, 0, 0.8)',
+        'glow-primary': '0 0 24px rgba(59, 130, 246, 0.4)',
+        'glow-success-alt': '0 0 24px rgba(16, 185, 129, 0.4)',
       },
       transitionDuration: {
-        'fast': 'var(--duration-fast)',
-        'base': 'var(--duration-base)',
-        'slow': 'var(--duration-slow)',
+        'fast': '150ms',
+        'base': '200ms',
+        'slow': '300ms',
       },
       transitionTimingFunction: {
-        'premium-out': 'var(--ease-out)',
-        'premium-in-out': 'var(--ease-in-out)',
-        'bounce': 'var(--ease-bounce)',
+        'premium-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'premium-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
       keyframes: {
         "accordion-down": {
@@ -146,15 +181,30 @@ const config: Config = {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "pulse-dot": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.5", transform: "scale(1.1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in var(--duration-base) var(--ease-out)",
-        "slide-up": "slide-up var(--duration-base) var(--ease-out)",
-        "slide-down": "slide-down var(--duration-base) var(--ease-out)",
-        "scale-in": "scale-in var(--duration-base) var(--ease-out)",
+        "fade-in": "fade-in 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "slide-up": "slide-up 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "slide-down": "slide-down 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "scale-in": "scale-in 200ms cubic-bezier(0.4, 0, 0.2, 1)",
         "shimmer": "shimmer 1.5s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "float": "float 6s ease-in-out infinite",
+        "pulse-dot": "pulse-dot 2s ease-in-out infinite",
       },
     },
   },
