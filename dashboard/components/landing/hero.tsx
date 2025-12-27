@@ -364,7 +364,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <img 
-              src="/illustrations/hero-image.csv"
+              src="/illustrations/hero-image.svg"
               alt="WatchLLM Dashboard Interface"
               className="w-full h-auto"
             />
