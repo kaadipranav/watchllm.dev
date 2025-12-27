@@ -21,7 +21,7 @@ export function Providers() {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <p className="text-sm font-medium text-premium-text-muted">
+          <p className="text-sm font-medium text-text-muted">
             Bring Your Own Key (BYOK) support for direct API access
           </p>
         </motion.div>
@@ -44,11 +44,11 @@ export function Providers() {
               className="group flex items-center justify-center"
             >
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xl font-semibold tracking-tight text-white/40 transition-all duration-300 group-hover:text-white/80">
+                <span className="text-xl font-semibold tracking-tight text-text-muted transition-colors duration-300 group-hover:text-text-secondary">
                   {provider.name}
                 </span>
                 {provider.byok && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
                     BYOK
                   </span>
                 )}

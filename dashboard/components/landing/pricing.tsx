@@ -85,23 +85,20 @@ function PricingCard({
 
   return (
     <motion.div
-      className={cn(
-        "relative group",
-        isPopular && "lg:scale-105 lg:z-10"
-      )}
+      className="relative"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{
         duration: 0.5,
         delay: index * 0.1,
-        ease: [0.4, 0, 0.2, 1],
+        ease: "easeOut" as const,
       }}
     >
       {/* Popular badge */}
       {isPopular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-          <Badge variant="primary" className="text-xs px-3 py-1">
+          <Badge variant="secondary" className="text-xs px-3 py-1">
             Most Popular
           </Badge>
         </div>
@@ -111,21 +108,16 @@ function PricingCard({
       <div
         className={cn(
           "relative h-full bg-bg-surface border rounded-lg p-8",
-          "transition-all duration-base",
+          "transition-colors duration-base",
           isPopular
-            ? "border-accent-primary shadow-glow-primary"
-            : "border-border-subtle hover:border-border-hover hover:-translate-y-1 hover:shadow-medium"
+            ? "border-border-default"
+            : "border-border-subtle hover:border-border-default"
         )}
       >
-        {/* Gradient border effect on hover */}
-        {!isPopular && (
-          <div className="gradient-border absolute inset-0 rounded-lg pointer-events-none" />
-        )}
-
         {/* Coming Soon Overlay */}
         {APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-bg-primary/90 backdrop-blur-sm rounded-lg">
-            <Badge variant="primary" className="mb-2">
+            <Badge variant="secondary" className="mb-2">
               Coming Soon
             </Badge>
             <p className="text-xs text-text-muted">
@@ -153,7 +145,7 @@ function PricingCard({
           {/* Price */}
           <div>
             <div className="flex items-baseline">
-              <span className="text-5xl font-black font-mono text-gradient-accent">
+              <span className="text-5xl font-semibold font-mono text-text-primary">
                 {plan.price}
               </span>
               <span className="ml-2 text-sm text-text-muted">
@@ -202,11 +194,6 @@ function PricingCard({
 export function Pricing() {
   return (
     <section id="pricing" className="relative py-32 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-accent-success/10 rounded-full blur-3xl" />
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
@@ -216,11 +203,11 @@ export function Pricing() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-sm font-medium uppercase tracking-wider text-accent-primary mb-4">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-4">
             Pricing
           </h2>
-          <h1 className="text-5xl font-bold tracking-tight text-text-primary mb-6">
-            Simple, <span className="text-gradient-accent">transparent</span> pricing
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
+            Simple, transparent pricing
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
             Start free, upgrade when you need more. No hidden fees or surprises.

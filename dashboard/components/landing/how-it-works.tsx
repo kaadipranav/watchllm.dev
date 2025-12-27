@@ -72,7 +72,7 @@ function CodeBlock({ code, language = "typescript" }: { code: string; language?:
       </button>
 
       {/* Code content */}
-      <pre className="bg-black border border-border-subtle rounded-lg p-4 pt-10 overflow-x-auto">
+      <pre className="bg-bg-primary border border-border-subtle rounded-lg p-4 pt-10 overflow-x-auto">
         <code className="text-sm font-mono text-text-secondary leading-relaxed">
           {code}
         </code>
@@ -84,11 +84,6 @@ function CodeBlock({ code, language = "typescript" }: { code: string; language?:
 export function HowItWorks() {
   return (
     <section className="relative py-32 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent-primary/10 rounded-full blur-3xl" />
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
@@ -98,12 +93,11 @@ export function HowItWorks() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-sm font-medium uppercase tracking-wider text-accent-primary mb-4">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-4">
             How It Works
           </h2>
-          <h1 className="text-5xl font-bold tracking-tight text-text-primary mb-6">
-            Three steps to
-            <span className="block text-gradient-accent mt-2">70% cost savings</span>
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
+            Three steps to 70% cost savings
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
             Intelligent semantic caching that works transparently between your app and AI providers.
@@ -115,15 +109,7 @@ export function HowItWorks() {
           {/* Desktop: Horizontal timeline */}
           <div className="hidden lg:block">
             {/* Connecting line */}
-            <div className="absolute top-24 left-0 right-0 h-0.5 bg-border-subtle">
-              <motion.div
-                className="h-full bg-gradient-to-r from-accent-primary to-accent-purple"
-                initial={{ width: "0%" }}
-                whileInView={{ width: "100%" }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-              />
-            </div>
+            <div className="absolute top-24 left-0 right-0 h-px bg-border-subtle" />
 
             <div className="grid grid-cols-3 gap-8">
               {steps.map((step, index) => (
@@ -137,31 +123,17 @@ export function HowItWorks() {
                 >
                   {/* Number badge */}
                   <div className="relative z-10 flex justify-center mb-12">
-                    <div
-                      className={cn(
-                        "flex items-center justify-center w-16 h-16 rounded-full",
-                        "bg-bg-surface border-2",
-                        "bg-gradient-to-br",
-                        step.gradient,
-                        "border-border-hover"
-                      )}
-                    >
-                      <span className="text-2xl font-bold text-white">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-bg-elevated border border-border-subtle">
+                      <span className="text-2xl font-semibold text-text-primary">
                         {step.step}
                       </span>
                     </div>
                   </div>
 
                   {/* Content card */}
-                  <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 hover:border-border-hover transition-all duration-base">
-                    <div
-                      className={cn(
-                        "inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4",
-                        "bg-gradient-to-br",
-                        step.gradient
-                      )}
-                    >
-                      <step.icon className="h-6 w-6 text-white" />
+                  <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 hover:border-border-default transition-colors duration-base">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 bg-bg-elevated border border-border-subtle">
+                      <step.icon className="h-6 w-6 text-text-primary" />
                     </div>
 
                     <h3 className="text-xl font-semibold text-text-primary mb-3">
@@ -196,16 +168,8 @@ export function HowItWorks() {
 
                 {/* Number badge */}
                 <div className="absolute left-0 top-0">
-                  <div
-                    className={cn(
-                      "flex items-center justify-center w-12 h-12 rounded-full",
-                      "bg-bg-surface border-2",
-                      "bg-gradient-to-br",
-                      step.gradient,
-                      "border-border-hover"
-                    )}
-                  >
-                    <span className="text-xl font-bold text-white">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-bg-elevated border border-border-subtle">
+                    <span className="text-xl font-semibold text-text-primary">
                       {step.step}
                     </span>
                   </div>
@@ -213,14 +177,8 @@ export function HowItWorks() {
 
                 {/* Content card */}
                 <div className="bg-bg-surface border border-border-subtle rounded-lg p-6">
-                  <div
-                    className={cn(
-                      "inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4",
-                      "bg-gradient-to-br",
-                      step.gradient
-                    )}
-                  >
-                    <step.icon className="h-6 w-6 text-white" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 bg-bg-elevated border border-border-subtle">
+                    <step.icon className="h-6 w-6 text-text-primary" />
                   </div>
 
                   <h3 className="text-xl font-semibold text-text-primary mb-3">

@@ -83,11 +83,6 @@ const itemVariants = {
 export function Features() {
   return (
     <section id="features" className="relative py-32 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
@@ -97,12 +92,11 @@ export function Features() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-sm font-medium uppercase tracking-wider text-accent-primary mb-4">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-4">
             Features
           </h2>
-          <h1 className="text-5xl font-bold tracking-tight text-text-primary mb-6">
-            Everything you need for
-            <span className="block text-gradient-accent mt-2">intelligent caching</span>
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
+            Everything you need for intelligent caching
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
             Built for developers who need reliability, performance, and cost efficiency at scale.
@@ -124,23 +118,17 @@ export function Features() {
               className="group relative"
             >
               {/* Card */}
-              <div className="h-full bg-bg-surface border border-border-subtle rounded-lg p-6 transition-all duration-base hover:border-border-hover hover:-translate-y-1 hover:shadow-medium">
-                {/* Icon with gradient background */}
+              <div className="h-full bg-bg-surface border border-border-subtle rounded-lg p-6 transition-colors duration-base hover:border-border-default">
+                {/* Icon */}
                 <div className="relative mb-6">
-                  <div
-                    className={cn(
-                      "inline-flex items-center justify-center w-12 h-12 rounded-lg",
-                      "bg-gradient-to-br",
-                      feature.gradient
-                    )}
-                  >
-                    <feature.icon className="h-6 w-6 text-white" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-bg-elevated border border-border-subtle">
+                    <feature.icon className="h-6 w-6 text-text-primary" />
                   </div>
                   
                   {/* Metric badge */}
                   {feature.metric && (
                     <div className="absolute -top-2 -right-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-xs text-[10px] font-medium uppercase tracking-wider bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-xs text-[10px] font-medium uppercase tracking-wider bg-bg-elevated text-text-muted border border-border-subtle">
                         {feature.metric}
                       </span>
                     </div>
@@ -148,23 +136,12 @@ export function Features() {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-semibold text-text-primary mb-3 group-hover:text-gradient-accent transition-all">
+                <h3 className="text-xl font-semibold text-text-primary mb-3">
                   {feature.title}
                 </h3>
                 <p className="text-sm text-text-secondary leading-relaxed">
                   {feature.description}
                 </p>
-
-                {/* Hover gradient border effect */}
-                <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-base pointer-events-none">
-                  <div
-                    className={cn(
-                      "absolute inset-0 rounded-lg bg-gradient-to-br p-[1px]",
-                      feature.gradient,
-                      "opacity-50"
-                    )}
-                  />
-                </div>
               </div>
             </motion.div>
           ))}

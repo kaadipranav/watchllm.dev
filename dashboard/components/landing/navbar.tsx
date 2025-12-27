@@ -38,14 +38,14 @@ export function Navbar() {
       )}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      transition={{ duration: 0.3, ease: "easeOut" as const }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 lg:h-18 items-center justify-between">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 transition-transform hover:scale-105 duration-base"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90 duration-base"
           >
             <Image
               src="/watchllm_logo.png"
@@ -75,13 +75,10 @@ export function Navbar() {
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-sm",
                   "text-text-secondary hover:text-text-primary",
-                  "hover:bg-white/5 transition-all duration-base",
-                  "relative group"
+                  "hover:bg-white/5 transition-colors duration-base"
                 )}
               >
                 {link.label}
-                {/* Active indicator */}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-accent-primary group-hover:w-8 transition-all duration-base" />
               </Link>
             ))}
           </nav>
