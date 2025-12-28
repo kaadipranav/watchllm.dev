@@ -9,8 +9,8 @@
     /* WatchLLM Design System - Based on ui.md specification */
     
     /* Background Colors */
-    --bg-primary: 0 0% 4%;           /* #0A0A0A - near-black */
-    --bg-surface: 0 0% 7%;           /* #111111 */
+    --bg-primary: 0 0% 2.5%;         /* #060606 - even darker */
+    --bg-surface: 0 0% 5%;           /* #0D0D0D - darker surface */
     --bg-elevated: 0 0% 10%;         /* #1A1A1A */
     --bg-glass: 0 0% 4% / 0.8;       /* glass effect base */
     
@@ -67,7 +67,6 @@
     --radius-lg: 12px;
     --radius-xl: 16px;
     --radius: var(--radius-md);
-    --builder-font: "JetBrains Mono", "Space Grotesk", "Inter", sans-serif;
     
     /* Shadows & Depth */
     --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.5);
@@ -125,8 +124,8 @@
   }
 
   .hero-heading {
-    font-family: var(--builder-font);
-    letter-spacing: -0.02em;
+    @apply font-display;
+    letter-spacing: -0.04em;
   }
   
   /* Smooth scrolling with reduced motion respect */

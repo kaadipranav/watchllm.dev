@@ -71,17 +71,39 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "WatchLLM",
+    "url": "https://watchllm.dev",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://watchllm.dev/docs?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
-    <div className="relative flex min-h-screen flex-col selection:bg-white/10">
+    <div className="relative flex min-h-screen flex-col selection:bg-white/10 max-w-[100vw]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Minimal dark grid + subtle top glow (Vercel/Linear-inspired) */}
       <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,hsl(var(--accent-primary)_/_0.10),transparent)]" />
-        <div className="absolute inset-x-0 bottom-0 h-[240px] bg-gradient-to-t from-bg-primary to-transparent" />
+        <div 
+          className="absolute inset-0 grid-pattern opacity-[0.09]" 
+          style={{
+            maskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)'
+          }}
+        />
+        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,hsl(var(--accent-primary)_/_0.13),transparent)]" />
+        <div className="absolute inset-x-0 bottom-0 h-[320px] bg-gradient-to-t from-bg-primary via-bg-primary/90 to-transparent" />
       </div>
 
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 max-w-[96rem] mx-auto w-full">
         <Suspense fallback={null}>
           <AuthCallbackHandler />
         </Suspense>

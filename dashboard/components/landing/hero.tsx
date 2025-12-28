@@ -34,9 +34,9 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
   }, [target]);
 
   return (
-    <span className="font-mono text-3xl font-bold text-text-primary">
+    <span className="hero-heading text-4xl font-bold text-text-primary tracking-tight">
       {count.toLocaleString()}
-      {suffix && <span className="text-text-secondary">{suffix}</span>}
+      {suffix && <span className="text-text-secondary ml-1">{suffix}</span>}
     </span>
   );
 }
@@ -47,7 +47,7 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 function LiveStatTicker() {
   return (
     <motion.div
-      className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12"
+      className="inline-grid grid-cols-1 sm:grid-cols-3 gap-12 px-12 py-8 rounded-2xl border border-border-subtle bg-bg-surface/30 backdrop-blur-sm mt-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.4 }}
@@ -59,13 +59,13 @@ function LiveStatTicker() {
       ].map((stat, index) => (
         <motion.div
           key={stat.label}
-          className="flex flex-col items-center text-center"
+          className="flex flex-col items-center text-center min-w-[140px]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
         >
           <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-          <p className="text-xs uppercase tracking-wider text-text-muted mt-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted mt-3">
             {stat.label}
           </p>
         </motion.div>
@@ -74,37 +74,75 @@ function LiveStatTicker() {
   );
 }
 
-function HeroMedia() {
-  const [videoReady, setVideoReady] = useState(false);
+/**
+ * Spotlight effect that follows the mouse
+ */
+function Spotlight() {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseEnter = () => setOpacity(1);
+    const handleMouseLeave = () => setOpacity(0);
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.body.addEventListener("mouseenter", handleMouseEnter);
+    document.body.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.body.removeEventListener("mouseenter", handleMouseEnter);
+      document.body.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
 
   return (
-    <div className="relative mt-16 w-full max-w-5xl mx-auto rounded-2xl border border-border-subtle bg-bg-surface/60 shadow-xl overflow-hidden">
-      <video
-        className="h-full w-full object-cover"
-        autoPlay
-        muted
-        loop
-        playsInline
-        poster="/illustrations/experimental-user-interface-in-website-design.svg"
-        onCanPlay={() => setVideoReady(true)}
-      >
-        <source src="/illustrations/hero-image.webm" type="video/webm" />
-      </video>
-      <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          videoReady ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <Image
-          src="/illustrations/experimental-user-interface-in-website-design.svg"
-          alt="WatchLLM hero preview"
-          fill
-          sizes="(max-width: 1024px) 100vw, 800px"
-          className="object-cover"
-          priority
-        />
-      </div>
-    </div>
+    <div
+      className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500"
+      style={{
+        opacity,
+        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(59, 130, 246, 0.06), transparent 80%)`,
+      }}
+    />
+  );
+}
+
+/**
+ * Typewriter effect for hero headline
+ */
+function Typewriter({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [reverse, setReverse] = useState(false);
+
+  useEffect(() => {
+    if (subIndex === words[index].length + 1 && !reverse) {
+      const timeout = setTimeout(() => setReverse(true), 2000);
+      return () => clearTimeout(timeout);
+    }
+
+    if (subIndex === 0 && reverse) {
+      setReverse(false);
+      setIndex((prev) => (prev + 1) % words.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSubIndex((prev) => prev + (reverse ? -1 : 1));
+    }, reverse ? 50 : 100);
+
+    return () => clearTimeout(timeout);
+  }, [subIndex, index, reverse, words]);
+
+  return (
+    <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-accent-purple to-accent-primary bg-[length:200%_auto] animate-flow-wave">
+      {words[index].substring(0, subIndex)}
+      <span className="inline-block w-[2px] h-[0.8em] bg-accent-primary ml-1 align-middle animate-pulse" />
+    </span>
   );
 }
 
@@ -114,57 +152,66 @@ function HeroMedia() {
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center py-20 overflow-hidden">
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
+      <Spotlight />
+      {/* Spotlight effect */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent-primary/5 blur-[120px] rounded-full" />
+      </div>
+
+      <div className="relative mx-auto max-w-[96rem] px-2 sm:px-8 lg:px-16 w-full z-10">
         {/* Main content */}
-        <div className="text-center max-w-4xl mx-auto">
+        <div className="text-center max-w-6xl mx-auto">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-8"
+            className="mb-10"
           >
-            <Badge variant="secondary" className="inline-flex items-center gap-2 text-xs">
-              <span className="inline-flex h-2 w-2 rounded-full bg-text-muted" />
-              Live
+            <Badge variant="secondary" className="inline-flex items-center gap-3 text-xs py-1.5 px-4 border-border-subtle bg-bg-surface/40 backdrop-blur-md rounded-full">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-primary"></span>
+              </span>
+              <span className="text-text-secondary font-semibold tracking-[0.1em] uppercase text-[10px]">System Operational</span>
             </Badge>
           </motion.div>
 
           {/* Headline with stagger animation */}
-          <motion.div className="space-y-4 mb-8">
+          <motion.div className="space-y-6 mb-10">
             <motion.h1
-              className="hero-heading text-5xl sm:text-6xl lg:text-[64px] tracking-tight leading-none"
+              className="hero-heading text-6xl sm:text-8xl lg:text-[104px] tracking-[-0.04em] leading-[0.95] text-text-primary"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
             >
-              The builder&rsquo;s companion for real-time semantic caching
+              The builder&rsquo;s companion for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} /> caching
             </motion.h1>
 
             <motion.p
-              className="text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed"
+              className="text-xl sm:text-2xl text-text-secondary max-w-3xl mx-auto leading-relaxed font-medium"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Ship confidently with semantic caching that keeps your OpenAI, Claude, and Groq
-              integrations identical to day one while serving repeated prompts under 100ms.
+              Ship confidently with semantic caching for <span className="font-semibold text-text-primary">OpenAI, Claude, Groq, Llama 3</span>—keep your integrations identical to day one while serving repeated prompts under 100ms.
             </motion.p>
           </motion.div>
 
           {/* CTA buttons */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
+            className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button asChild size="lg" className="min-w-[200px]">
+            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group">
               <Link href="/signup">
-                Launch Build
+                <span className="relative z-10">Launch Build</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="secondary" className="min-w-[200px]">
+            <Button asChild size="lg" variant="secondary" className="h-14 px-10 text-lg min-w-[220px] border-border-default hover:bg-bg-elevated transition-all">
               <Link href="#features">
                 See the stack
               </Link>
@@ -192,7 +239,6 @@ export function Hero() {
           <LiveStatTicker />
         </div>
 
-          <HeroMedia />
       </div>
     </section>
   );

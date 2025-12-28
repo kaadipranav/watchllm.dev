@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 
-const inter = Inter({ subsets: ["latin"] });
+const sans = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  variable: '--font-sans',
+});
+
+const display = Outfit({
+  subsets: ["latin"],
+  variable: '--font-display',
+});
 
 export const metadata: Metadata = {
   title: "WatchLLM - Cut Your AI API Costs by 40-70% | Semantic Caching Proxy",
@@ -180,7 +188,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${sans.variable} ${display.variable} font-sans antialiased`}>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" defer />
         <noscript>
           <img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerPolicy="no-referrer-when-downgrade" />
