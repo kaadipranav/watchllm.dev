@@ -140,7 +140,7 @@ function Typewriter({ words }: { words: string[] }) {
 
   return (
     /* Fixed width container to prevent CLS */
-    <span className="inline-block min-w-[8ch] sm:min-w-[10ch] text-left">
+    <span className="inline-block min-w-[7ch] sm:min-w-[8ch] text-left">
       <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-purple-400 to-accent-primary bg-[length:200%_auto]">
         {words[index].substring(0, subIndex)}
       </span>
@@ -183,13 +183,15 @@ export function Hero() {
           {/* Headline with stagger animation */}
           <motion.div className="space-y-6 mb-10">
             <motion.h1
-              className="hero-heading text-5xl sm:text-7xl lg:text-[96px] tracking-[-0.04em] leading-[1.05] text-text-primary"
+              className="hero-heading text-5xl sm:text-7xl lg:text-[84px] tracking-[-0.04em] leading-[1.1] text-text-primary mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="block sm:inline">The builder&rsquo;s companion</span>{" "}
-              <span className="block sm:inline">for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} /></span>
+              <span className="block">The builder&rsquo;s</span>
+              <span className="block sm:whitespace-nowrap">
+                companion for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} />
+              </span>
             </motion.h1>
 
             <motion.p
