@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Key, Check, AlertCircle, Trash2 } from "lucide-react";
+import { Loader2, Key, Check, AlertCircle, Trash2, Plus, ShieldCheck, ShieldAlert, Shield } from "lucide-react";
 import { saveProviderKey, deleteProviderKey, getActiveProviderKeys } from "@/app/actions/provider-keys";
 import {
     Select,
@@ -15,18 +15,34 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Project {
     id: string;
     name: string;
 }
 
-interface ProviderKeyState {
+interface ProviderKey {
+    id: string;
+    name: string;
+    priority: number;
+    last_used_at: string | null;
+    created_at: string;
+}
+
+interface ProviderState {
     provider: "openai" | "anthropic" | "groq" | "openrouter";
-    key: string;
+    keys: ProviderKey[];
     loading: boolean;
-    isSet: boolean;
-    lastUsedAt: string | null;
 }
 
 const PROVIDERS = [
@@ -59,16 +75,28 @@ const PROVIDERS = [
 export function ProviderSettings() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [selectedProject, setSelectedProject] = useState<string>("");
-    const [keysState, setKeysState] = useState<Record<string, ProviderKeyState>>({
-        openai: { provider: "openai", key: "", loading: false, isSet: false, lastUsedAt: null },
-        anthropic: { provider: "anthropic", key: "", loading: false, isSet: false, lastUsedAt: null },
-        groq: { provider: "groq", key: "", loading: false, isSet: false, lastUsedAt: null },
-        openrouter: { provider: "openrouter", key: "", loading: false, isSet: false, lastUsedAt: null },
+
+    // State to hold keys for each provider
+    const [providerStates, setProviderStates] = useState<Record<string, ProviderState>>({
+        openai: { provider: "openai", keys: [], loading: false },
+        anthropic: { provider: "anthropic", keys: [], loading: false },
+        groq: { provider: "groq", keys: [], loading: false },
+        openrouter: { provider: "openrouter", keys: [], loading: false },
     });
+
+    // Form state for adding new key
+    const [newKeyValues, setNewKeyValues] = useState<Record<string, { key: string; name: string }>>({
+        openai: { key: "", name: "" },
+        anthropic: { key: "", name: "" },
+        groq: { key: "", name: "" },
+        openrouter: { key: "", name: "" },
+    });
+
     const [fetching, setFetching] = useState(true);
     const supabase = createClient();
     const { toast } = useToast();
 
+    // Load Projects
     useEffect(() => {
         async function loadProjects() {
             const { data, error } = await supabase.from("projects").select("id, name").order("name");
@@ -81,80 +109,119 @@ export function ProviderSettings() {
         loadProjects();
     }, []);
 
+    // Load Keys when project changes
     useEffect(() => {
         if (!selectedProject) return;
 
         async function loadKeys() {
             const activeKeys = await getActiveProviderKeys(selectedProject);
 
-            const newState = { ...keysState };
-            // Reset all to not set first
-            Object.keys(newState).forEach(p => {
-                newState[p] = { ...newState[p], isSet: false, key: "", lastUsedAt: null };
-            });
+            // Group keys by provider
+            const groupedKeys: Record<string, ProviderKey[]> = {
+                openai: [],
+                anthropic: [],
+                groq: [],
+                openrouter: []
+            };
 
-            activeKeys.forEach(k => {
-                if (newState[k.provider]) {
-                    newState[k.provider] = {
-                        ...newState[k.provider],
-                        isSet: true,
-                        lastUsedAt: k.last_used_at,
-                    };
+            // Cast type since server action might return slightly different shape if not strictly typed
+            (activeKeys as any[]).forEach(k => {
+                if (groupedKeys[k.provider]) {
+                    groupedKeys[k.provider].push({
+                        id: k.id,
+                        name: k.name || `${k.provider} Key`,
+                        priority: k.priority || 1,
+                        last_used_at: k.last_used_at,
+                        created_at: k.created_at
+                    });
                 }
             });
-            setKeysState(newState);
+
+            // Update state
+            setProviderStates(prev => {
+                const newState = { ...prev };
+                Object.keys(newState).forEach(p => {
+                    newState[p] = { ...newState[p], keys: groupedKeys[p] || [] };
+                });
+                return newState;
+            });
         }
         loadKeys();
     }, [selectedProject]);
 
-    const handleSave = async (provider: "openai" | "anthropic" | "groq" | "openrouter") => {
-        const key = keysState[provider].key;
+    const handleSaveKey = async (provider: "openai" | "anthropic" | "groq" | "openrouter") => {
+        const { key, name } = newKeyValues[provider];
         if (!key) return;
 
-        setKeysState(prev => ({ ...prev, [provider]: { ...prev[provider], loading: true } }));
+        setProviderStates(prev => ({ ...prev, [provider]: { ...prev[provider], loading: true } }));
 
         try {
-            await saveProviderKey(selectedProject, provider, key);
+            await saveProviderKey(selectedProject, provider, key, name || undefined);
+
             toast({
-                title: "Key Saved",
-                description: `Your ${provider} API key has been securely encrypted and saved.`,
+                title: "Key Added",
+                description: `Your ${provider} API key has been securely saved as priority key.`,
             });
-            setKeysState(prev => ({
+
+            // Clear inputs
+            setNewKeyValues(prev => ({ ...prev, [provider]: { key: "", name: "" } }));
+
+            // Reload keys to get the new ID and updated list
+            const activeKeys = await getActiveProviderKeys(selectedProject);
+            const providerKeys = (activeKeys as any[])
+                .filter(k => k.provider === provider)
+                .map(k => ({
+                    id: k.id,
+                    name: k.name || `${k.provider} Key`,
+                    priority: k.priority || 1,
+                    last_used_at: k.last_used_at,
+                    created_at: k.created_at
+                }));
+
+            setProviderStates(prev => ({
                 ...prev,
-                [provider]: { ...prev[provider], loading: false, isSet: true, key: "" }
+                [provider]: { ...prev[provider], keys: providerKeys, loading: false }
             }));
+
         } catch (error: any) {
             toast({
                 title: "Error",
                 description: error.message || "Failed to save key.",
                 variant: "destructive",
             });
-            setKeysState(prev => ({ ...prev, [provider]: { ...prev[provider], loading: false } }));
+            setProviderStates(prev => ({ ...prev, [provider]: { ...prev[provider], loading: false } }));
         }
     };
 
-    const handleDelete = async (provider: string) => {
-        if (!confirm(`Are you sure you want to remove your ${provider} key? WatchLLM will fall back to the global OpenRouter pool for this provider.`)) return;
+    const handleDeleteKey = async (provider: string, keyId: string) => {
+        if (!confirm("Are you sure you want to remove this key?")) return;
 
-        setKeysState(prev => ({ ...prev, [provider]: { ...prev[provider], loading: true } }));
+        setProviderStates(prev => ({ ...prev, [provider]: { ...prev[provider], loading: true } }));
 
         try {
-            await deleteProviderKey(selectedProject, provider);
+            await deleteProviderKey(selectedProject, keyId);
             toast({
                 title: "Key Removed",
-                description: `Your ${provider} API key has been deleted.`,
+                description: "The API key has been permanently deleted.",
             });
-            setKeysState(prev => ({
+
+            // Optimistic update
+            setProviderStates(prev => ({
                 ...prev,
-                [provider]: { ...prev[provider], loading: false, isSet: false, key: "" }
+                [provider]: {
+                    ...prev[provider],
+                    keys: prev[provider].keys.filter(k => k.id !== keyId),
+                    loading: false
+                }
             }));
+
         } catch (error: any) {
             toast({
                 title: "Error",
                 description: error.message || "Failed to delete key.",
                 variant: "destructive",
             });
-            setKeysState(prev => ({ ...prev, [provider]: { ...prev[provider], loading: false } }));
+            setProviderStates(prev => ({ ...prev, [provider]: { ...prev[provider], loading: false } }));
         }
     };
 
@@ -183,36 +250,49 @@ export function ProviderSettings() {
 
     return (
         <div className="space-y-8">
-            <div className="space-y-4">
-                <div className="flex flex-col gap-2">
-                    <Label htmlFor="project-select" className="text-xs uppercase tracking-widest text-premium-text-muted">Target Project</Label>
+            {/* Context Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
+                <div className="space-y-1">
+                    <h2 className="text-xl font-semibold text-premium-text-primary">Provider Configuration</h2>
+                    <p className="text-sm text-premium-text-muted">
+                        Connect your own API keys to bypass global limits and access direct provider pricing.
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Label htmlFor="project-select" className="text-xs uppercase tracking-widest text-premium-text-muted sr-only">Target Project</Label>
                     <Select value={selectedProject} onValueChange={setSelectedProject}>
-                        <SelectTrigger className="w-full md:w-[300px] border-premium-border-subtle bg-premium-bg-primary text-premium-text-primary">
+                        <SelectTrigger className="w-[200px] border-white/10 bg-white/5 text-premium-text-primary">
                             <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
-                        <SelectContent className="bg-premium-bg-primary border-premium-border-subtle text-premium-text-primary">
+                        <SelectContent className="bg-premium-bg-elevated border-white/10 text-premium-text-primary">
                             {projects.map(p => (
                                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-xs text-premium-text-muted">
-                        API keys are isolating per project for maximum security and billing control.
-                    </p>
                 </div>
             </div>
 
             <div className="grid gap-6">
                 {PROVIDERS.map((p) => {
-                    const state = keysState[p.id];
+                    const state = providerStates[p.id];
+                    const keyCount = state.keys.length;
+                    const canAddMore = keyCount < 3;
+                    const inputs = newKeyValues[p.id];
+
                     return (
                         <div
                             key={p.id}
-                            className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-6 shadow-premium-sm transition-all hover:border-premium-accent/30"
+                            className={`rounded-premium-xl border p-6 transition-all ${keyCount > 0
+                                    ? 'border-premium-accent/20 bg-premium-accent/5'
+                                    : 'border-premium-border-subtle bg-premium-bg-elevated'
+                                }`}
                         >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-premium-bg-primary border border-premium-border-subtle overflow-hidden p-1.5">
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl border p-2 ${keyCount > 0 ? 'bg-premium-bg-primary border-premium-accent/30' : 'bg-premium-bg-primary border-white/5'
+                                        }`}>
                                         <img
                                             src={p.logo}
                                             alt={p.name}
@@ -220,78 +300,128 @@ export function ProviderSettings() {
                                         />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-premium-text-primary">{p.name}</h3>
-                                        <div className="flex items-center gap-2">
-                                            {state.isSet ? (
-                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-premium-success">
-                                                    <Check className="h-3 w-3" /> Connected
-                                                </span>
-                                            ) : (
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-premium-text-muted">
-                                                    Not Configured
-                                                </span>
+                                        <h3 className="text-lg font-bold text-premium-text-primary flex items-center gap-2">
+                                            {p.name}
+                                            {keyCount > 0 && (
+                                                <Badge variant="outline" className="border-premium-success/30 text-premium-success bg-premium-success/5 text-[10px] uppercase">
+                                                    Active
+                                                </Badge>
                                             )}
-                                        </div>
+                                        </h3>
+                                        <p className="text-xs text-premium-text-muted mt-1 flex items-center gap-1.5">
+                                            <Key className="h-3 w-3" />
+                                            {keyCount === 0 ? "No keys configured" : `${keyCount} / 3 keys loaded`}
+                                        </p>
                                     </div>
                                 </div>
-
-                                {state.isSet && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDelete(p.id)}
-                                        disabled={state.loading}
-                                        className="text-premium-text-muted hover:text-premium-danger hover:bg-premium-danger/10"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                {keyCount > 0 && (
+                                    <div className="text-right">
+                                        <span className="text-xs font-mono text-premium-text-muted/60">
+                                            Next Priority: #{keyCount < 3 ? keyCount + 1 : '-'}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="flex gap-2">
-                                    <Input
-                                        type="password"
-                                        placeholder={state.isSet ? "••••••••••••••••" : p.placeholder}
-                                        value={state.key}
-                                        onChange={(e) => setKeysState(prev => ({
-                                            ...prev,
-                                            [p.id]: { ...prev[p.id], key: e.target.value }
-                                        }))}
-                                        className="flex-1 border-white/5 bg-white/5 text-premium-text-primary focus:border-premium-accent/60 h-10 placeholder:text-premium-text-muted/50"
-                                    />
-                                    <Button
-                                        onClick={() => handleSave(p.id)}
-                                        disabled={!state.key || state.loading}
-                                        className="bg-premium-accent hover:bg-premium-accent/90 shadow-glow-accent min-w-[100px] h-10"
-                                    >
-                                        {state.loading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            state.isSet ? "Update" : "Connect"
-                                        )}
-                                    </Button>
+                            {/* Existing Keys List */}
+                            {keyCount > 0 && (
+                                <div className="space-y-3 mb-6">
+                                    {state.keys
+                                        .sort((a, b) => a.priority - b.priority)
+                                        .map((key) => (
+                                            <div key={key.id} className="group relative flex items-center justify-between p-3 rounded-lg bg-premium-bg-primary border border-premium-border-subtle hover:border-premium-accent/30 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${key.priority === 1 ? 'bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/30' :
+                                                            key.priority === 2 ? 'bg-slate-500/10 text-slate-400 ring-1 ring-slate-500/30' :
+                                                                'bg-amber-900/10 text-amber-700 ring-1 ring-amber-900/30'
+                                                        }`}>
+                                                        #{key.priority}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium text-premium-text-primary">{key.name}</span>
+                                                        <span className="text-[10px] text-premium-text-muted">
+                                                            Added {new Date(key.created_at).toLocaleDateString()} • Used: {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDeleteKey(p.id, key.id)}
+                                                    className="h-8 w-8 text-premium-text-muted hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
                                 </div>
-                                <p className="text-[11px] text-premium-text-muted">
-                                    {state.isSet
-                                        ? `Encrypted at rest. Last context usage: ${state.lastUsedAt ? new Date(state.lastUsedAt).toLocaleDateString() : 'Never'}`
-                                        : `Provide your own ${p.name} key to bypass the global OpenRouter pool.`
-                                    }
-                                </p>
-                            </div>
+                            )}
+
+                            {/* Add New Key Form */}
+                            {canAddMore ? (
+                                <div className={`space-y-3 ${keyCount > 0 ? 'pt-4 border-t border-white/5' : ''}`}>
+                                    {keyCount > 0 && <p className="text-xs font-semibold text-premium-text-muted uppercase tracking-wider mb-2">Add Backup Key</p>}
+
+                                    <div className="grid md:grid-cols-[1fr,2fr,auto] gap-3 items-start">
+                                        <Input
+                                            placeholder="Name (e.g. Production)"
+                                            value={inputs.name}
+                                            onChange={(e) => setNewKeyValues(prev => ({
+                                                ...prev,
+                                                [p.id]: { ...prev[p.id], name: e.target.value }
+                                            }))}
+                                            className="bg-white/5 border-white/10 text-sm h-10 placeholder:text-white/20"
+                                        />
+                                        <div className="relative">
+                                            <Input
+                                                type="password"
+                                                placeholder={p.placeholder}
+                                                value={inputs.key}
+                                                onChange={(e) => setNewKeyValues(prev => ({
+                                                    ...prev,
+                                                    [p.id]: { ...prev[p.id], key: e.target.value }
+                                                }))}
+                                                className="bg-white/5 border-white/10 text-sm h-10 font-mono placeholder:text-white/20 pr-10"
+                                            />
+                                            <ShieldCheck className="absolute right-3 top-3 h-4 w-4 text-premium-success/40 pointer-events-none" />
+                                        </div>
+                                        <Button
+                                            onClick={() => handleSaveKey(p.id)}
+                                            disabled={!inputs.key || state.loading}
+                                            className="bg-premium-accent hover:bg-premium-accent/90 shadow-glow-accent h-10 px-4 whitespace-nowrap"
+                                        >
+                                            {state.loading ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <span className="flex items-center gap-2"><Plus className="h-3 w-3" /> Add Key</span>
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <p className="text-[10px] text-premium-text-muted/60 pl-1">
+                                        Keys are securely encrypted with AES-256-GCM. We never store them in plain text.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="mt-4 flex items-center gap-2 rounded-lg bg-yellow-500/10 p-3 text-xs text-yellow-500 border border-yellow-500/20">
+                                    <ShieldAlert className="h-4 w-4 shrink-0" />
+                                    <span>Maximum limit of 3 keys reached for this provider. Delete a key to add a new one.</span>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
             </div>
 
+            {/* Info Footer */}
             <div className="rounded-premium-lg border border-violet-500/20 bg-violet-500/5 p-4">
                 <div className="flex gap-3">
-                    <AlertCircle className="h-5 w-5 text-violet-400 shrink-0" />
+                    <Shield className="h-5 w-5 text-violet-400 shrink-0" />
                     <div className="text-sm text-violet-300">
-                        <p className="font-semibold mb-1">How BYOK Works</p>
-                        <p>
-                            When a key is provided, WatchLLM will route requests for that provider directly to their official API endpoints (or OpenRouter) using your key.
-                            This allows you to use your own negotiated rates, free tiers, and avoids global rate limits. Caching and logging still apply.
+                        <p className="font-semibold mb-1">Secure Multi-Key Management</p>
+                        <p className="opacity-90 leading-relaxed">
+                            WatchLLM automatically rotates through your keys based on priority (1-3).
+                            If your primary key hits a rate limit or error, we instantly failover to the next available priority key
+                            to ensure 100% uptime for your AI features.
                         </p>
                     </div>
                 </div>

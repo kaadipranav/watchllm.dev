@@ -82,27 +82,31 @@ async function getAPIKeyAndProvider(
     const supabase = createSupabaseClient(env);
     const providerKeys = await supabase.getProviderKeys(projectId);
 
-    // Find the key for the requested provider
-    const userKey = providerKeys.find(k => k.provider === provider && k.is_active);
+    // Find all keys for the requested provider (already sorted by priority)
+    const userKeys = providerKeys.filter(k => k.provider === provider && k.is_active);
 
-    if (userKey && env.ENCRYPTION_MASTER_SECRET) {
-      try {
-        // Decrypt the user's key
-        const decryptedKey = await decryptProviderKey(
-          userKey.encrypted_key,
-          userKey.encryption_iv,
-          env.ENCRYPTION_MASTER_SECRET
-        );
+    // Try keys in priority order (1, 2, 3)
+    for (const userKey of userKeys) {
+      if (env.ENCRYPTION_MASTER_SECRET) {
+        try {
+          // Decrypt the user's key
+          const decryptedKey = await decryptProviderKey(
+            userKey.encrypted_key,
+            userKey.encryption_iv,
+            env.ENCRYPTION_MASTER_SECRET
+          );
 
-        console.log(`Using BYOK key for provider: ${provider}`);
-        return {
-          apiKey: decryptedKey,
-          effectiveProvider: provider,
-          isUserKey: true,
-          isFreeModel
-        };
-      } catch (error) {
-        console.error(`Failed to decrypt user key for ${provider}:`, error);
+          console.log(`Using BYOK key for provider: ${provider} (Priority: ${userKey.priority}, Name: ${userKey.name || 'Unnamed'})`);
+          return {
+            apiKey: decryptedKey,
+            effectiveProvider: provider,
+            isUserKey: true,
+            isFreeModel
+          };
+        } catch (error) {
+          console.error(`Failed to decrypt user key for ${provider} (Priority: ${userKey.priority}):`, error);
+          // Continue to next key if decryption fails
+        }
       }
     }
   }

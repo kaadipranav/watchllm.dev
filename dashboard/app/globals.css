@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Fonts are loaded via next/font in layout.tsx - no @import needed */
 
 @tailwind base;
 @tailwind components;
@@ -7,38 +7,57 @@
 @layer base {
   :root {
     /* WatchLLM Design System - Based on ui.md specification */
-    
+
     /* Background Colors */
-    --bg-primary: 0 0% 2.5%;         /* #060606 - even darker */
-    --bg-surface: 0 0% 5%;           /* #0D0D0D - darker surface */
-    --bg-elevated: 0 0% 10%;         /* #1A1A1A */
-    --bg-glass: 0 0% 4% / 0.8;       /* glass effect base */
-    
+    --bg-primary: 0 0% 2.5%;
+    /* #060606 - even darker */
+    --bg-surface: 0 0% 5%;
+    /* #0D0D0D - darker surface */
+    --bg-elevated: 0 0% 10%;
+    /* #1A1A1A */
+    --bg-glass: 0 0% 4% / 0.8;
+    /* glass effect base */
+
     /* Border Colors */
-    --border-subtle: 0 0% 13%;       /* #222222 */
-    --border-default: 0 0% 16%;      /* #2A2A2A */
-    --border-hover: 0 0% 20%;        /* #333333 */
-    --border-focus: 217 91% 60% / 0.5; /* blue with opacity */
-    
-    /* Text Colors */
-    --text-primary: 0 0% 98%;        /* #FAFAFA - near-white */
-    --text-secondary: 0 0% 63%;      /* #A1A1A1 */
-    --text-tertiary: 0 0% 45%;       /* #737373 */
-    --text-muted: 0 0% 32%;          /* #525252 */
-    
+    --border-subtle: 0 0% 13%;
+    /* #222222 */
+    --border-default: 0 0% 16%;
+    /* #2A2A2A */
+    --border-hover: 0 0% 20%;
+    /* #333333 */
+    --border-focus: 217 91% 60% / 0.5;
+    /* blue with opacity */
+
+    /* Text Colors - Improved for WCAG AA contrast */
+    --text-primary: 0 0% 98%;
+    /* #FAFAFA - near-white */
+    --text-secondary: 0 0% 72%;
+    /* #B8B8B8 - improved from 63% for AA contrast */
+    --text-tertiary: 0 0% 55%;
+    /* #8C8C8C - improved from 45% */
+    --text-muted: 0 0% 42%;
+    /* #6B6B6B - improved from 32% */
+
     /* Accent Colors */
-    --accent-primary: 217 91% 60%;   /* #3B82F6 - blue */
-    --accent-primary-hover: 217 91% 54%; /* #2563EB */
+    --accent-primary: 217 91% 60%;
+    /* #3B82F6 - blue */
+    --accent-primary-hover: 217 91% 54%;
+    /* #2563EB */
     --accent-glow: 217 91% 60% / 0.15;
-    
+
     /* Semantic Colors */
-    --success: 158 64% 52%;          /* #10B981 - green */
+    --success: 158 64% 52%;
+    /* #10B981 - green */
     --success-glow: 158 64% 52% / 0.12;
-    --warning: 38 92% 50%;           /* #F59E0B - amber */
-    --danger: 0 72% 51%;             /* #EF4444 - red */
-    --info: 217 91% 60%;             /* #3B82F6 - blue */
-    --purple: 271 91% 65%;           /* #A855F7 - purple */
-    
+    --warning: 38 92% 50%;
+    /* #F59E0B - amber */
+    --danger: 0 72% 51%;
+    /* #EF4444 - red */
+    --info: 217 91% 60%;
+    /* #3B82F6 - blue */
+    --purple: 271 91% 65%;
+    /* #A855F7 - purple */
+
     /* Legacy mappings for compatibility */
     --background: var(--bg-primary);
     --foreground: var(--text-primary);
@@ -59,7 +78,7 @@
     --border: var(--border-subtle);
     --input: var(--border-default);
     --ring: var(--border-focus);
-    
+
     /* Border Radius System */
     --radius-xs: 4px;
     --radius-sm: 6px;
@@ -67,7 +86,7 @@
     --radius-lg: 12px;
     --radius-xl: 16px;
     --radius: var(--radius-md);
-    
+
     /* Shadows & Depth */
     --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.5);
     --shadow-sm: 0 2px 8px 0 rgb(0 0 0 / 0.6);
@@ -75,20 +94,25 @@
     --shadow-lg: 0 8px 32px 0 rgb(0 0 0 / 0.8);
     --shadow-glow-accent: 0 0 24px rgb(59 130 246 / 0.4);
     --shadow-glow-success: 0 0 24px rgb(16 185 129 / 0.4);
-    
+
     /* Animations */
     --duration-fast: 150ms;
     --duration-base: 200ms;
     --duration-slow: 300ms;
     --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-    
+
     /* Charts */
-    --chart-1: 217 91% 60%;  /* Blue */
-    --chart-2: 158 64% 52%;  /* Green */
-    --chart-3: 271 91% 65%;  /* Purple */
-    --chart-4: 38 92% 50%;   /* Amber */
-    --chart-5: 0 72% 51%;    /* Red */
+    --chart-1: 217 91% 60%;
+    /* Blue */
+    --chart-2: 158 64% 52%;
+    /* Green */
+    --chart-3: 271 91% 65%;
+    /* Purple */
+    --chart-4: 38 92% 50%;
+    /* Amber */
+    --chart-5: 0 72% 51%;
+    /* Red */
   }
 }
 
@@ -96,7 +120,7 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-bg-primary text-text-primary;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -106,18 +130,18 @@
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
   }
-  
+
   /* Typography scale */
   h1 {
     @apply text-5xl font-bold tracking-tight;
     letter-spacing: -0.03em;
   }
-  
+
   h2 {
     @apply text-3xl font-semibold tracking-tight;
     letter-spacing: -0.02em;
   }
-  
+
   h3 {
     @apply text-2xl font-semibold tracking-tight;
     letter-spacing: -0.01em;
@@ -127,17 +151,17 @@
     @apply font-display;
     letter-spacing: -0.04em;
   }
-  
+
   /* Smooth scrolling with reduced motion respect */
   html {
     scroll-behavior: smooth;
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
-    
+
     *,
     *::before,
     *::after {
@@ -146,43 +170,44 @@
       transition-duration: 0.01ms !important;
     }
   }
-  
+
   /* Better focus visibility */
   *:focus-visible {
     outline: 2px solid hsl(var(--border-focus));
     outline-offset: 4px;
     border-radius: 2px;
   }
-  
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  
+
   ::-webkit-scrollbar-track {
     background: hsl(var(--bg-primary));
   }
-  
+
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--border-default));
     border-radius: 4px;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--border-hover));
   }
 }
 
 @layer components {
+
   /* Grid background pattern */
   .grid-pattern {
-    background-image: 
+    background-image:
       linear-gradient(hsl(var(--border-subtle)) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--border-subtle)) 1px, transparent 1px);
     background-size: 60px 60px;
   }
-    
+
   .hero-grid {
     background-color: transparent;
     background-image:
@@ -194,12 +219,12 @@
     inset: 0;
     z-index: 0;
   }
-  
+
   /* Animated gradient border */
   .gradient-border {
     position: relative;
   }
-  
+
   .gradient-border::before {
     content: '';
     position: absolute;
@@ -214,14 +239,14 @@
     opacity: 0;
     transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .gradient-border:hover::before {
     opacity: 1;
   }
-  
+
   /* Card glow effect */
   .card-glow {
-    box-shadow: 
+    box-shadow:
       0 0 0 1px hsl(var(--border-subtle)),
       0 8px 32px 0 rgb(0 0 0 / 0.8),
       0 0 48px -12px hsl(var(--accent-glow));
@@ -234,7 +259,7 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  
+
   .text-gradient-accent {
     background: linear-gradient(135deg, #3B82F6, #A855F7);
     -webkit-background-clip: text;
@@ -252,10 +277,14 @@
   }
 
   @keyframes blink {
-    0%, 50% {
+
+    0%,
+    50% {
       opacity: 1;
     }
-    50.1%, 100% {
+
+    50.1%,
+    100% {
       opacity: 0;
     }
   }
@@ -264,29 +293,28 @@
   .skeleton {
     @apply relative overflow-hidden bg-bg-elevated;
   }
-  
+
   .skeleton::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(0 0% 100% / 0.05) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(0 0% 100% / 0.05) 50%,
+        transparent 100%);
     animation: skeleton-shimmer 2s ease-in-out infinite;
   }
-  
+
   @keyframes skeleton-shimmer {
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(100%);
     }
   }
-  
+
   /* Glass effect */
   .glass {
     @apply bg-bg-primary/80 backdrop-blur-xl border border-border-subtle;
@@ -302,6 +330,7 @@
     0% {
       background-position: 200% 0;
     }
+
     100% {
       background-position: -200% 0;
     }

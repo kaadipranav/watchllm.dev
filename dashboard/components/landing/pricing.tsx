@@ -116,12 +116,12 @@ function PricingCard({
       >
         {/* Coming Soon Overlay */}
         {APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-bg-primary/90 backdrop-blur-sm rounded-lg">
-            <Badge variant="secondary" className="mb-2">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-bg-primary/95 backdrop-blur-sm rounded-lg border-2 border-dashed border-text-muted/30">
+            <Badge variant="secondary" className="mb-3 px-4 py-1.5 text-sm font-semibold bg-accent-primary/10 text-accent-primary border-accent-primary/20">
               Coming Soon
             </Badge>
-            <p className="text-xs text-text-muted">
-              Available after testing
+            <p className="text-sm text-text-secondary font-medium">
+              Available after beta testing
             </p>
           </div>
         )}
@@ -130,8 +130,8 @@ function PricingCard({
           className={cn(
             "space-y-6",
             APP_CONFIG.showPricingComingSoon &&
-              plan.name !== "Free" &&
-              "blur-sm opacity-50"
+            plan.name !== "Free" &&
+            "blur-sm opacity-50"
           )}
         >
           {/* Header */}

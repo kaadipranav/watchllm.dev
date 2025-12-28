@@ -1,17 +1,25 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 
-const sans = Plus_Jakarta_Sans({ 
+const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: '--font-sans',
+  display: 'swap', // Prevent FOUT/CLS
 });
 
 const display = Outfit({
   subsets: ["latin"],
   variable: '--font-display',
+  display: 'swap',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: '--font-mono',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -114,15 +122,18 @@ export const metadata: Metadata = {
     google: "your-google-verification-code",
     yandex: "your-yandex-verification-code",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
   other: {
     "msapplication-TileColor": "#000000",
     "theme-color": "#000000",
   },
+};
+
+// Viewport export (moved from metadata for Next.js 14+)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // Allow zoom for accessibility
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -164,7 +175,7 @@ export default function RootLayout({
     "featureList": [
       "Semantic caching with vector similarity",
       "OpenAI API proxy",
-      "Claude API proxy", 
+      "Claude API proxy",
       "Groq API proxy",
       "Real-time cost optimization",
       "95%+ accuracy matching",
@@ -188,7 +199,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${sans.variable} ${display.variable} font-sans antialiased`}>
+      <body className={`${sans.variable} ${display.variable} ${mono.variable} font-sans antialiased`}>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" defer />
         <noscript>
           <img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerPolicy="no-referrer-when-downgrade" />

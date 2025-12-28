@@ -139,9 +139,12 @@ function Typewriter({ words }: { words: string[] }) {
   }, [subIndex, index, reverse, words]);
 
   return (
-    <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-accent-purple to-accent-primary bg-[length:200%_auto] animate-flow-wave">
-      {words[index].substring(0, subIndex)}
-      <span className="inline-block w-[2px] h-[0.8em] bg-accent-primary ml-1 align-middle animate-pulse" />
+    /* Fixed width container to prevent CLS */
+    <span className="inline-block min-w-[8ch] sm:min-w-[10ch] text-left">
+      <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-purple-400 to-accent-primary bg-[length:200%_auto]">
+        {words[index].substring(0, subIndex)}
+      </span>
+      <span className="inline-block w-[3px] h-[0.75em] bg-accent-primary ml-0.5 align-middle animate-pulse rounded-full" />
     </span>
   );
 }
@@ -180,12 +183,13 @@ export function Hero() {
           {/* Headline with stagger animation */}
           <motion.div className="space-y-6 mb-10">
             <motion.h1
-              className="hero-heading text-6xl sm:text-8xl lg:text-[104px] tracking-[-0.04em] leading-[0.95] text-text-primary"
+              className="hero-heading text-5xl sm:text-7xl lg:text-[96px] tracking-[-0.04em] leading-[1.05] text-text-primary"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              The builder&rsquo;s companion for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} /> caching
+              <span className="block sm:inline">The builder&rsquo;s companion</span>{" "}
+              <span className="block sm:inline">for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} /></span>
             </motion.h1>
 
             <motion.p
@@ -200,20 +204,25 @@ export function Hero() {
 
           {/* CTA buttons */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group">
+            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-accent-primary/20">
               <Link href="/signup">
-                <span className="relative z-10">Launch Build</span>
+                <span className="relative z-10 font-semibold">Start Building Free</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="secondary" className="h-14 px-10 text-lg min-w-[220px] border-border-default hover:bg-bg-elevated transition-all">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-accent-primary/50 hover:bg-accent-primary/5 text-text-primary transition-all"
+            >
               <Link href="#features">
-                See the stack
+                See How It Works
               </Link>
             </Button>
           </motion.div>

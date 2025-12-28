@@ -91,8 +91,8 @@ export default function HomePage() {
       />
       {/* Minimal dark grid + subtle top glow (Vercel/Linear-inspired) */}
       <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
-        <div 
-          className="absolute inset-0 grid-pattern opacity-[0.09]" 
+        <div
+          className="absolute inset-0 grid-pattern opacity-[0.09]"
           style={{
             maskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)',
             WebkitMaskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)'
@@ -103,7 +103,14 @@ export default function HomePage() {
       </div>
 
       <Navbar />
-      <main className="flex-1 max-w-[96rem] mx-auto w-full">
+      {/* Skip to content link for keyboard accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-20 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent-primary focus:text-white focus:rounded-md focus:outline-none"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content" className="flex-1 max-w-[96rem] mx-auto w-full" role="main">
         <Suspense fallback={null}>
           <AuthCallbackHandler />
         </Suspense>

@@ -64,6 +64,7 @@ export interface ProviderKeyRecord {
   encrypted_key: string;
   encryption_iv: string;
   name: string | null;
+  priority: number; // 1-3, lower = higher priority
   is_active: boolean;
   created_at: string;
   updated_at: string;

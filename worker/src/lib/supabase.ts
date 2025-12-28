@@ -206,7 +206,7 @@ export class SupabaseClient {
 
   /**
    * Get provider keys for a project (BYOK)
-   * Returns all active provider keys for the project
+   * Returns all active provider keys for the project, ordered by priority
    */
   async getProviderKeys(projectId: string): Promise<ProviderKeyRecord[]> {
     const result = await this.query<ProviderKeyRecord[]>('provider_keys', {
@@ -214,6 +214,7 @@ export class SupabaseClient {
       filters: {
         project_id: `eq.${projectId}`,
         is_active: 'eq.true',
+        order: 'priority.asc', // Order by priority (1 first, then 2, then 3)
       },
     });
 
@@ -221,8 +222,9 @@ export class SupabaseClient {
       return [];
     }
 
-    // Return as array (even if single result)
-    return Array.isArray(result.data) ? result.data : [result.data];
+    // Return as array (even if single result), sorted by priority
+    const keys = Array.isArray(result.data) ? result.data : [result.data];
+    return keys.sort((a, b) => a.priority - b.priority);
   }
 
   /**
