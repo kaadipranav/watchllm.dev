@@ -46,7 +46,8 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
-  const [showKey, setShowKey] = useState<string | null>(null);
+  const [revealedKeys, setRevealedKeys] = useState<Record<string,string>>({});
+  const [showKeyId, setShowKeyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const supabase = createClient();
@@ -71,7 +72,7 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
       
       toast({
         title: "API Key Created",
-        description: "Make sure to copy your key now. You won't be able to see it again!",
+        description: "Your API key has been created — you can reveal and copy it any time from this page.",
       });
     } catch (error) {
       toast({
@@ -115,6 +116,33 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
     });
   };
 
+  const revealKey = async (keyId: string) => {
+    try {
+      const res = await fetch('/api/reveal-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyId }),
+      });
+      if (!res.ok) throw new Error('Failed to reveal key');
+      const json = await res.json();
+      setRevealedKeys((prev) => ({ ...prev, [keyId]: json.key }));
+      return json.key;
+    } catch (err) {
+      toast({ title: 'Error', description: 'Unable to reveal API key', variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const revealAndCopy = async (keyId: string) => {
+    let key = revealedKeys[keyId];
+    if (!key) {
+      key = await revealKey(keyId);
+    }
+    if (key) {
+      copyToClipboard(key);
+    }
+  };
+
   const handleCloseDialog = () => {
     setShowDialog(false);
     setCreatedKey(null);
@@ -153,9 +181,9 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
                   <TableRow key={apiKey.id}>
                     <TableCell className="font-medium">{apiKey.name}</TableCell>
                     <TableCell>
-                      <code className="text-sm">
-                        {showKey === apiKey.id 
-                          ? apiKey.key_prefix + "••••••••••••••••••••••••"
+                      <code className="text-sm break-all">
+                        {revealedKeys[apiKey.id]
+                          ? revealedKeys[apiKey.id]
                           : maskAPIKey(apiKey.key_prefix + "••••••••••••••••••••••••")
                         }
                       </code>
@@ -177,9 +205,20 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setShowKey(showKey === apiKey.id ? null : apiKey.id)}
+                          onClick={async () => {
+                            if (revealedKeys[apiKey.id]) {
+                              // hide
+                              setRevealedKeys((prev) => {
+                                const copy = { ...prev };
+                                delete copy[apiKey.id];
+                                return copy;
+                              });
+                            } else {
+                              await revealKey(apiKey.id);
+                            }
+                          }}
                         >
-                          {showKey === apiKey.id ? (
+                          {revealedKeys[apiKey.id] ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />
@@ -188,7 +227,7 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => copyToClipboard(apiKey.key_prefix)}
+                          onClick={() => revealAndCopy(apiKey.id)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -220,7 +259,7 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
             </DialogTitle>
             <DialogDescription>
               {createdKey
-                ? "Make sure to copy your API key now. You won't be able to see it again!"
+                ? "Your API key has been created — you can reveal and copy it any time from this page."
                 : "Give your API key a name to help you identify it later."
               }
             </DialogDescription>
