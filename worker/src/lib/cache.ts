@@ -12,22 +12,13 @@ import type {
   EmbeddingsResponse,
   CacheEntry,
 } from '../types';
+import { normalizePrompt } from './semanticCache';
 
 // Default TTL: 1 hour in seconds
 const DEFAULT_TTL = 3600;
 
 // Cache key prefix
 const CACHE_PREFIX = 'watchllm:cache:';
-
-/**
- * Normalize text for consistent cache key generation
- * - Convert to lowercase
- * - Remove extra whitespace
- * - Trim
- */
-function normalizeText(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, ' ');
-}
 
 /**
  * Generate a deterministic hash for cache key
@@ -52,11 +43,11 @@ export function generateChatCacheKey(request: ChatCompletionRequest): string {
   const model = request.model;
   const temperature = (request.temperature ?? 1).toFixed(2);
 
-  // Normalize and concatenate messages
+  // Normalize and concatenate messages using the same normalization as semantic cache
   const messagesKey = request.messages
     .map((m) => {
       const role = m.role;
-      const content = normalizeText(m.content || '');
+      const content = normalizePrompt(m.content || '');
       return `${role}:${content}`;
     })
     .join('|');
@@ -85,10 +76,10 @@ export function generateCompletionCacheKey(request: CompletionRequest): string {
   const model = request.model;
   const temperature = (request.temperature ?? 1).toFixed(2);
 
-  // Normalize prompt
+  // Normalize prompt using the same normalization as semantic cache
   const prompt = Array.isArray(request.prompt)
-    ? request.prompt.map(normalizeText).join('|')
-    : normalizeText(request.prompt);
+    ? request.prompt.map(normalizePrompt).join('|')
+    : normalizePrompt(request.prompt);
 
   const keyData = `${model}:${temperature}:${prompt}`;
   const hash = hashString(keyData);
@@ -102,10 +93,10 @@ export function generateCompletionCacheKey(request: CompletionRequest): string {
 export function generateEmbeddingsCacheKey(request: EmbeddingsRequest): string {
   const model = request.model;
 
-  // Normalize input
+  // Normalize input using the same normalization as semantic cache
   const input = Array.isArray(request.input)
-    ? request.input.map(normalizeText).join('|')
-    : normalizeText(request.input);
+    ? request.input.map(normalizePrompt).join('|')
+    : normalizePrompt(request.input);
 
   const dimensions = request.dimensions ?? '';
 
