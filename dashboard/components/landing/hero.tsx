@@ -139,12 +139,9 @@ function Typewriter({ words }: { words: string[] }) {
   }, [subIndex, index, reverse, words]);
 
   return (
-    /* Fixed width container to prevent CLS */
-    <span className="inline-block min-w-[7ch] sm:min-w-[8ch] text-left">
-      <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-purple-400 to-accent-primary bg-[length:200%_auto]">
-        {words[index].substring(0, subIndex)}
-      </span>
-      <span className="inline-block w-[3px] h-[0.75em] bg-accent-primary ml-0.5 align-middle animate-pulse rounded-full" />
+    <span className="inline bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-purple-400 to-accent-primary bg-[length:200%_auto]">
+      {words[index].substring(0, subIndex)}
+      <span className="inline-block w-[3px] h-[0.75em] bg-accent-primary ml-1 align-middle animate-pulse rounded-full" />
     </span>
   );
 }
@@ -154,16 +151,16 @@ function Typewriter({ words }: { words: string[] }) {
  */
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center py-20 overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center py-20 overflow-hidden">
       <Spotlight />
       {/* Spotlight effect */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
         <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent-primary/5 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative mx-auto max-w-[96rem] px-2 sm:px-8 lg:px-16 w-full z-10">
+      <div className="relative w-full z-10 flex justify-center">
         {/* Main content */}
-        <div className="text-center max-w-6xl mx-auto">
+        <div className="text-center max-w-6xl w-full px-4 sm:px-8 lg:px-16">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -183,24 +180,24 @@ export function Hero() {
           {/* Headline with stagger animation */}
           <motion.div className="space-y-6 mb-10">
             <motion.h1
-              className="hero-heading text-5xl sm:text-7xl lg:text-[84px] tracking-[-0.04em] leading-[1.1] text-text-primary mb-8"
+              className="hero-heading text-5xl sm:text-7xl lg:text-[84px] tracking-[-0.04em] leading-[1.05] text-text-primary mb-8 px-4 sm:px-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="block">The builder&rsquo;s</span>
-              <span className="block sm:whitespace-nowrap">
-                companion for <Typewriter words={["OpenAI", "Claude", "Groq", "Llama 3"]} />
+              <span className="block">The builder&rsquo;s companion</span>
+              <span className="block mt-3">
+                for any <Typewriter words={["model", "provider", "API", "endpoint", "LLM"]} />
               </span>
             </motion.h1>
 
             <motion.p
-              className="text-xl sm:text-2xl text-text-secondary max-w-3xl mx-auto leading-relaxed font-medium"
+              className="text-lg sm:text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed font-medium px-4 sm:px-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Ship confidently with semantic caching for <span className="font-semibold text-text-primary">OpenAI, Claude, Groq, Llama 3</span>—keep your integrations identical to day one while serving repeated prompts under 100ms.
+              Semantic caching that works with <span className="font-semibold text-text-primary">OpenRouter and any LLM provider</span>. Keep your integrations production-identical while serving cached responses in under <span className="font-semibold text-text-primary">100ms</span>.
             </motion.p>
           </motion.div>
 
