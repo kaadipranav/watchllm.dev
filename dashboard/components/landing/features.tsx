@@ -23,38 +23,38 @@ const features: Feature[] = [
     gradient: "from-accent-primary to-accent-purple",
   },
   {
+    title: "A/B Testing",
+    description: "Compare models like GPT-4 vs Claude in production. Split traffic by weight, measure performance, and optimize costs.",
+    icon: Code,
+    metric: "Live comparisons",
+    gradient: "from-cyan-500 to-blue-500",
+  },
+  {
+    title: "Cost Forecasting",
+    description: "Predict month-end costs with ML-powered forecasting. See confidence bands and trends to avoid budget surprises.",
+    icon: BarChart3,
+    metric: "30-day view",
+    gradient: "from-emerald-500 to-teal-500",
+  },
+  {
+    title: "Anomaly Detection",
+    description: "Get alerted instantly when costs spike. Our AI monitors usage patterns and detects anomalies before they hurt your wallet.",
+    icon: Shield,
+    metric: "Instant alerts",
+    gradient: "from-rose-500 to-pink-500",
+  },
+  {
     title: "Zero Integration",
     description: "Drop-in OpenAI-compatible proxy. Swap one endpoint and keep your existing code. No refactoring required.",
-    icon: Code,
+    icon: Database,
     metric: "5min setup",
-    gradient: "from-cyan-500 to-blue-500",
+    gradient: "from-amber-500 to-orange-500",
   },
   {
     title: "Global Edge Network",
     description: "Deployed on Cloudflare Workers with sub-50ms latency worldwide. Automatic routing to nearest edge.",
     icon: Globe,
     metric: "<50ms",
-    gradient: "from-emerald-500 to-teal-500",
-  },
-  {
-    title: "Real-time Analytics",
-    description: "Monitor costs, cache hits, and performance by project in real-time. Actionable insights at your fingertips.",
-    icon: BarChart3,
-    metric: "Live data",
-    gradient: "from-amber-500 to-orange-500",
-  },
-  {
-    title: "Enterprise Security",
-    description: "End-to-end encryption, audit logs, and BYOK support. Your keys, your data, your control.",
-    icon: Shield,
-    metric: "SOC 2 ready",
-    gradient: "from-rose-500 to-pink-500",
-  },
-  {
-    title: "Multi-Provider",
-    description: "Unified API for OpenAI, Claude, Groq, and more via OpenRouter. One integration, all models.",
-    icon: Database,
-    metric: "BYOK",
     gradient: "from-indigo-500 to-purple-500",
   },
 ];
@@ -124,7 +124,7 @@ export function Features() {
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-bg-elevated border border-border-subtle">
                     <feature.icon className="h-6 w-6 text-text-primary" />
                   </div>
-                  
+
                   {/* Metric badge */}
                   {feature.metric && (
                     <div className="absolute -top-2 -right-2">

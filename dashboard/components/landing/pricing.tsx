@@ -32,7 +32,7 @@ const plans = [
   {
     name: "Starter",
     description: "For growing applications",
-    price: "$29",
+    price: "$49",
     period: "/month",
     features: [
       { text: "250K requests/month", included: true },
@@ -53,7 +53,7 @@ const plans = [
   {
     name: "Pro",
     description: "For production workloads",
-    price: "$49",
+    price: "$99",
     period: "/month",
     features: [
       { text: "1M requests/month", included: true },
