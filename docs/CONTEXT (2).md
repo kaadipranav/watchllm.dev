@@ -12,6 +12,18 @@
 
 ---
 
+## 1.5 Current Implementation Snapshot
+
+The present WatchLLM repository already includes a **fully-typed foundation layer** and starter infrastructure:
+
+- **Event schema & utilities** – `packages/shared/observability/*` (TypeScript)
+- **Cross-platform JS/TS SDK** – batching, sampling, PII-redaction
+- **Python SDK** – thread-safe background flushing for data-science users
+- **Cloudflare Worker ingestion** – Hono routes with API-key validation stubs
+- **Next.js dashboard skeleton** – live event feed component & metrics cards
+
+These pieces are battle-tested locally but still require persistence, stream processing and alerting to be production-ready. The roadmap below assumes this starting point.
+
 ## 2. Product Principles
 
 1. **Developer-first:** one-line integrations, simple SDKs, predictable APIs.
@@ -168,15 +180,16 @@ OKR examples:
 
 **Components:**
 
-* Ingestion API (autoscale) behind rate limiting and API key auth.
-* Stream processor (Kafka or serverless queue) to normalize events.
-* Storage: hot store for recent logs (Elasticsearch / ClickHouse / Timescale) + cold archive (S3 + Parquet).
-* Indexing & search: full text for prompts/responses, tags.
-* Aggregation pipelines: nightly rollups for usage/cost metrics.
-* UI backend: GraphQL/REST API for the dashboard.
-* Frontend: React + Tailwind (or similar) with charts and timeline UI.
-* SaaS infra: Terraform + k8s or serverless stack (Cloud Run / Fargate) depending on scale.
-* Billing: Stripe + WHOP integration for distribution.
+* **Cloudflare Worker ingestion API** (Hono) with Supabase API-key auth & global rate-limiting.
+* **Queue / stream** – Cloudflare Queues (Student Pack free tier) or Kafka on DigitalOcean credit for high-volume pipelines.
+* **Storage** – Supabase Postgres for hot rows, **ClickHouse** (DigitalOcean Managed) for analytics, S3/Backblaze for cold archive.
+* **Cache layer** – Upstash Redis (free tier) for real-time counters & session state.
+* **Indexing & search** – Postgres `pg_trgm` search plus ClickHouse materialised views for aggregations.
+* **Aggregation jobs** – Supabase Edge Functions & cron triggers (free).
+* **UI backend** – Next.js API routes / tRPC deployed on Vercel (Education plan) or Fly.io credit.
+* **Frontend** – React + Tailwind + shadcn/ui (already in repo) with Recharts/Visx for charts.
+* **IaC & CI** – Terraform + GitHub Actions (Student Pack) for reproducible infra.
+* **Billing & auth** – Stripe fee waiver (Student Pack) + WHOP for plan distribution.
 
 **Observability:** own Sentry for app errors, metrics (Prometheus/Grafana), cost alerts.
 
