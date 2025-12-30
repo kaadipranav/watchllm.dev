@@ -31,9 +31,26 @@ out/
 # IDE
 .vscode/
 .idea/
+.qodo/
 *.swp
 *.swo
 *~
+
+# Test files with sensitive data
+test-*.js
+test-*.ts
+quick-*.js
+setup-*.js
+
+# Internal documents
+TASKS.md
+MARKETING_TRACKER.md
+PROFILE_README.md
+LANDING_PAGE_AUDIT.md
+marketing_launch.txt
+
+# Git hooks
+.husky/
 
 # OS
 .DS_Store
