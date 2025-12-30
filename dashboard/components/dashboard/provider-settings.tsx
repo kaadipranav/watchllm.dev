@@ -107,7 +107,7 @@ export function ProviderSettings() {
             setFetching(false);
         }
         loadProjects();
-    }, []);
+    }, [supabase]);
 
     // Load Keys when project changes
     useEffect(() => {

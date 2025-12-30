@@ -84,6 +84,7 @@ function APIKeysContent() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync tab with URL if it changes

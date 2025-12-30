@@ -29,7 +29,7 @@ export default function SettingsPage() {
       }
     };
     getUser();
-  }, []);
+  }, [supabase]);
 
   const handleUpdateProfile = async () => {
     setLoading(true);

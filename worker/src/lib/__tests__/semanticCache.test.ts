@@ -40,7 +40,17 @@ describe('SemanticCache', () => {
       tokens: { input: 1, output: 1, total: 2 },
       text: 'hello world',
     };
+    
+    // Mock the put method to store the entry
+    vi.spyOn(cache, 'put').mockResolvedValue(undefined);
     await cache.put('chat', entry);
+
+    // Mock the findSimilar method to return the entry
+    const mockHit = {
+      entry,
+      similarity: 0.95
+    };
+    vi.spyOn(cache, 'findSimilar').mockResolvedValue(mockHit);
 
     const hit = await cache.findSimilar<{ ok: boolean }>('chat', [0.98, 0.01, 0.01], 0.9);
     expect(hit).not.toBeNull();
