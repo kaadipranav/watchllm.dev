@@ -1,4 +1,4 @@
-# CONTEXT — Sentry for AI (Product Brain)
+# CONTEXT — WatchLLM (AI Observability & Cost Control)
 
 > This file is the single source of truth (the "brain") for the product: a full, exhaustive specification that guides engineering, product, marketing, sales, legal, and ops toward building a high‑MRR, high‑valuation AI observability platform.
 
@@ -17,8 +17,6 @@
 The present WatchLLM repository already includes a **fully-typed foundation layer** and starter infrastructure:
 
 - **Event schema & utilities** – `packages/shared/observability/*` (TypeScript)
-- **Cross-platform JS/TS SDK** – batching, sampling, PII-redaction
-- **Python SDK** – thread-safe background flushing for data-science users
 - **Cloudflare Worker ingestion** – Hono routes with API-key validation stubs
 - **Next.js dashboard skeleton** – live event feed component & metrics cards
 
@@ -176,28 +174,55 @@ OKR examples:
 
 ---
 
-## 11. Technical Architecture (High Level)
+## 11. Technical Architecture (Expanded Stack)
 
-**Components:**
+**Components (Utilizing Student Benefits):**
 
-* **Cloudflare Worker ingestion API** (Hono) with Supabase API-key auth & global rate-limiting.
-* **Queue / stream** – Cloudflare Queues (Student Pack free tier) or Kafka on DigitalOcean credit for high-volume pipelines.
-* **Storage** – Supabase Postgres for hot rows, **ClickHouse** (DigitalOcean Managed) for analytics, S3/Backblaze for cold archive.
-* **Cache layer** – Upstash Redis (free tier) for real-time counters & session state.
-* **Indexing & search** – Postgres `pg_trgm` search plus ClickHouse materialised views for aggregations.
-* **Aggregation jobs** – Supabase Edge Functions & cron triggers (free).
-* **UI backend** – Next.js API routes / tRPC deployed on Vercel (Education plan) or Fly.io credit.
-* **Frontend** – React + Tailwind + shadcn/ui (already in repo) with Recharts/Visx for charts.
-* **IaC & CI** – Terraform + GitHub Actions (Student Pack) for reproducible infra.
-* **Billing & auth** – Stripe fee waiver (Student Pack) + WHOP for plan distribution.
-
-**Observability:** own Sentry for app errors, metrics (Prometheus/Grafana), cost alerts.
-
-**Security:** API keys, per-project encryption keys, RBAC, audit logs.
+*   **Ingestion Proxy**: **Cloudflare Worker** (Hono) for global low-latency proxying.
+*   **Buffer/Queue**: **Cloudflare Queues** (Student Pack) to prevent database bottlenecks during traffic spikes.
+*   **Primary Database**: **Supabase Postgres** for user data, project configs, and API key management.
+*   **Analytics Engine**: **ClickHouse** (Self-hosted on **DigitalOcean $200 credit**) for high-speed aggregations on millions of usage logs.
+*   **Caching Layer**: **Upstash Redis** (Global) for real-time cost counters and semantic cache keys.
+*   **Web Dashboard**: **Next.js** on Vercel (Pro/Education) using **Recharts** for the analytics engine.
+*   **Infrastructure Monitoring**: **Datadog Pro** (Free for 2 years) for monitoring worker health and server vitals.
+*   **Application Error Tracking**: **Sentry** (Student Pack) for frontend and worker error reporting.
+*   **Transactional Email**: **Resend** (100k free/mo) for cost alerts, weekly reports, and invitation flows.
+*   **Payments & Billing**: **Stripe** (Fee waiver) + **Whop SDK** for managing subscriptions and "Build-in-public" tiers.
+*   **Feature Management**: **ConfigCat** (Student Pack) to toggle experimental AI features (like "Guardian Mode").
 
 ---
 
-## 12. Data Model / Events Schema (recommended)
+## 12. Expanded Environment Variables
+
+To configure this full observability stack, ensure these are set in `.dev.vars` (Worker) and `.env.local` (Dashboard):
+
+### Core & Auth
+- `SUPABASE_URL`: Project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: For backend operations
+- `ENCRYPTION_MASTER_SECRET`: Used to encrypt BYOK keys (AES-256)
+
+### AI Providers (OpenRouter Native)
+- `OPENROUTER_API_KEY`: Main gateway for multi-model fallback
+
+### Analytics & Cache
+- `UPSTASH_REDIS_REST_URL`: For semantic cache and counters
+- `UPSTASH_REDIS_REST_TOKEN`: Auth for Redis
+- `CLICKHOUSE_HOST`: (DigitalOcean) Analytics URL
+- `CLICKHOUSE_USER`: DB User
+- `CLICKHOUSE_PASSWORD`: DB Password
+
+### Observability & Comms
+- `SENTRY_DSN`: Error reporting
+- `DATADOG_API_KEY`: Infrastructure metrics
+- `RESEND_API_KEY`: Transactional emails (Alerts)
+
+### Billing
+- `WHOP_API_KEY`: Subscription verification
+- `STRIPE_SECRET_KEY`: Payment integration
+
+---
+
+## 13. Data Model / Events Schema (recommended)
 
 **Event (prompt_call)**
 
