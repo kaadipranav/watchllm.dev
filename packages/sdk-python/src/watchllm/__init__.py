@@ -1,0 +1,39 @@
+from .client import (
+    WatchLLMClient,
+    init,
+    Status,
+    EventType,
+    StepType,
+    AssertionType,
+    DetectionMethod,
+    AlertType,
+    Severity,
+    BaseEvent,
+    PromptCallEvent,
+    AgentStepEvent,
+    ErrorEvent,
+    AssertionFailedEvent,
+    HallucinationDetectedEvent,
+    PerformanceAlertEvent,
+    ToolCallEvent
+)
+
+__all__ = [
+    "WatchLLMClient",
+    "init",
+    "Status",
+    "EventType",
+    "StepType",
+    "AssertionType",
+    "DetectionMethod",
+    "AlertType",
+    "Severity",
+    "BaseEvent",
+    "PromptCallEvent",
+    "AgentStepEvent",
+    "ErrorEvent",
+    "AssertionFailedEvent",
+    "HallucinationDetectedEvent",
+    "PerformanceAlertEvent",
+    "ToolCallEvent"
+]

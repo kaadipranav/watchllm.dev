@@ -22,9 +22,13 @@ import { handleChatCompletions } from './handlers/chat';
 import { handleCompletions } from './handlers/completions';
 import { handleEmbeddings } from './handlers/embeddings';
 import { log, maskApiKey } from './lib/logger';
+import observabilityApp from './observability/routes';
 
 // Create Hono app with environment bindings
 const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
+
+// Mount observability routes
+app.route('/', observabilityApp);
 
 // Response compression for text/JSON payloads
 // app.use('*', compress());
@@ -384,4 +388,20 @@ app.onError((err, c) => {
   );
 });
 
-export default app;
+// ============================================================================
+// Queue Handler
+// ============================================================================
+
+import { handleQueueBatch } from './observability/queue-consumer';
+
+export default {
+  fetch: app.fetch,
+  queue: async (batch: MessageBatch<any>, env: Env, ctx: ExecutionContext) => {
+    // Dispatch based on queue name if multiple queues
+    if (batch.queue === 'watchllm-observability-events' || batch.queue === 'watchllm-observability-dlq') {
+      await handleQueueBatch(batch, env, ctx);
+    } else {
+      console.warn(`Unknown queue: ${batch.queue}`);
+    }
+  },
+};

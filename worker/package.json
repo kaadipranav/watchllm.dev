@@ -16,6 +16,7 @@
     "clean": "rm -rf dist .wrangler"
   },
   "dependencies": {
+    "@clickhouse/client-web": "^1.15.0",
     "@sentry/cloudflare": "^10.30.0",
     "hono": "^4.6.0",
     "mongodb": "^7.0.0"

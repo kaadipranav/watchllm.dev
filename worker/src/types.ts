@@ -4,21 +4,52 @@
 
 // Environment bindings for Cloudflare Worker
 export interface Env {
+  // Supabase Configuration
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+
+  // Upstash Redis Configuration
   UPSTASH_REDIS_REST_URL: string;
   UPSTASH_REDIS_REST_TOKEN: string;
+
+  // AI Provider Keys
   OPENAI_API_KEY: string;
   ANTHROPIC_API_KEY?: string;
   GROQ_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
+
+  // Application Configuration
   APP_URL?: string;
   EMAIL_TRIGGER_SECRET?: string;
   SENTRY_DSN?: string;
   SEMANTIC_CACHE_THRESHOLD?: string;
   ENCRYPTION_MASTER_SECRET: string; // Master secret for encrypting user provider keys
-  DB?: D1Database; // D1 database for semantic caching
+
+  // D1 Database for semantic caching
+  DB?: D1Database;
+
+  // ClickHouse Analytics Configuration
+  CLICKHOUSE_HOST?: string;
+  CLICKHOUSE_PORT?: string;
+  CLICKHOUSE_USER?: string;
+  CLICKHOUSE_PASSWORD?: string;
+  CLICKHOUSE_DATABASE?: string;
+  CLICKHOUSE_SSL?: string;
+
+  // Cloudflare Queues for async event ingestion
+  OBSERVABILITY_QUEUE?: Queue<ObservabilityQueueMessage>;
+  OBSERVABILITY_DLQ?: Queue<ObservabilityQueueMessage>;
+}
+
+// Message type for observability queue
+export interface ObservabilityQueueMessage {
+  event_type: string;
+  event_id: string;
+  project_id: string;
+  run_id: string;
+  timestamp: string;
+  payload: Record<string, unknown>;
 }
 
 // API Key record from Supabase

@@ -23,6 +23,37 @@ binding = "DB"
 database_name = "watchllm-cache"
 database_id = "05064211-5526-4438-8c68-f29824da1d60"
 
+# ============================================================================
+# Cloudflare Queues Configuration
+# ============================================================================
+# Queue for asynchronous event ingestion into ClickHouse
+# This enables high-throughput data pipeline without blocking API responses
+# ============================================================================
+
+# Producer: Sends events to the queue from API handlers
+[[queues.producers]]
+queue = "watchllm-observability-events"
+binding = "OBSERVABILITY_QUEUE"
+
+# Consumer: Processes events and inserts into ClickHouse
+[[queues.consumers]]
+queue = "watchllm-observability-events"
+max_batch_size = 100           # Process up to 100 messages per batch
+max_batch_timeout = 30         # Wait max 30 seconds to fill batch
+max_retries = 3                # Retry failed messages up to 3 times
+dead_letter_queue = "watchllm-observability-dlq"  # Failed messages go here
+
+# Dead Letter Queue for failed event processing
+[[queues.producers]]
+queue = "watchllm-observability-dlq"
+binding = "OBSERVABILITY_DLQ"
+
+# Optional: Consumer for DLQ to handle/alert on failed events
+[[queues.consumers]]
+queue = "watchllm-observability-dlq"
+max_batch_size = 10            # Smaller batch for error handling
+max_batch_timeout = 60         # Longer timeout for DLQ
+max_retries = 0                # Don't retry DLQ messages
 
 [env.production]
 name = "watchllm-worker-production"
@@ -40,6 +71,28 @@ routes = [
 binding = "DB"
 database_name = "watchllm-cache"
 database_id = "05064211-5526-4438-8c68-f29824da1d60"
+
+# Production Queues Configuration
+[[env.production.queues.producers]]
+queue = "watchllm-observability-events"
+binding = "OBSERVABILITY_QUEUE"
+
+[[env.production.queues.consumers]]
+queue = "watchllm-observability-events"
+max_batch_size = 100
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "watchllm-observability-dlq"
+
+[[env.production.queues.producers]]
+queue = "watchllm-observability-dlq"
+binding = "OBSERVABILITY_DLQ"
+
+[[env.production.queues.consumers]]
+queue = "watchllm-observability-dlq"
+max_batch_size = 10
+max_batch_timeout = 60
+max_retries = 0
 
 # [env.development]
 # name = "watchllm-worker-dev"

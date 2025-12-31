@@ -57,9 +57,9 @@ export class ObservabilityIngestion {
 
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -160,9 +160,9 @@ export class ObservabilityIngestion {
     try {
       const { createSupabaseClient } = await import('../lib/supabase');
       const supabase = createSupabaseClient(this.env);
-      
+
       const result = await supabase.validateAPIKey(apiKey);
-      
+
       if (!result || !result.keyRecord || !result.project) {
         return { valid: false };
       }
@@ -179,18 +179,30 @@ export class ObservabilityIngestion {
   }
 
   /**
-   * Stores event in database
+   * Stores event in database or queue
    */
   private async storeEvent(event: ObservabilityEvent): Promise<void> {
-    // This would store the event in the appropriate database
-    // Could be Supabase, ClickHouse, or other time-series database
-    
-    // Placeholder implementation - in production this would:
-    // 1. Store in the main events table
-    // 2. Update real-time metrics
-    // 3. Trigger any alerts or integrations
-    
-    console.log('Storing event:', event.event_id, event.event_type);
+    // 1. Queue for asynchronous ingestion to ClickHouse
+    if (this.env.OBSERVABILITY_QUEUE) {
+      try {
+        await this.env.OBSERVABILITY_QUEUE.send({
+          event_type: event.event_type,
+          event_id: event.event_id,
+          project_id: event.project_id,
+          run_id: event.run_id,
+          timestamp: event.timestamp,
+          payload: event as unknown as Record<string, unknown>
+        });
+        console.log(`Queued event ${event.event_id} for ingestion`);
+      } catch (error) {
+        console.error('Failed to queue event:', error);
+      }
+    } else {
+      console.warn('OBSERVABILITY_QUEUE binding not found, skipping queueing');
+    }
+
+    // 2. Placeholder/Legacy storage (updates real-time metrics, etc.)
+    console.log('Storing event (legacy):', event.event_id, event.event_type);
   }
 
   /**
@@ -202,13 +214,13 @@ export class ObservabilityIngestion {
     // 2. Update live dashboards
     // 3. Trigger webhooks
     // 4. Update anomaly detection models
-    
+
     // Check for performance alerts
     if (event.event_type === 'prompt_call') {
       const promptEvent = event as any;
       await this.checkPerformanceAlerts(promptEvent);
     }
-    
+
     // Check for error rate spikes
     if (event.event_type === 'error') {
       await this.checkErrorRateAlerts(event.project_id);
@@ -223,7 +235,7 @@ export class ObservabilityIngestion {
     // 1. Query the events database with filters
     // 2. Apply pagination
     // 3. Return results with total count
-    
+
     return {
       events: [],
       total: 0,
@@ -243,7 +255,7 @@ export class ObservabilityIngestion {
     // 1. Query aggregated metrics from the database
     // 2. Apply date filters
     // 3. Return time-series data
-    
+
     return [];
   }
 
@@ -266,12 +278,12 @@ export class ObservabilityIngestion {
   private async checkPerformanceAlerts(event: any): Promise<void> {
     // Check for cost spikes, latency issues, etc.
     // This would integrate with the alerting system
-    
+
     if (event.latency_ms > 5000) {
       // Trigger latency alert
       console.log('Latency alert triggered for event:', event.event_id);
     }
-    
+
     if (event.cost_estimate_usd > 1.0) {
       // Trigger cost alert
       console.log('Cost alert triggered for event:', event.event_id);
@@ -284,7 +296,7 @@ export class ObservabilityIngestion {
   private async checkErrorRateAlerts(projectId: string): Promise<void> {
     // Check if error rate exceeds threshold
     // This would query recent error rates and trigger alerts if needed
-    
+
     console.log('Checking error rate alerts for project:', projectId);
   }
 }

@@ -24,7 +24,7 @@ The goal is to establish the high-volume data pipeline without breaking the curr
         node scripts/verify-clickhouse.js
         ```
 
-- [ ] **Task 1.2: ClickHouse Schema Design**
+- [x] **Task 1.2: ClickHouse Schema Design**
     *   **Action:** Create the initial SQL schema for `events`, `spans`, and `traces` based on `packages/shared/src/observability/types.ts`.
     *   **Reference:** Use BaseEvent + specific event types (PromptCallEvent, ToolCallEvent, etc.) to create tables.
     *   **Deliverable:** `clickhouse/schema.sql` file with tables:
@@ -66,7 +66,7 @@ The goal is to establish the high-volume data pipeline without breaking the curr
         node scripts/check-tables.js
         ```
 
-- [ ] **Task 1.3: Cloudflare Queues Setup**
+- [x] **Task 1.3: Cloudflare Queues Setup**
     *   **Action:** Configure Cloudflare Queues in `worker/wrangler.toml`.
     *   **Config:** Add `[[queues.producers]]` and `[[queues.consumers]]`.
     *   **Deliverable:** Updated `wrangler.toml`.
@@ -76,7 +76,7 @@ The goal is to establish the high-volume data pipeline without breaking the curr
         npx wrangler types
         ```
 
-- [ ] **Task 1.4: Worker Queue Producer**
+- [x] **Task 1.4: Worker Queue Producer**
     *   **Action:** Modify `worker/src/observability/ingestion.ts` to write incoming events to the Queue *asynchronously* instead of (or in addition to) current processing.
     *   **Note:** Keep the current Supabase write for now as a fallback/double-write until ClickHouse is proven.
     *   **Code Location:** Update `createObservabilityIngestion` function to call `c.env.OBSERVABILITY_QUEUE.send(event)`.
@@ -92,7 +92,7 @@ The goal is to establish the high-volume data pipeline without breaking the curr
           -d '{"event_id":"test","event_type":"prompt_call","project_id":"test","run_id":"test","timestamp":"2024-01-01T00:00:00Z","tags":[],"env":"development","client":{},"prompt":"test","model":"gpt-4","tokens_input":10,"tokens_output":20,"cost_estimate_usd":0.01,"response":"test","response_metadata":{},"status":"success","latency_ms":100}'
         ```
 
-- [ ] **Task 1.5: Worker Queue Consumer**
+- [x] **Task 1.5: Worker Queue Consumer**
     *   **Action:** Create a `queue` handler in `worker/src/index.ts`.
     *   **Logic:** Read batches from Queue -> Insert into ClickHouse (via HTTP interface or client).
     *   **Deliverable:** `queue` export in `worker/src/index.ts`.
@@ -109,15 +109,14 @@ The goal is to establish the high-volume data pipeline without breaking the curr
 
 Ensure the data entering the system is rich, typed, and reliable.
 
-- [ ] **Task 2.1: Python SDK Verification**
-    *   **Action:** Audit `packages/sdk-python/src/aisentry/client.py`.
+- [x] **Task 2.1: Python SDK Verification**
+    *   **Action:** Audit `packages/sdk-python/src/watchllm/client.py`.
     *   **Check:** Does it match the `Event` schema expected by the Worker?
     *   **Improvement:** Add automatic batching and retry logic if missing.
-    *   **Deliverable:** Updated `client.py` and a `tests/sdk_test.py` script.
+    *   **Deliverable:** Updated `client.py` and a `tests/test_client.py` script.
     *   **Verification:** Run the Python test suite.
         ```bash
-        cd packages/sdk-python
-        pytest
+        python packages/sdk-python/tests/test_client.py
         # Expected: All tests passed.
         ```
 
