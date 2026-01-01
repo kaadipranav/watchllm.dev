@@ -23,12 +23,16 @@ import { handleCompletions } from './handlers/completions';
 import { handleEmbeddings } from './handlers/embeddings';
 import { log, maskApiKey } from './lib/logger';
 import observabilityApp from './observability/routes';
+import analyticsApp from './handlers/analytics';
 
 // Create Hono app with environment bindings
 const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
 
 // Mount observability routes
 app.route('/', observabilityApp);
+
+// Mount analytics routes
+app.route('/', analyticsApp);
 
 // Response compression for text/JSON payloads
 // app.use('*', compress());

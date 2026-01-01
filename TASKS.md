@@ -147,18 +147,27 @@ Ensure the data entering the system is rich, typed, and reliable.
 
 Build the query layer that the dashboard will consume.
 
-- [ ] **Task 3.1: Analytics API Routes**
+- [x] **Task 3.1: Analytics API Routes** ✅ *Completed: 2026-01-01*
     *   **Action:** Create new Hono routes in `worker/src/handlers/analytics.ts` (create this file).
     *   **Endpoints:**
         *   `GET /v1/analytics/stats?project_id=...` (aggregates: total_requests, total_cost, avg_latency)
         *   `GET /v1/analytics/timeseries?project_id=...&period=1h` (time-series data for charts)
         *   `GET /v1/analytics/logs?project_id=...&limit=100` (recent events list)
+        *   `GET /v1/analytics/event/:eventId` (detailed event view with tool calls)
     *   **Logic:** Query ClickHouse using HTTP interface, return JSON.
     *   **Deliverable:** New analytics routes mounted in `worker/src/index.ts`.
+    *   **Implementation Notes:**
+        *   Created comprehensive analytics handler with 4 endpoints
+        *   Includes API key validation and project access control
+        *   Supports filtering by status, model, run_id
+        *   Implements pagination for logs endpoint
+        *   Calculates top models by usage
+        *   Time-series with configurable periods (1h, 6h, 24h, 7d, 30d)
     *   **Verification:** Test endpoints with curl.
         ```bash
-        curl http://localhost:8787/v1/analytics/stats?project_id=test
-        # Expected: JSON response with { total_requests: X, total_cost: Y }
+        curl http://localhost:8787/v1/analytics/stats?project_id=test \
+          -H "Authorization: Bearer YOUR_API_KEY"
+        # Expected: JSON response with { total_requests: X, total_cost: Y, ... }
         ```
 
 - [ ] **Task 3.2: Materialized Views (Optional/Performance)**

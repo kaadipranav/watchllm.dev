@@ -299,6 +299,8 @@ Check if proxy is operational.
 
 ## 4. Dashboard API Endpoints
 
+> **Note:** The Dashboard API is being migrated to use the new Analytics API (see section 4.5 below) for better performance and real-time capabilities.
+
 Base URL: `https://watchllm.dev/api`
 
 Authentication: Session cookie (automatically handled by Supabase)
@@ -520,7 +522,36 @@ date,model,tokens_used,cost_usd,cached,latency_ms
 2024-12-12T10:31:00Z,gpt-4,0,0,true,45
 ```
 
-### 4.5 Provider Configuration
+---
+
+### 4.5 Analytics API (ClickHouse-Backed) 🆕
+
+**Base URL:** `https://proxy.watchllm.dev/v1/analytics`
+
+**Authentication:** API Key (same as proxy API)
+
+The Analytics API provides high-performance querying of observability data from ClickHouse. This powers real-time dashboards and historical analysis.
+
+**📚 Full Documentation:** See [ANALYTICS_API.md](./ANALYTICS_API.md) for detailed endpoint specifications.
+
+#### Quick Overview
+
+**Available Endpoints:**
+
+1. **GET /v1/analytics/stats** - Aggregated project statistics
+2. **GET /v1/analytics/timeseries** - Time-series data for charts
+3. **GET /v1/analytics/logs** - Paginated event logs
+4. **GET /v1/analytics/event/:eventId** - Single event details
+
+**Example:**
+```bash
+curl "https://proxy.watchllm.dev/v1/analytics/stats?project_id=proj_123" \
+  -H "Authorization: Bearer lgw_your_key"
+```
+
+---
+
+### 4.6 Provider Configuration
 
 **POST /api/projects/:project_id/providers**
 
