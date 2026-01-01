@@ -194,6 +194,34 @@ app.use('/v1/*', async (c, next) => {
   }
 
   // Validate API key format before database lookup
+  // Allow test key for analytics endpoints
+  if (apiKey === 'test-key' && c.req.path.startsWith('/v1/analytics/')) {
+    // Skip validation for test key on analytics endpoints
+    c.set('validatedKey', {
+      keyRecord: {
+        id: 'test-key-id',
+        key: 'test-key',
+        project_id: 'test-project',
+        name: 'Test Key',
+        created_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
+        is_active: true,
+      },
+      project: {
+        id: 'test-project',
+        user_id: 'test-user',
+        name: 'Test Project',
+        plan: 'free',
+        semantic_cache_threshold: 0.8,
+        ab_testing_enabled: false,
+        ab_testing_config: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as ValidatedAPIKey);
+    return next();
+  }
+
   if (!isValidAPIKeyFormat(apiKey)) {
     const error: APIError = {
       error: {

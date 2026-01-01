@@ -389,7 +389,7 @@ export class ObservabilityClient {
    * Makes an HTTP request to the API
    */
   private async makeRequest(path: string, options: any = {}): Promise<any> {
-    const url = `${this.config.base_url || 'https://api.aisentry.com/v1'}${path}`;
+    const url = `${this.config.base_url || 'https://api.watchllm.com/v1'}${path}`;
     
     const response = await this.fetch(url, {
       ...options,

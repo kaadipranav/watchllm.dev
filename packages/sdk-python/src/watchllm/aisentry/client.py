@@ -1,5 +1,5 @@
 """
-AI Sentry - Python SDK for AI Observability
+WatchLLM - Python SDK for AI Observability
 Provides a simple interface for logging AI events and metrics
 """
 
@@ -204,7 +204,7 @@ class PerformanceAlertEvent(BaseEvent):
             self.affected_models = []
 
 
-class AISentryClient:
+class WatchLLMClient:
     """
     Main client for AI observability
     """
@@ -213,7 +213,7 @@ class AISentryClient:
         self,
         api_key: str,
         project_id: str,
-        base_url: str = "https://api.aisentry.com/v1",
+        base_url: str = "https://api.watchllm.com/v1",
         environment: str = "development",
         sample_rate: float = 1.0,
         redact_pii: bool = True,
@@ -708,9 +708,9 @@ def create_client(
     api_key: str,
     project_id: str,
     **kwargs
-) -> AISentryClient:
-    """Create a new AISentry client"""
-    return AISentryClient(api_key, project_id, **kwargs)
+) -> WatchLLMClient:
+    """Create a new WatchLLM client"""
+    return WatchLLMClient(api_key, project_id, **kwargs)
 
 
 # Import required modules

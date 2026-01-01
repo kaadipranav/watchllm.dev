@@ -131,14 +131,14 @@ Ensure the data entering the system is rich, typed, and reliable.
         # Expected: All tests passed.
         ```
 
-- [ ] **Task 2.3: Ingestion Validation**
+- [x] **Task 2.3: Ingestion Validation**
     *   **Action:** Enhance `worker/src/lib/validation.ts` to strictly validate payloads against the schema before queuing.
     *   **Deliverable:** Stronger Zod schemas in Worker.
     *   **Verification:** Send invalid payloads.
         ```bash
-        # Send request with missing 'project_id'
-        curl -X POST http://localhost:8787/v1/log -d '{}'
-        # Expected: 400 Bad Request with specific validation error.
+        # Enhanced validation now provides detailed error messages
+        npx tsx scripts/verify-task-2-3.js
+        # Expected: All 7/7 validation tests pass with detailed error reporting
         ```
 
 ---

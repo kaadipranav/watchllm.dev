@@ -3,7 +3,19 @@
  * Implements defense-in-depth validation following OWASP best practices
  */
 
+import { z } from 'zod';
 import type { ChatCompletionRequest, CompletionRequest, EmbeddingsRequest } from '../types';
+import type {
+  ObservabilityEvent,
+  BaseEvent,
+  PromptCallEvent,
+  ToolCallEvent,
+  AgentStepEvent,
+  ErrorEvent,
+  AssertionFailedEvent,
+  HallucinationDetectedEvent,
+  PerformanceAlertEvent
+} from '../../../packages/shared/src/observability/types';
 
 // Maximum request body size (1MB)
 export const MAX_REQUEST_SIZE_BYTES = 1024 * 1024;
@@ -31,6 +43,125 @@ const ALLOWED_MODELS = new Set([
 ]);
 
 const VALID_ROLES = new Set(['system', 'user', 'assistant', 'function', 'tool']);
+
+// Zod schemas for observability events
+const baseEventSchema = z.object({
+  event_id: z.string().uuid('event_id must be a valid UUID'),
+  project_id: z.string().min(1, 'project_id is required'),
+  run_id: z.string().min(1, 'run_id is required'),
+  timestamp: z.string().datetime('timestamp must be a valid ISO8601 datetime'),
+  user_id: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  release: z.string().optional(),
+  env: z.enum(['production', 'staging', 'development']),
+  client: z.object({
+    hostname: z.string().optional(),
+    sdk_version: z.string().optional(),
+    platform: z.string().optional(),
+  }).default({}),
+});
+
+const errorInfoSchema = z.object({
+  message: z.string().min(1, 'error message is required'),
+  type: z.string().optional(),
+  code: z.string().optional(),
+  stack: z.string().optional(),
+  context: z.record(z.any()).optional(),
+});
+
+const toolCallEventSchema = z.object({
+  tool_name: z.string().min(1, 'tool_name is required'),
+  tool_id: z.string().optional(),
+  input: z.record(z.any()),
+  output: z.record(z.any()),
+  latency_ms: z.number().int().min(0),
+  status: z.enum(['success', 'error', 'timeout', 'assertion_failed', 'warning']),
+  error: errorInfoSchema.optional(),
+});
+
+const promptCallEventSchema = baseEventSchema.extend({
+  event_type: z.literal('prompt_call'),
+  prompt: z.string().min(1, 'prompt is required'),
+  prompt_template_id: z.string().optional(),
+  model: z.string().min(1, 'model is required'),
+  model_version: z.string().optional(),
+  tokens_input: z.number().int().min(0),
+  tokens_output: z.number().int().min(0),
+  cost_estimate_usd: z.number().min(0),
+  response: z.string(),
+  response_metadata: z.object({
+    safety_score: z.number().min(0).max(1).optional(),
+    hallucination_score: z.number().min(0).max(1).optional(),
+    confidence_score: z.number().min(0).max(1).optional(),
+  }).catchall(z.any()).default({}),
+  tool_calls: z.array(toolCallEventSchema).optional(),
+  status: z.enum(['success', 'error', 'timeout', 'assertion_failed', 'warning']),
+  error: errorInfoSchema.optional(),
+  latency_ms: z.number().int().min(0),
+});
+
+const agentStepEventSchema = baseEventSchema.extend({
+  event_type: z.literal('agent_step'),
+  step_number: z.number().int().min(0),
+  step_name: z.string().min(1, 'step_name is required'),
+  step_type: z.enum(['reasoning', 'tool_call', 'validation', 'output']),
+  input_data: z.record(z.any()),
+  output_data: z.record(z.any()),
+  reasoning: z.string().optional(),
+  context: z.record(z.any()),
+  latency_ms: z.number().int().min(0),
+  status: z.enum(['success', 'error', 'timeout', 'assertion_failed', 'warning']),
+  error: errorInfoSchema.optional(),
+});
+
+const errorEventSchema = baseEventSchema.extend({
+  event_type: z.literal('error'),
+  error: errorInfoSchema,
+  context: z.record(z.any()),
+  stack_trace: z.string().optional(),
+});
+
+const assertionFailedEventSchema = baseEventSchema.extend({
+  event_type: z.literal('assertion_failed'),
+  assertion_name: z.string().min(1, 'assertion_name is required'),
+  assertion_type: z.enum(['response_format', 'content_filter', 'safety_check', 'custom']),
+  expected: z.any(),
+  actual: z.any(),
+  severity: z.enum(['low', 'medium', 'high', 'critical']),
+});
+
+const hallucinationDetectedEventSchema = baseEventSchema.extend({
+  event_type: z.literal('hallucination_detected'),
+  detection_method: z.enum(['heuristic', 'model_ensemble', 'ground_truth_verification']),
+  confidence_score: z.number().min(0).max(1),
+  flagged_content: z.string().min(1, 'flagged_content is required'),
+  ground_truth: z.string().optional(),
+  recommendations: z.array(z.string()),
+});
+
+const performanceAlertEventSchema = baseEventSchema.extend({
+  event_type: z.literal('cost_threshold_exceeded'),
+  alert_type: z.enum(['cost_spike', 'latency_spike', 'error_rate_spike', 'token_limit']),
+  threshold: z.number().min(0),
+  actual_value: z.number().min(0),
+  window_minutes: z.number().int().min(1),
+  affected_models: z.array(z.string()).optional(),
+});
+
+// Union schema for all observability events
+const observabilityEventSchema = z.discriminatedUnion('event_type', [
+  promptCallEventSchema,
+  agentStepEventSchema,
+  errorEventSchema,
+  assertionFailedEventSchema,
+  hallucinationDetectedEventSchema,
+  performanceAlertEventSchema,
+]);
+
+// Schema for batch events
+const batchEventsSchema = z.object({
+  events: z.array(observabilityEventSchema).min(1, 'events array cannot be empty').max(100, 'maximum 100 events per batch'),
+});
 
 /**
  * Sanitize string input - remove null bytes and control characters
@@ -247,6 +378,38 @@ export function validateEmbeddingsRequest(body: unknown): { valid: true; data: E
   }
 
   return { valid: true, data: req as unknown as EmbeddingsRequest };
+}
+
+/**
+ * Validate observability event payload
+ */
+export function validateObservabilityEvent(body: unknown): { valid: true; data: ObservabilityEvent } | { valid: false; error: string } {
+  try {
+    const validatedEvent = observabilityEventSchema.parse(body) as ObservabilityEvent;
+    return { valid: true, data: validatedEvent };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return { valid: false, error: `Validation failed: ${errorMessages}` };
+    }
+    return { valid: false, error: 'Invalid event format' };
+  }
+}
+
+/**
+ * Validate batch observability events payload
+ */
+export function validateBatchObservabilityEvents(body: unknown): { valid: true; data: { events: ObservabilityEvent[] } } | { valid: false; error: string } {
+  try {
+    const validatedBatch = batchEventsSchema.parse(body) as { events: ObservabilityEvent[] };
+    return { valid: true, data: validatedBatch };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return { valid: false, error: `Batch validation failed: ${errorMessages}` };
+    }
+    return { valid: false, error: 'Invalid batch format' };
+  }
 }
 
 /**

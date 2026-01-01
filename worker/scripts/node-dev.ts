@@ -51,13 +51,39 @@ const env: Env = {
 
 const port = Number(process.env.PORT ?? 8787);
 
+console.log(`Starting server on port ${port}...`);
+
 serve(
   {
     port,
-    fetch: (request: Request) => app.fetch(request, env),
+    hostname: '0.0.0.0', // Bind to all interfaces
+    fetch: (request: Request) => {
+      try {
+        return app.fetch(request, env);
+      } catch (e) {
+        console.error('Request error:', e);
+        return new Response('Internal Server Error', { status: 500 });
+      }
+    },
   },
-  (info: { port: number }) => {
+  (info: { port: number; address: string; family: string }) => {
     console.log(`WatchLLM node dev server listening on http://localhost:${info.port}`);
+    console.log(`Address: ${info.address}, Family: ${info.family}`);
     console.log('Note: this is a local Node fallback (not wrangler/workerd).');
   }
 );
+
+// Keep process alive just in case
+setInterval(() => {}, 10000);
+
+process.on('exit', (code) => {
+  console.log(`Process exiting with code: ${code}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});

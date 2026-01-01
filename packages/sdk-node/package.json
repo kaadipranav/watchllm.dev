@@ -1,0 +1,35 @@
+{
+  "name": "@watchllm/sdk-node",
+  "version": "0.1.0",
+  "description": "TypeScript/Node.js SDK for WatchLLM AI Observability",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "observability",
+    "llm",
+    "monitoring",
+    "telemetry"
+  ],
+  "author": "WatchLLM",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

@@ -32,13 +32,13 @@ This document outlines the foundation that has been laid for expanding WatchLLM 
 - **Platform Abstraction**: Works in Node.js, browser, and Cloudflare Workers
 
 ### 4. Python SDK
-**Location**: `packages/sdk-python/src/aisentry/client.py`
+**Location**: `packages/sdk-python/src/watchllm/client.py`
 
 - **Complete Python Client**: Full-featured SDK with all event types
 - **Type Safety**: Comprehensive type hints and enums
 - **Background Processing**: Thread-safe background event flushing
 - **Error Handling**: Robust HTTP client with retry logic
-- **Easy Integration**: Simple `pip install aisentry` setup
+- **Easy Integration**: Simple `pip install watchllm` setup
 
 ### 5. Ingestion API
 **Location**: `worker/src/observability/ingestion.ts`

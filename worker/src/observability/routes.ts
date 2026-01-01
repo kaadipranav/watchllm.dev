@@ -10,6 +10,7 @@ import { validator } from 'hono/validator';
 import type { Env } from '../types';
 import type { ObservabilityEvent, EventQuery } from '../../../packages/shared/src/observability/types';
 import { createObservabilityIngestion } from './ingestion';
+import { validateObservabilityEvent, validateBatchObservabilityEvents } from '../lib/validation';
 
 // Create the observability sub-app with proper typing
 const observabilityApp = new Hono<{ 
@@ -43,19 +44,24 @@ observabilityApp.use('*', async (c, next) => {
  * POST /v1/projects/{projectId}/events
  * Ingest a single observability event
  */
-observabilityApp.post(
-  '/v1/projects/:projectId/events',
-  validator('json', (value, c) => {
-    // Basic validation for event structure
-    if (!value.event_id || !value.event_type || !value.project_id) {
-      return c.json({ error: 'Missing required fields: event_id, event_type, project_id' }, 400);
+observabilityApp.post('/v1/projects/:projectId/events', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    const validation = validateObservabilityEvent(body);
+
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400);
     }
-    return value as ObservabilityEvent;
-  }),
-  async (c) => {
-    const projectId = c.req.param('projectId');
-    const event = c.req.valid('json') as ObservabilityEvent;
-    const apiKey = c.get('apiKey');
+
+    const event = validation.data;
+
+    // Ensure project_id matches the URL parameter
+    if (event.project_id !== projectId) {
+      return c.json({ error: 'project_id in event does not match URL parameter' }, 400);
+    }
 
     const ingestion = createObservabilityIngestion(c.env);
     const result = await ingestion.ingestEvent(projectId, event, apiKey);
@@ -65,24 +71,27 @@ observabilityApp.post(
     } else {
       return c.json({ error: result.error }, 400);
     }
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
   }
-);
+});
 
 /**
  * POST /v1/events/batch
  * Ingest multiple observability events
  */
-observabilityApp.post(
-  '/v1/events/batch',
-  validator('json', (value, c) => {
-    if (!Array.isArray(value.events) || value.events.length === 0) {
-      return c.json({ error: 'events must be a non-empty array' }, 400);
+observabilityApp.post('/v1/events/batch', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    const validation = validateBatchObservabilityEvents(body);
+
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400);
     }
-    return value as { events: ObservabilityEvent[] };
-  }),
-  async (c) => {
-    const { events } = c.req.valid('json') as { events: ObservabilityEvent[] };
-    const apiKey = c.get('apiKey');
+
+    const { events } = validation.data;
 
     // Group events by project ID for batch processing
     const eventsByProject = new Map<string, ObservabilityEvent[]>();
@@ -117,8 +126,10 @@ observabilityApp.post(
       total_errors: totalErrors,
       results
     });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
   }
-);
+});
 
 /**
  * POST /v1/events/query

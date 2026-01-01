@@ -19,7 +19,7 @@ I've successfully prepared the WatchLLM codebase for the comprehensive AI observ
 - Batch processing and background flushing
 - Error handling and retry logic
 
-**4. Python SDK** ([packages/sdk-python/src/aisentry/client.py](cci:7://file:///d:/PRANAV%20APPS/WATCHLLM/packages/sdk-python/src/aisentry/client.py:0:0-0:0))
+**4. Python SDK** ([packages/sdk-python/src/watchllm/client.py](cci:7://file:///d:/PRANAV%20APPS/WATCHLLM/packages/sdk-python/src/watchllm/client.py:0:0-0:0))
 - Complete Python implementation with all event types
 - Thread-safe background processing
 - Comprehensive type hints and validation

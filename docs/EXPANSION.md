@@ -261,7 +261,7 @@ To configure this full observability stack, ensure these are set in `.dev.vars` 
 **Python quick example:**
 
 ```py
-from aisentry import Client
+from watchllm import Client
 c = Client(api_key="xxx")
 run = c.log_prompt(project_id="p1", run_id="r1", prompt="Hi", model="gpt-4o-mini")
 ```
