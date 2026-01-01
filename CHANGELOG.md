@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added - 2026-01-01
 
+#### Dashboard Navigation Restructuring 🎨
+- **Reorganized sidebar with semantic grouping** in `dashboard/components/dashboard/sidebar.tsx`
+  - **Core Navigation** (always visible): Dashboard, Billing, Settings, Documentation
+  - **Cost Savings** dropdown (collapsible): Projects, API Keys, Usage, A/B Testing
+    - Groups all semantic caching features (the original WatchLLM MVP)
+  - **Observability** dropdown (collapsible): Requests, Analytics, Traces
+    - Groups all new observability/monitoring features
+  
+- **Created Observability page stubs** (ready for backend integration)
+  - `/dashboard/observability/logs` - Request log explorer with filters
+  - `/dashboard/observability/analytics` - Metrics dashboard and time-series charts
+  - `/dashboard/observability/traces` - Detailed trace view with execution flow
+  
+- **Navigation best practices applied**
+  - Core/essential pages at top level (Dashboard, Billing, Settings)
+  - Feature-specific dropdowns to reduce cognitive load
+  - Smooth chevron animations on dropdown toggle
+  - Smart active state detection across dropdown sections
+  - Default expanded state: Cost Savings (original product), Observability collapsed
+
+- **Observability onboarding guidance**
+  - Dashboard now has an Observability readiness card that summarizes how many projects have provider keys, explains ClickHouse retention controls, and points users to the logs and API keys pages.
+  - Each of the new Observability pages (requests/analytics/traces) posts an inline callout reminding users that observability only starts once a project + provider key are configured.
+
 #### Analytics API (Phase 3.1) ✅
 - **Created comprehensive Analytics API** in `worker/src/handlers/analytics.ts`
   - `GET /v1/analytics/stats` - Project-wide statistics with date range filtering
@@ -48,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Response Format**: JSON with proper type conversions (BigInt → Number)
 - **Error Handling**: Comprehensive error logging and user-friendly error messages
 - **Compatibility**: Ready for dashboard integration (Phase 4)
+
+- **Environment parity**: Added ClickHouse connection placeholders to `worker/.env.example` and `dashboard/.env.example` so the frontend can mirror the worker's analytics host/credentials when wiring up the new API surface.
 
 ### Infrastructure Status
 ✅ Phase 1: Infrastructure Foundation - **COMPLETE**

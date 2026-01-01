@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Code, Database, Globe, Shield, Zap } from "lucide-react";
+import { Activity, BarChart3, Database, Globe, Shield, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,44 +15,49 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    title: "Semantic Caching",
+    title: "Observability Control Plane",
     description:
-      "Intelligent vector-based caching that understands intent. 95%+ accuracy with cosine similarity matching for massive cost savings.",
-    icon: Zap,
-    metric: "70% savings",
+      "Attach project + provider keys, enforce retention, and stream logs/metrics safely into ClickHouse without touching infrastructure.",
+    icon: Activity,
+    metric: "Keyed access",
     gradient: "from-accent-primary to-accent-purple",
   },
   {
-    title: "A/B Testing",
-    description: "Compare models like GPT-4 vs Claude in production. Split traffic by weight, measure performance, and optimize costs.",
-    icon: Code,
-    metric: "Live comparisons",
+    title: "Semantic Caching",
+    description:
+      "Vector-based caching that understands intent. 95%+ accuracy with cosine similarity matching delivers massive cost savings and faster responses.",
+    icon: Zap,
+    metric: "70% savings",
     gradient: "from-cyan-500 to-blue-500",
   },
   {
-    title: "Cost Forecasting",
-    description: "Predict month-end costs with ML-powered forecasting. See confidence bands and trends to avoid budget surprises.",
+    title: "Analytics & Alerts",
+    description:
+      "Request-scale analytics, anomaly detection, and usage forecasts powered by ClickHouse so you can optimize spend in real time.",
     icon: BarChart3,
-    metric: "30-day view",
+    metric: "Real-time insights",
     gradient: "from-emerald-500 to-teal-500",
   },
   {
-    title: "Anomaly Detection",
-    description: "Get alerted instantly when costs spike. Our AI monitors usage patterns and detects anomalies before they hurt your wallet.",
+    title: "Trace + Log Explorer",
+    description:
+      "Collect provider responses, prompts, and traces with configurable retention so you can debug confidently without exposing secrets.",
     icon: Shield,
-    metric: "Instant alerts",
+    metric: "ClickHouse-ready logs",
     gradient: "from-rose-500 to-pink-500",
   },
   {
     title: "Zero Integration",
-    description: "Drop-in OpenAI-compatible proxy. Swap one endpoint and keep your existing code. No refactoring required.",
+    description:
+      "Drop-in OpenAI-compatible proxy—swap one endpoint, keep your code, and gain caching plus telemetry within minutes.",
     icon: Database,
-    metric: "5min setup",
+    metric: "5 min setup",
     gradient: "from-amber-500 to-orange-500",
   },
   {
-    title: "Global Edge Network",
-    description: "Deployed on Cloudflare Workers with sub-50ms latency worldwide. Automatic routing to nearest edge.",
+    title: "Global Edge Observability",
+    description:
+      "Cloudflare Workers stream telemetry worldwide with sub-50ms latency while forwarding observability data to the dashboard.",
     icon: Globe,
     metric: "<50ms",
     gradient: "from-indigo-500 to-purple-500",
@@ -96,10 +101,10 @@ export function Features() {
             Features
           </h2>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
-            Everything you need for intelligent caching
+            Observability-first caching that scales
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Built for developers who need reliability, performance, and cost efficiency at scale.
+            Built for developers who need reliability, telemetry, and cost efficiency at scale.
           </p>
         </motion.div>
 
@@ -161,7 +166,7 @@ export function Features() {
               href="/docs"
               className="text-accent-primary hover:underline transition-colors"
             >
-              documentation
+              documentation and observability guides
             </a>{" "}
             to learn about all features.
           </p>

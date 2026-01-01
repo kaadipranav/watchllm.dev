@@ -3,14 +3,18 @@
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { ProjectCard } from "@/components/dashboard/project-card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Activity,
   DollarSign,
   Zap,
   TrendingUp,
   Plus,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +34,11 @@ export default function DashboardPage() {
     apiCost: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
+  const [observabilityReadiness, setObservabilityReadiness] = useState({
+    totalProjects: 0,
+    readyProjects: 0,
+    missingProjects: [] as string[],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,7 +102,34 @@ export default function DashboardPage() {
             cache_hit_rate: hitRate
           };
         }));
-        setProjects(projectsWithCounts);
+        const projectIds = (projectsData || []).map((p) => p.id);
+        let providerRows: { project_id: string }[] = [];
+        if (projectIds.length > 0) {
+          const { data: providerKeys } = await supabase
+            .from("provider_keys")
+            .select("project_id")
+            .in("project_id", projectIds)
+            .eq("is_active", true);
+          providerRows = providerKeys || [];
+        }
+
+        const readyProjectIds = new Set(providerRows.map((row) => row.project_id));
+
+        const projectsWithProviderState = projectsWithCounts.map((project) => ({
+          ...project,
+          provider_keys_count: providerRows.filter((row) => row.project_id === project.id).length,
+          has_provider_key: readyProjectIds.has(project.id),
+        }));
+
+        setProjects(projectsWithProviderState);
+        setObservabilityReadiness({
+          totalProjects: projectIds.length,
+          readyProjects: readyProjectIds.size,
+          missingProjects: (projectsData || [])
+            .filter((project) => !readyProjectIds.has(project.id))
+            .map((project) => project.name || `Project ${project.id}`)
+            .slice(0, 2),
+        });
 
         // 2. Fetch Usage Logs (Last 7 days for Chart & aggregates)
         // In a real production app, this should be an RPC call or aggregated table.
@@ -226,6 +262,49 @@ export default function DashboardPage() {
           trend={{ value: 0, isPositive: true }}
         />
       </div>
+
+      {/* Observability Readiness */}
+      <Card className="border-white/[0.08] bg-white/[0.02]">
+        <CardHeader className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-premium-accent" />
+            <CardTitle className="text-sm">Observability readiness</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            Observability captures every request in ClickHouse, but only runs for projects with an active provider key. Retention and partitions keep the database lean even at scale.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">Projects: {observabilityReadiness.totalProjects}</Badge>
+            <Badge variant="secondary">Ready: {observabilityReadiness.readyProjects}</Badge>
+            <Badge variant="secondary">Missing keys: {observabilityReadiness.totalProjects - observabilityReadiness.readyProjects}</Badge>
+          </div>
+          {observabilityReadiness.missingProjects.length > 0 && (
+            <div className="text-xs text-white/70">
+              Projects without provider keys: {observabilityReadiness.missingProjects.join(', ')}{observabilityReadiness.totalProjects - observabilityReadiness.readyProjects > observabilityReadiness.missingProjects.length && '...'}
+            </div>
+          )}
+          <Alert className="text-xs text-white/70 bg-white/[0.04] border-white/[0.06]">
+            <AlertTitle className="text-[10px] uppercase tracking-wide">Storage controls</AlertTitle>
+            <AlertDescription>
+              ClickHouse tables are partitioned by month and you can configure retention so logs don’t grow forever. Observability is scoped to the same project+provider key already protecting your caching data.
+            </AlertDescription>
+          </Alert>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/observability/logs">
+              <Button variant="outline" size="sm" className="min-w-[160px]">
+                Open Observability
+              </Button>
+            </Link>
+            <Link href="/dashboard/api-keys">
+              <Button variant="ghost" size="sm" className="min-w-[160px]">
+                Configure provider key
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Usage Chart */}
       {chartData.length > 0 && (

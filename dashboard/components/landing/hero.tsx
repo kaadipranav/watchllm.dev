@@ -54,8 +54,8 @@ function LiveStatTicker() {
     >
       {[
         { label: "Requests/s", value: 1200, suffix: "/s" },
-        { label: "Cache Hit Rate", value: 78, suffix: "%" },
-        { label: "Cost Savings", value: 70, suffix: "%" },
+        { label: "Observability events", value: 9800, suffix: "/h" },
+        { label: "Cost savings", value: 70, suffix: "%" },
       ].map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -187,18 +187,21 @@ export function Hero() {
             >
               <span className="block">The builder&rsquo;s companion</span>
               <span className="block mt-3">
-                for any <Typewriter words={["model", "provider", "API", "endpoint", "LLM"]} />
+                for any <Typewriter words={["model", "provider", "API", "observability", "analytics"]} />
               </span>
             </motion.h1>
 
-            <motion.p
-              className="text-lg sm:text-xl text-text-secondary max-w-3xl mx-auto leading-relaxed font-medium px-4 sm:px-0"
+            <motion.div
+              className="max-w-2xl mx-auto px-4 sm:px-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Semantic caching that works with <span className="font-semibold text-text-primary">OpenRouter and any LLM provider</span>. Keep your integrations production-identical while serving cached responses in under <span className="font-semibold text-text-primary">100ms</span>.
-            </motion.p>
+              <div className="text-lg sm:text-xl text-text-secondary font-medium leading-relaxed text-center">
+                <div>Semantic caching for any LLM provider—save costs and accelerate responses.</div>
+                <div>Built-in observability: logs, traces, and analytics with ClickHouse.</div>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* CTA buttons */}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/landing/providers";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { PlatformShowcase } from "@/components/landing/platform-showcase";
 import { Testimonials } from "@/components/landing/testimonials";
 import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
@@ -13,12 +14,13 @@ import { AuthCallbackHandler } from "@/components/auth/auth-callback-handler";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
+  title: "WatchLLM - Semantic Caching & Observability Platform",
   description:
-    "Unify AI costs across OpenAI, Claude, and Groq with true semantic caching. Vector similarity matching with 95%+ accuracy. Drop-in proxy for 70% cost savings on repeated API calls. No code changes required.",
+    "Drop-in semantic caching proxy with built-in observability, ClickHouse analytics, and trace-ready logs for OpenAI, Claude, Groq, and any LLM provider.",
   keywords: [
     "semantic caching",
-    "vector similarity",
+    "observability",
+    "ClickHouse analytics",
     "AI API proxy",
     "OpenAI cost reduction",
     "Claude API savings",
@@ -27,16 +29,16 @@ export const metadata: Metadata = {
     "cosine similarity",
     "API cost optimization",
     "AI gateway",
-    "chat completions cache",
+    "trace explorer",
     "embeddings cache",
     "reduce AI costs",
     "intelligent caching",
     "vector database"
   ],
   openGraph: {
-    title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
+    title: "WatchLLM - Semantic Caching & Observability Platform",
     description:
-      "Drop-in proxy with true semantic caching and vector similarity matching. Unify AI costs across OpenAI, Claude, and Groq with 95%+ accuracy.",
+      "Combine semantic caching with ClickHouse-powered observability, analytics, and trace exploration while cutting AI API costs by 70%.",
     type: "website",
     url: "https://watchllm.dev",
     siteName: "WatchLLM",
@@ -53,9 +55,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "WatchLLM - Real-time Semantic Caching | Cut AI API Costs by 70%",
+    title: "WatchLLM - Semantic Caching & Observability Platform",
     description:
-      "True semantic caching with vector similarity matching. Drop-in proxy for OpenAI, Claude, and Groq APIs with 95%+ accuracy.",
+      "True semantic caching meets ClickHouse-powered observability for OpenAI, Claude, Groq, and any API provider.",
     creator: "@kaad_zz",
     site: "@watchllm",
     images: {
@@ -117,6 +119,7 @@ export default function HomePage() {
         <Hero />
         <Providers />
         <HowItWorks />
+        <PlatformShowcase />
         <Features />
         <Pricing />
         <FAQ />

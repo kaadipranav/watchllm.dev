@@ -11,7 +11,7 @@ import { APP_CONFIG } from "@/lib/config";
 const plans = [
   {
     name: "Free",
-    description: "Perfect for side projects",
+    description: "Perfect for side projects needing caching + telemetry",
     price: "$0",
     period: "forever",
     features: [
@@ -19,6 +19,8 @@ const plans = [
       { text: "10 requests/minute", included: true },
       { text: "Basic semantic caching", included: true },
       { text: "7-day usage history", included: true },
+      { text: "Provider + project key onboarding", included: true },
+      { text: "Basic observability telemetry (logs + metrics)", included: true },
       { text: "Community support", included: true },
       { text: "1 project", included: true },
       { text: "Priority support", included: false },
@@ -31,7 +33,7 @@ const plans = [
   },
   {
     name: "Starter",
-    description: "For growing applications",
+    description: "For growing applications that need analytics",
     price: "$49",
     period: "/month",
     features: [
@@ -39,11 +41,13 @@ const plans = [
       { text: "50 requests/minute", included: true },
       { text: "Advanced semantic caching", included: true },
       { text: "30-day usage history", included: true },
+      { text: "Realtime analytics & alerts", included: true },
+      { text: "Observability dashboards", included: true },
       { text: "Email support", included: true },
       { text: "5 projects", included: true },
       { text: "Webhook notifications", included: true },
       { text: "Custom cache TTL", included: true },
-      { text: "API analytics", included: false },
+      { text: "ClickHouse analytics", included: true },
     ],
     cta: "Start Free Trial",
     href: "/signup?plan=starter",
@@ -52,7 +56,7 @@ const plans = [
   },
   {
     name: "Pro",
-    description: "For production workloads",
+    description: "For production workloads that demand observability",
     price: "$99",
     period: "/month",
     features: [
@@ -60,11 +64,13 @@ const plans = [
       { text: "200 requests/minute", included: true },
       { text: "Priority semantic caching", included: true },
       { text: "90-day usage history", included: true },
+      { text: "ClickHouse trace + log explorer", included: true },
+      { text: "Unlimited observability projects", included: true },
+      { text: "Retention controls (30/90 days)", included: true },
       { text: "Priority support", included: true },
       { text: "Unlimited projects", included: true },
       { text: "Webhook notifications", included: true },
       { text: "Custom cache TTL", included: true },
-      { text: "API analytics dashboard", included: true },
       { text: "Team members (up to 5)", included: true },
     ],
     cta: "Start Free Trial",
