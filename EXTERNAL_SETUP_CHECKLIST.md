@@ -18,7 +18,7 @@ All code implementation is **100% complete**:
 
 ## 📦 1. SDK Publishing
 
-### TypeScript SDK (@watchllm/sdk-node)
+### TypeScript SDK (watchllm-sdk-node)
 
 **Status:** Ready to publish to npm
 
@@ -39,11 +39,11 @@ All code implementation is **100% complete**:
    ```
 
 4. **Verify publication**
-   - Visit: https://www.npmjs.com/package/@watchllm/sdk-node
-   - Test install: `npm install @watchllm/sdk-node`
+   - Visit: https://www.npmjs.com/package/watchllm-sdk-node
+   - Test install: `npm install watchllm-sdk-node`
 
 **Notes:**
-- Package name: `@watchllm/sdk-node`
+- Package name: `watchllm-sdk-node`
 - Current version: `0.1.0`
 - Already configured with `prepublishOnly` script to auto-build
 - `files` field properly set to include `dist` and `README.md`
@@ -443,7 +443,7 @@ ENCRYPTION_MASTER_SECRET
 1. **SDK Integration**
    ```bash
    # Test TypeScript SDK
-   npm install @watchllm/sdk-node
+   npm install watchllm-sdk-node
    # Run example from README
    
    # Test Python SDK

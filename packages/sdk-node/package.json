@@ -1,5 +1,5 @@
 {
-  "name": "@watchllm/sdk-node",
+  "name": "watchllm-sdk-node",
   "version": "0.1.0",
   "description": "TypeScript/Node.js SDK for WatchLLM AI Observability",
   "main": "dist/index.js",

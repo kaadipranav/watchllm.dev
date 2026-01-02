@@ -16,10 +16,10 @@
 - Queue consumer batch-processing to ClickHouse
 - All verification scripts ready
 
-#### Phase 2: SDK & Validation ✅ (2/3)
-- Python SDK production-ready
+#### Phase 2: SDK & Validation ✅ (100%)
+- Python SDK production-ready (559 lines, batching, retry, threading)
+- TypeScript SDK production-ready (551 lines, 15/15 tests passing)
 - Strict Zod validation with detailed errors
-- ⏳ TypeScript SDK pending (next priority)
 
 #### Phase 3: Analytics Engine ✅
 - **4 Production-Ready API Endpoints:**
@@ -42,27 +42,37 @@
 
 ### ⏳ **IN PROGRESS** (Dashboard Data Integration)
 
-#### Phase 4: Dashboard - Next Steps
+#### Phase 4: Dashboard - 75% Complete
 
-**Immediate Priority:**
-1. **Task 4.1** - Create `dashboard/lib/analytics-api.ts`
-   - Typed fetch functions for all 4 endpoints
-   - Error handling + retry logic
-   - Loading states
+**Recently Completed:**
+1. ✅ **Task 4.1** - Created `dashboard/lib/analytics-api.ts`
+   - Full TypeScript client for all 4 Analytics API endpoints
+   - Type-safe request/response with Zod-style interfaces
+   - Error handling with custom `AnalyticsAPIError` class
+   - Helper methods: `getStatsLast24h()`, `getErrorLogs()`, `getRunLogs()`, etc.
+   - Singleton pattern for React Server Components
+   - Timeout/abort controller support
 
-2. **Task 4.2** - Build Log Explorer (`/dashboard/requests`)
-   - Table with pagination
-   - Filters (status, model, date)
-   - Export functionality
+2. ✅ **Task 4.2** - Built Log Explorer (`/dashboard/observability/logs`)
+   - Complete table with pagination (50 events/page)
+   - Filters: status, model, search (client-side)
+   - Real-time Analytics API integration
+   - Responsive card layout with metadata
+   - Link to detail view
 
-3. **Task 4.3** - Event Detail View (`/dashboard/requests/[id]`)
-   - Structured event display
-   - Tool call visualization
+3. ✅ **Task 4.3** - Event Detail View (`/dashboard/observability/logs/[eventId]`)
+   - Structured event display with all fields
+   - Tool call visualization with JSON formatting
+   - Copy-to-clipboard for prompts/responses/IDs
+   - Response metadata display
+   - Error highlighting
 
+**Next Priority:**
 4. **Task 4.4** - Live Dashboard Charts
-   - Replace Supabase with Analytics API
-   - Real-time updates (polling)
-   - Recharts integration
+   - Replace Supabase queries with Analytics API
+   - Real-time stats/timeseries integration
+   - Recharts line/bar charts
+   - Auto-refresh polling
 
 ---
 

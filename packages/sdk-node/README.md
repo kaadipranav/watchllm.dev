@@ -5,13 +5,13 @@ TypeScript/Node.js SDK for the WatchLLM AI Observability platform.
 ## Installation
 
 ```bash
-npm install @watchllm/sdk-node
+npm install watchllm-sdk-node
 ```
 
 ## Quick Start
 
 ```typescript
-import { init, Status, StepType } from '@watchllm/sdk-node';
+import { init, Status, StepType } from 'watchllm-sdk-node';
 
 // Initialize the client
 const watchllm = init({
@@ -219,7 +219,7 @@ Close the client and flush all remaining events.
 
 ```typescript
 import OpenAI from 'openai';
-import { init, Status } from '@watchllm/sdk-node';
+import { init, Status } from 'watchllm-sdk-node';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const watchllm = init({
