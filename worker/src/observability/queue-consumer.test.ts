@@ -20,6 +20,7 @@ describe('Queue Consumer', () => {
         ctx = {
             waitUntil: vi.fn(),
             passThroughOnException: vi.fn(),
+            props: {},
         };
 
         vi.clearAllMocks();

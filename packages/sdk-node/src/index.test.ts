@@ -104,7 +104,7 @@ describe('WatchLLMClient', () => {
       });
 
       expect(queueSpy).toHaveBeenCalled();
-      const event = queueSpy.mock.calls[0][0];
+      const event = queueSpy.mock.calls[0][0] as any;
       expect(event.cost_estimate_usd).toBeGreaterThan(0);
     });
   });

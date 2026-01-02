@@ -47,6 +47,7 @@ const env: Env = {
   APP_URL: process.env.APP_URL,
   EMAIL_TRIGGER_SECRET: process.env.EMAIL_TRIGGER_SECRET,
   SENTRY_DSN: process.env.SENTRY_DSN,
+  ENCRYPTION_MASTER_SECRET: process.env.ENCRYPTION_MASTER_SECRET ?? '',
 };
 
 const port = Number(process.env.PORT ?? 8787);

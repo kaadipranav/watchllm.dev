@@ -181,12 +181,19 @@ Build the query layer that the dashboard will consume.
 
 Update the Next.js dashboard to visualize the new data.
 
-- [ ] **Task 4.1: Connect to Analytics API**
-    *   **Action:** Create a data fetching layer in `dashboard/lib/api.ts` to talk to the Worker's new Analytics endpoints.
-    *   **Deliverable:** Typed fetch functions.
+**Status:** Frontend structure ready, needs data integration layer
+
+- [ ] **Task 4.1: Connect to Analytics API** ⏳ *Next Priority*
+    *   **Action:** Create a data fetching layer in `dashboard/lib/analytics-api.ts` to talk to the Worker's new Analytics endpoints.
+    *   **Deliverable:** Typed fetch functions with error handling and loading states.
+    *   **Implementation Notes:**
+        *   Create TypeScript interfaces matching Analytics API responses
+        *   Implement retry logic for failed requests
+        *   Add request/response caching where appropriate
+        *   Handle authentication (API key in headers)
     *   **Verification:** Unit test the fetcher.
         ```bash
-        npm test dashboard/lib/api.test.ts
+        npm test dashboard/lib/analytics-api.test.ts
         ```
 
 - [ ] **Task 4.2: "Requests" (Log Explorer) Page**
