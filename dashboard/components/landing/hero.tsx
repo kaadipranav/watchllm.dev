@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Code2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -54,8 +51,8 @@ function LiveStatTicker() {
     >
       {[
         { label: "Requests/s", value: 1200, suffix: "/s" },
-        { label: "Observability events", value: 9800, suffix: "/h" },
-        { label: "Cost savings", value: 70, suffix: "%" },
+        { label: "Events processed", value: 9800, suffix: "/h" },
+        { label: "Avg. Latency", value: 45, suffix: "ms" },
       ].map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -105,7 +102,7 @@ function Spotlight() {
       className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500"
       style={{
         opacity,
-        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(59, 130, 246, 0.06), transparent 80%)`,
+        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255, 255, 255, 0.03), transparent 80%)`,
       }}
     />
   );
@@ -139,9 +136,9 @@ function Typewriter({ words }: { words: string[] }) {
   }, [subIndex, index, reverse, words]);
 
   return (
-    <span className="inline bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-purple-400 to-accent-primary bg-[length:200%_auto]">
+    <span className="inline text-text-primary">
       {words[index].substring(0, subIndex)}
-      <span className="inline-block w-[3px] h-[0.75em] bg-accent-primary ml-1 align-middle animate-pulse rounded-full" />
+      <span className="inline-block w-[3px] h-[0.75em] bg-white/50 ml-1 align-middle animate-pulse rounded-full" />
     </span>
   );
 }
@@ -155,26 +152,21 @@ export function Hero() {
       <Spotlight />
       {/* Spotlight effect */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent-primary/5 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-white/5 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative w-full z-10 flex justify-center">
         {/* Main content */}
         <div className="text-center max-w-6xl w-full px-4 sm:px-8 lg:px-16">
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-10"
+            className="mb-10 flex items-center justify-center gap-4 text-[11px] font-semibold uppercase tracking-[0.4em] text-text-muted"
           >
-            <Badge variant="secondary" className="inline-flex items-center gap-3 text-xs py-1.5 px-4 border-border-subtle bg-bg-surface/40 backdrop-blur-md rounded-full">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-primary"></span>
-              </span>
-              <span className="text-text-secondary font-semibold tracking-[0.1em] uppercase text-[10px]">System Operational</span>
-            </Badge>
+            <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
+            <span>Edge caching → observability</span>
+            <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
           </motion.div>
 
           {/* Headline with stagger animation */}
@@ -185,9 +177,9 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="block">The builder&rsquo;s companion</span>
+              <span className="block">Caching and observability</span>
               <span className="block mt-3">
-                for any <Typewriter words={["model", "provider", "API", "observability", "analytics"]} />
+                for any <Typewriter words={["stack", "model", "provider", "team"]} />
               </span>
             </motion.h1>
 
@@ -198,8 +190,8 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <div className="text-lg sm:text-xl text-text-secondary font-medium leading-relaxed text-center">
-                <div>Semantic caching for any LLM provider—save costs and accelerate responses.</div>
-                <div>Built-in observability: logs, traces, and analytics with ClickHouse.</div>
+                <div>Drop-in gateway that reduces latency and spend with semantic caching.</div>
+                <div>Get request logs, traces, and ClickHouse-backed analytics for every call.</div>
               </div>
             </motion.div>
           </motion.div>
@@ -211,20 +203,19 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-accent-primary/20">
+            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-white/5 bg-white text-black hover:bg-white/90">
               <Link href="/signup">
-                <span className="relative z-10 font-semibold">Start Building Free</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                <span className="relative z-10 font-semibold">Start Building</span>
               </Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-accent-primary/50 hover:bg-accent-primary/5 text-text-primary transition-all"
+              className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-white/50 hover:bg-white/5 text-text-primary transition-all"
             >
               <Link href="#features">
-                See How It Works
+                View Documentation
               </Link>
             </Button>
           </motion.div>
@@ -237,12 +228,13 @@ export function Hero() {
             transition={{ duration: 0.4, delay: 0.35 }}
           >
             <span className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-accent-success" />
-              No credit card
+              No credit card required
             </span>
             <span className="flex items-center gap-2">
-              <Code2 className="h-4 w-4 text-text-muted" />
               OpenAI-compatible
+            </span>
+            <span className="flex items-center gap-2">
+              SOC2 Compliant
             </span>
           </motion.div>
 

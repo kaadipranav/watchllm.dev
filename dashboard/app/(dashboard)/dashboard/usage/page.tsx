@@ -157,10 +157,10 @@ export default function UsagePage() {
       meta: "in selected period",
     },
     {
-      label: "Cache Hit Rate",
-      value: `${stats.cacheHitRate.toFixed(1)}%`,
-      meta: "average",
-      accent: "text-emerald-400",
+      label: "Cache Miss Rate",
+      value: `${(100 - stats.cacheHitRate).toFixed(1)}%`,
+      meta: "requests costing you money",
+      accent: stats.cacheHitRate < 50 ? "text-red-400" : "text-white/90",
     },
     {
       label: "Total Cost",
@@ -186,16 +186,16 @@ export default function UsagePage() {
   return (
     <div className="space-y-10 p-8">
       <header className="space-y-3">
-        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Usage</p>
+        <p className="text-xs uppercase tracking-[0.4em] text-white/40">Usage</p>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-premium-text-primary">Usage Analytics</h1>
-            <p className="max-w-2xl text-lg text-premium-text-secondary">
-              Monitor requests, cost, and savings with actionable, premium-ready insights.
+            <h1 className="text-4xl font-bold text-white/90">Usage Analytics</h1>
+            <p className="max-w-2xl text-lg text-white/60">
+              Track every dollar. See what&apos;s cached, what&apos;s not, and where you&apos;re bleeding money.
             </p>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[160px] rounded-premium-md border border-premium-border-subtle bg-premium-bg-primary text-sm font-semibold text-premium-text-primary">
+            <SelectTrigger className="w-[160px] rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-white/90">
               <SelectValue placeholder="Time range" />
             </SelectTrigger>
             <SelectContent>
@@ -212,10 +212,10 @@ export default function UsagePage() {
         {overviewStats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
+            className="rounded-xl border border-white/10 bg-white/5 p-5"
           >
-            <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">{stat.label}</p>
-            <p className={`mt-2 text-2xl font-semibold ${stat.accent || "text-premium-text-primary"}`}>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40">{stat.label}</p>
+            <p className={`mt-2 text-2xl font-semibold ${stat.accent || "text-white/90"}`}>
               {stat.value}
             </p>
             <p className="text-xs text-premium-text-secondary">{stat.meta}</p>

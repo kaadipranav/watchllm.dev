@@ -30,12 +30,12 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative border-t border-white/[0.06] bg-[hsl(222_47%_3%)]">
+    <footer className="relative border-t border-border-subtle bg-bg-primary">
       <div className="container relative mx-auto px-4 py-16">
         <div className="grid gap-12 md:grid-cols-5">
           {/* Logo & Description */}
           <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-2.5 text-premium-text-primary">
+            <Link href="/" className="flex items-center gap-2.5 text-text-primary">
               <Image
                 src="/watchllm_logo.png"
                 alt="WatchLLM Logo"
@@ -45,19 +45,19 @@ export function Footer() {
               />
               <span className="text-lg font-bold">WatchLLM</span>
             </Link>
-            <p className="text-sm text-premium-text-muted leading-relaxed max-w-xs">
+            <p className="text-sm text-text-muted leading-relaxed max-w-xs">
               Reduce AI API costs by 40-70% with intelligent semantic caching.
             </p>
             <div className="pt-4">
-              <p className="text-xs text-premium-text-muted mb-2 uppercase tracking-widest font-bold">Enterprise Support</p>
-              <p className="text-sm text-premium-text-secondary">
+              <p className="text-xs text-text-muted mb-2 uppercase tracking-widest font-bold">Enterprise Support</p>
+              <p className="text-sm text-text-secondary">
                 Need help with integration? Contact our engineering team at <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-text-primary hover:underline underline-offset-4">{APP_CONFIG.supportEmail}</a>.
               </p>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-premium-text-primary mb-4">
+            <p className="text-sm font-semibold text-text-primary mb-4">
               Product
             </p>
             <ul className="space-y-3">
@@ -65,7 +65,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-premium-text-muted transition-colors duration-150 hover:text-premium-text-primary"
+                    className="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary"
                   >
                     {link.label}
                   </Link>
@@ -75,7 +75,7 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-premium-text-primary mb-4">
+            <p className="text-sm font-semibold text-text-primary mb-4">
               Company
             </p>
             <ul className="space-y-3">
@@ -83,7 +83,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-premium-text-muted transition-colors duration-150 hover:text-premium-text-primary"
+                    className="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary"
                   >
                     {link.label}
                   </Link>
@@ -94,7 +94,7 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="text-sm font-semibold text-premium-text-primary mb-4">
+            <p className="text-sm font-semibold text-text-primary mb-4">
               Legal
             </p>
             <ul className="space-y-3">

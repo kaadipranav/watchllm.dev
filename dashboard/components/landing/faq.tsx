@@ -79,12 +79,12 @@ function FAQItem({
           className="relative flex w-full items-center justify-between px-6 py-5 text-left"
           onClick={onToggle}
         >
-          <span className="pr-4 text-base font-medium text-premium-text-primary">
+          <span className="pr-4 text-base font-medium text-text-primary">
             {faq.question}
           </span>
           <ChevronDown
             className={cn(
-              "h-5 w-5 shrink-0 text-premium-text-muted transition-transform duration-200",
+              "h-5 w-5 shrink-0 text-text-muted transition-transform duration-200",
               isOpen && "rotate-180"
             )}
           />
@@ -100,7 +100,7 @@ function FAQItem({
               className="overflow-hidden"
             >
               <div className="border-t border-white/[0.06] px-6 py-5">
-                <p className="text-sm leading-relaxed text-premium-text-secondary">
+                <p className="text-sm leading-relaxed text-text-secondary">
                   {faq.answer}
                 </p>
               </div>
@@ -126,13 +126,13 @@ export function FAQ() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <p className="text-sm font-medium text-violet-400 mb-4">
+          <p className="text-sm font-medium text-text-muted mb-4">
             FAQ
           </p>
-          <h2 className="text-4xl font-bold tracking-tight text-premium-text-primary sm:text-5xl">
-            Frequently asked <span className="text-gradient-accent">questions</span>
+          <h2 className="text-4xl font-bold tracking-tight text-text-primary sm:text-5xl">
+            Frequently asked questions
           </h2>
-          <p className="mt-6 text-lg text-premium-text-secondary">
+          <p className="mt-6 text-lg text-text-secondary">
             Everything you need to know about WatchLLM.
           </p>
         </motion.div>

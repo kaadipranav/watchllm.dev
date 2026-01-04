@@ -60,7 +60,7 @@ export function Providers() {
                   {provider.name}
                 </span>
                 {provider.byok && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-text-secondary border border-white/20 font-medium">
                     BYOK
                   </span>
                 )}

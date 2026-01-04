@@ -7,7 +7,6 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { APP_CONFIG } from "@/lib/config";
-import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
@@ -59,7 +58,7 @@ export function Navbar() {
                 WatchLLM
               </span>
               {APP_CONFIG.isBeta && (
-                <Badge variant="primary" className="text-[10px] px-1.5 py-0">
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-white/10 text-white border-white/20">
                   Beta
                 </Badge>
               )}
@@ -95,22 +94,19 @@ export function Navbar() {
               >
                 <Link href="/login">Sign In</Link>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="bg-white text-black hover:bg-white/90">
                 <Link href="/signup">Get Started</Link>
               </Button>
             </div>
 
             {/* Mobile Menu Toggle */}
             <button
-              className="flex md:hidden items-center justify-center h-8 w-8 rounded-sm hover:bg-white/5 transition-colors text-text-primary"
+              className="md:hidden p-2 text-text-secondary hover:text-text-primary"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {mobileMenuOpen ? "Close" : "Menu"}
+              </span>
             </button>
           </div>
         </div>
@@ -123,39 +119,24 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-border-subtle bg-bg-primary/95 backdrop-blur-xl"
+            className="md:hidden border-b border-border-subtle bg-bg-primary"
           >
             <div className="px-4 py-6 space-y-4">
-              {/* Navigation Links */}
-              <div className="flex flex-col gap-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 rounded-sm transition-all"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Auth Buttons */}
-              <div className="flex flex-col gap-2 pt-4 border-t border-border-subtle">
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="w-full"
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block px-4 py-3 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-4 border-t border-border-subtle grid gap-3">
+                <Button asChild variant="ghost" className="w-full justify-start">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button
-                  asChild
-                  className="w-full"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
+                <Button asChild className="w-full bg-white text-black hover:bg-white/90">
                   <Link href="/signup">Get Started</Link>
                 </Button>
               </div>

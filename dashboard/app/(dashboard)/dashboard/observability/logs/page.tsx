@@ -122,7 +122,7 @@ export default function RequestsPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Request Logs</h1>
         <p className="text-muted-foreground">
-          View all API requests and events from your applications.
+          Every LLM request is logged, priced, and traceable. Find what&apos;s costing you money.
         </p>
       </div>
 

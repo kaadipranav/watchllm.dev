@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { APP_CONFIG } from "@/lib/config";
@@ -11,72 +10,67 @@ import { APP_CONFIG } from "@/lib/config";
 const plans = [
   {
     name: "Free",
-    description: "Perfect for side projects needing caching + telemetry",
+    description: "For side projects",
     price: "$0",
     period: "forever",
     features: [
-      { text: "50K requests/month", included: true },
+      { text: "50,000 requests/month", included: true },
       { text: "10 requests/minute", included: true },
       { text: "Basic semantic caching", included: true },
       { text: "7-day usage history", included: true },
-      { text: "Provider + project key onboarding", included: true },
-      { text: "Basic observability telemetry (logs + metrics)", included: true },
-      { text: "Community support", included: true },
       { text: "1 project", included: true },
-      { text: "Priority support", included: false },
-      { text: "Team members", included: false },
     ],
     cta: "Get Started",
     href: "/signup",
     popular: false,
-    gradient: "from-cyan-500 to-blue-500",
   },
   {
     name: "Starter",
-    description: "For growing applications that need analytics",
-    price: "$49",
+    description: "For growing applications",
+    price: "$29",
     period: "/month",
     features: [
-      { text: "250K requests/month", included: true },
+      { text: "250,000 requests/month", included: true },
       { text: "50 requests/minute", included: true },
       { text: "Advanced semantic caching", included: true },
       { text: "30-day usage history", included: true },
-      { text: "Realtime analytics & alerts", included: true },
-      { text: "Observability dashboards", included: true },
       { text: "Email support", included: true },
-      { text: "5 projects", included: true },
-      { text: "Webhook notifications", included: true },
-      { text: "Custom cache TTL", included: true },
-      { text: "ClickHouse analytics", included: true },
     ],
     cta: "Start Free Trial",
     href: "/signup?plan=starter",
     popular: true,
-    gradient: "from-violet-500 to-purple-500",
   },
   {
     name: "Pro",
-    description: "For production workloads that demand observability",
-    price: "$99",
+    description: "For production workloads",
+    price: "$49",
     period: "/month",
     features: [
-      { text: "1M requests/month", included: true },
+      { text: "1,000,000 requests/month", included: true },
       { text: "200 requests/minute", included: true },
       { text: "Priority semantic caching", included: true },
       { text: "90-day usage history", included: true },
-      { text: "ClickHouse trace + log explorer", included: true },
-      { text: "Unlimited observability projects", included: true },
-      { text: "Retention controls (30/90 days)", included: true },
       { text: "Priority support", included: true },
-      { text: "Unlimited projects", included: true },
-      { text: "Webhook notifications", included: true },
-      { text: "Custom cache TTL", included: true },
-      { text: "Team members (up to 5)", included: true },
     ],
     cta: "Start Free Trial",
     href: "/signup?plan=pro",
     popular: false,
-    gradient: "from-amber-500 to-orange-500",
+  },
+  {
+    name: "Agency",
+    description: "For high volume",
+    price: "Custom",
+    period: "",
+    features: [
+      { text: "10M+ requests/month", included: true },
+      { text: "Custom rate limits", included: true },
+      { text: "Dedicated infrastructure", included: true },
+      { text: "Custom retention", included: true },
+      { text: "SLA", included: true },
+    ],
+    cta: "Contact Sales",
+    href: `mailto:${APP_CONFIG.salesEmail}`,
+    popular: false,
   },
 ];
 
@@ -104,7 +98,7 @@ function PricingCard({
       {/* Popular badge */}
       {isPopular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-          <Badge variant="secondary" className="text-xs px-3 py-1">
+          <Badge variant="secondary" className="text-xs px-3 py-1 bg-white text-black border-none">
             Most Popular
           </Badge>
         </div>
@@ -116,30 +110,11 @@ function PricingCard({
           "relative h-full bg-bg-surface border rounded-lg p-8",
           "transition-colors duration-base",
           isPopular
-            ? "border-border-default"
+            ? "border-white/20"
             : "border-border-subtle hover:border-border-default"
         )}
       >
-        {/* Coming Soon Overlay */}
-        {APP_CONFIG.showPricingComingSoon && plan.name !== "Free" && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-bg-primary/95 backdrop-blur-sm rounded-lg border-2 border-dashed border-text-muted/30">
-            <Badge variant="secondary" className="mb-3 px-4 py-1.5 text-sm font-semibold bg-accent-primary/10 text-accent-primary border-accent-primary/20">
-              Coming Soon
-            </Badge>
-            <p className="text-sm text-text-secondary font-medium">
-              Available after beta testing
-            </p>
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "space-y-6",
-            APP_CONFIG.showPricingComingSoon &&
-            plan.name !== "Free" &&
-            "blur-sm opacity-50"
-          )}
-        >
+        <div className="space-y-6">
           {/* Header */}
           <div>
             <h3 className="text-sm font-medium uppercase tracking-wider text-text-secondary mb-2">
@@ -170,11 +145,7 @@ function PricingCard({
                   !feature.included && "text-text-muted opacity-50"
                 )}
               >
-                {feature.included ? (
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-success" />
-                ) : (
-                  <X className="mt-0.5 h-4 w-4 shrink-0 text-text-muted" />
-                )}
+                <span className="text-text-secondary">•</span>
                 <span>{feature.text}</span>
               </li>
             ))}
@@ -185,7 +156,10 @@ function PricingCard({
             <Button
               asChild
               variant={isPopular ? "default" : "secondary"}
-              className="w-full"
+              className={cn(
+                "w-full",
+                isPopular ? "bg-white text-black hover:bg-white/90" : ""
+              )}
               size="lg"
             >
               <Link href={plan.href}>{plan.cta}</Link>
@@ -213,38 +187,19 @@ export function Pricing() {
             Pricing
           </h2>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
-            Simple, transparent pricing
+            Transparent pricing
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Start free, upgrade when you need more. No hidden fees or surprises.
+            Start free, upgrade when you need more.
           </p>
         </motion.div>
 
         {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {plans.map((plan, index) => (
             <PricingCard key={plan.name} plan={plan} index={index} />
           ))}
         </div>
-
-        {/* Bottom note */}
-        <motion.div
-          className="mt-16 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <p className="text-sm text-text-muted">
-            Need custom enterprise pricing?{" "}
-            <a
-              href={`mailto:${APP_CONFIG.salesEmail}`}
-              className="text-accent-primary hover:underline transition-colors"
-            >
-              Contact sales
-            </a>
-          </p>
-        </motion.div>
       </div>
     </section>
   );

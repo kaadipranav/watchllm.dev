@@ -17,8 +17,12 @@ import {
   ShieldCheck,
   AlertCircle,
   Clock,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
+import { ActionableInsights } from "@/components/dashboard/actionable-insights";
+import { COPY } from "@/lib/icp";
+import type { InsightsResult } from "@/lib/insights";
 import { createClient } from "@/lib/supabase/client";
 import { createAnalyticsClient } from "@/lib/analytics-api";
 import { useRouter } from "next/navigation";
@@ -49,6 +53,45 @@ export default function DashboardPage() {
     errorRate: number;
   } | null>(null);
   const [isLoadingObservability, setIsLoadingObservability] = useState(false);
+  const [insights, setInsights] = useState<InsightsResult | null>(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+
+  // Export Cost Report function
+  const exportCostReport = () => {
+    const report = {
+      generated_at: new Date().toISOString(),
+      period: "Last 7 days",
+      summary: {
+        total_requests: stats.totalRequests,
+        cache_hit_rate: `${stats.cacheHitRate.toFixed(1)}%`,
+        cache_miss_rate: `${(100 - stats.cacheHitRate).toFixed(1)}%`,
+        total_savings: `$${stats.totalSavings.toFixed(2)}`,
+        actual_spend: `$${stats.apiCost.toFixed(2)}`,
+        estimated_waste: `$${((stats.apiCost * (100 - stats.cacheHitRate) / 100) * 0.7).toFixed(2)}`,
+      },
+      observability: observabilityStats ? {
+        logged_requests: observabilityStats.totalRequests,
+        avg_latency_ms: Math.round(observabilityStats.avgLatency),
+        total_cost: `$${observabilityStats.totalCost.toFixed(2)}`,
+        error_rate: `${observabilityStats.errorRate.toFixed(1)}%`,
+      } : null,
+      insights: insights ? {
+        total_impact: `$${insights.totalImpactUsd.toFixed(2)}`,
+        insight_count: insights.insightCount,
+        wasted_spend: insights.wastedSpend?.data.wasted_cost_usd ?? 0,
+      } : null,
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `watchllm-cost-report-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -267,50 +310,103 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <h1 className="text-xl font-medium tracking-tight text-white/90">Dashboard</h1>
+          <h1 className="text-xl font-medium tracking-tight text-white/90">{COPY.dashboard.title}</h1>
           <p className="text-sm text-white/50">
-            Overview of your API usage and savings
+            {COPY.dashboard.subtitle}
           </p>
         </div>
-        <Link href="/dashboard/projects">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportCostReport()}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
           </Button>
-        </Link>
+          <Link href="/dashboard/projects">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Actionable Insights - ABOVE raw metrics */}
+      <ActionableInsights
+        wastedSpend={insights?.wastedSpend ?? null}
+        costWastingEndpoints={insights?.costWastingEndpoints ?? []}
+        overPromptedRequests={insights?.overPromptedRequests ?? []}
+        cacheThreshold={insights?.cacheThreshold ?? null}
+        modelSwaps={insights?.modelSwaps ?? []}
+        totalImpactUsd={insights?.totalImpactUsd ?? 0}
+        isLoading={isLoadingInsights}
+      />
 
       {/* Stats Cards */}
       <div className="space-y-4">
+        {/* Wasted Spend - The "Oh Sh*t" Metric */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-red-300">Wasted LLM Spend</CardTitle>
+              <CardDescription className="text-xs text-red-400/60">
+                Requests that missed cache but could have hit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-400">
+                ${((stats.apiCost * (100 - stats.cacheHitRate) / 100) * 0.7).toFixed(2)}
+              </div>
+              <p className="text-xs text-red-400/70 mt-1">
+                {(100 - stats.cacheHitRate).toFixed(1)}% of requests are still costing you money
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-green-300">Money Saved</CardTitle>
+              <CardDescription className="text-xs text-green-400/60">
+                Cost avoided via caching
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-400">
+                ${stats.totalSavings.toFixed(2)}
+              </div>
+              <p className="text-xs text-green-400/70 mt-1">
+                {stats.cacheHitRate.toFixed(1)}% cache hit rate this week
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Caching Stats */}
         <div>
-          <h2 className="text-sm font-medium text-white/70 mb-3">Semantic Caching Performance</h2>
+          <h2 className="text-sm font-medium text-white/70 mb-3">Performance Metrics</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               title="Total Requests"
               value={stats.totalRequests.toLocaleString()}
               description="last 7 days"
               icon={Activity}
-              trend={{ value: 0, isPositive: true }} // Trends require historical data comparison
-            />
-            <StatsCard
-              title="Cache Hit Rate"
-              value={`${stats.cacheHitRate.toFixed(1)}%`}
-              description="average this week"
-              icon={Zap}
               trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
-              title="Total Savings"
-              value={`$${stats.totalSavings.toFixed(4)}`}
-              description="this week"
+              title="Cache Miss Rate"
+              value={`${(100 - stats.cacheHitRate).toFixed(1)}%`}
+              description="requests costing money"
+              icon={AlertCircle}
+              trend={{ value: 0, isPositive: false }}
+            />
+            <StatsCard
+              title="Saved This Week"
+              value={`$${stats.totalSavings.toFixed(2)}`}
+              description="via caching"
               icon={DollarSign}
               trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
-              title="API Cost"
-              value={`$${stats.apiCost.toFixed(4)}`}
-              description="actual spend"
+              title="Actual Spend"
+              value={`$${stats.apiCost.toFixed(2)}`}
+              description="LLM API cost"
               icon={TrendingUp}
               trend={{ value: 0, isPositive: true }}
             />
@@ -321,16 +417,16 @@ export default function DashboardPage() {
         {observabilityStats && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-medium text-white/70">Observability Insights</h2>
-              <Link href="/dashboard/observability/logs" className="text-xs text-premium-accent hover:underline">
-                View Details →
+              <h2 className="text-sm font-medium text-white/70">Request Telemetry</h2>
+              <Link href="/dashboard/observability/logs" className="text-xs text-white/50 hover:text-white/70">
+                Every request is logged, priced, and traceable →
               </Link>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatsCard
-                title="Total Events"
+                title="Logged Requests"
                 value={observabilityStats.totalRequests.toLocaleString()}
-                description="logged events"
+                description="every call tracked"
                 icon={Activity}
                 trend={{ value: 0, isPositive: true }}
               />
@@ -342,9 +438,9 @@ export default function DashboardPage() {
                 trend={{ value: 0, isPositive: false }}
               />
               <StatsCard
-                title="Total Cost"
-                value={`$${observabilityStats.totalCost.toFixed(4)}`}
-                description="LLM spend"
+                title="LLM Spend"
+                value={`$${observabilityStats.totalCost.toFixed(2)}`}
+                description="actual cost"
                 icon={DollarSign}
                 trend={{ value: 0, isPositive: false }}
               />
@@ -370,11 +466,11 @@ export default function DashboardPage() {
       <Card className="border-white/[0.08] bg-white/[0.02]">
         <CardHeader className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-premium-accent" />
-            <CardTitle className="text-sm">Observability readiness</CardTitle>
+            <ShieldCheck className="h-4 w-4 text-white/60" />
+            <CardTitle className="text-sm">Observability Setup</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Observability captures every request in ClickHouse, but only runs for projects with an active provider key. Retention and partitions keep the database lean even at scale.
+            Every LLM request is logged, priced, and traceable. We thought about retention for you—30 days default, partitioned by month.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

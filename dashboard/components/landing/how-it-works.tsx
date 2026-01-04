@@ -1,24 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Database, Server, Zap, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 const steps = [
   {
-    icon: Server,
     title: "Change one line",
     step: 1,
     description: "Update your baseURL to WatchLLM. We intercept requests at the edge with zero latency overhead.",
     code: `const client = new OpenAI({
-  baseURL: "https://api.watchllm.com/v1",
+  baseURL: "https://proxy.watchllm.dev/v1",
   apiKey: process.env.WATCHLLM_KEY
 });`,
-    gradient: "from-cyan-500 to-blue-500",
   },
   {
-    icon: Database,
     title: "Semantic matching",
     step: 2,
     description: "We vectorize your prompt and search our distributed cache for semantically similar queries using cosine similarity.",
@@ -26,17 +21,14 @@ const steps = [
 // 1. Vectorize your prompt
 // 2. Search Redis vector DB
 // 3. Find similar queries (>95% match)`,
-    gradient: "from-violet-500 to-purple-500",
   },
   {
-    icon: Zap,
     title: "Instant response",
     step: 3,
     description: "Cache hit? Return in <50ms. Cache miss? Forward to your provider and cache the response for next time.",
     code: `// Cache hit: ~50ms response
 // Cache miss: Normal latency
 // Auto-caching for future requests`,
-    gradient: "from-amber-500 to-orange-500",
   },
 ];
 
@@ -61,14 +53,10 @@ function CodeBlock({ code, language = "typescript" }: { code: string; language?:
       {/* Copy button */}
       <button
         onClick={handleCopy}
-        className="absolute top-3 right-3 z-10 p-2 rounded-sm bg-bg-primary/80 border border-border-subtle hover:border-border-hover transition-colors"
+        className="absolute top-3 right-3 z-10 p-2 rounded-sm bg-bg-primary/80 border border-border-subtle hover:border-border-hover transition-colors text-xs text-text-muted"
         aria-label="Copy code"
       >
-        {copied ? (
-          <Check className="h-4 w-4 text-accent-success" />
-        ) : (
-          <Copy className="h-4 w-4 text-text-muted" />
-        )}
+        {copied ? "Copied" : "Copy"}
       </button>
 
       {/* Code content */}
@@ -132,10 +120,6 @@ export function HowItWorks() {
 
                   {/* Content card */}
                   <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 hover:border-border-default transition-colors duration-base">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 bg-bg-elevated border border-border-subtle">
-                      <step.icon className="h-6 w-6 text-text-primary" />
-                    </div>
-
                     <h3 className="text-xl font-semibold text-text-primary mb-3">
                       {step.title}
                     </h3>
@@ -177,10 +161,6 @@ export function HowItWorks() {
 
                 {/* Content card */}
                 <div className="bg-bg-surface border border-border-subtle rounded-lg p-6">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 bg-bg-elevated border border-border-subtle">
-                    <step.icon className="h-6 w-6 text-text-primary" />
-                  </div>
-
                   <h3 className="text-xl font-semibold text-text-primary mb-3">
                     {step.title}
                   </h3>

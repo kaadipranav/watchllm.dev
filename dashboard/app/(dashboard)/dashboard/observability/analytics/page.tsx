@@ -20,14 +20,14 @@ export default function AnalyticsPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
         <p className="text-muted-foreground">
-          Monitor request metrics, costs, latency, and error rates.
+          See where your LLM spend is going. Costs, latency, and errors—all in one place.
         </p>
       </div>
 
       <Alert className="border-white/[0.08] bg-white/[0.02]">
-        <AlertTitle className="text-xs uppercase tracking-wide">Observability requires an API key</AlertTitle>
+        <AlertTitle className="text-xs uppercase tracking-wide">We&apos;ve set sensible defaults</AlertTitle>
         <AlertDescription className="text-xs text-white/70">
-          Analytics only run after you associate a provider key with a project. ClickHouse partitions and TTLs keep logs limited, so even high-volume workloads stay manageable.
+          Retention: 30 days. Partitioned by month. No config needed—we&apos;ve thought about this for you.
         </AlertDescription>
       </Alert>
 
