@@ -24,6 +24,7 @@ import { handleEmbeddings } from './handlers/embeddings';
 import { log, maskApiKey } from './lib/logger';
 import observabilityApp from './observability/routes';
 import analyticsApp from './handlers/analytics';
+import { checkRateLimit, checkQuota, incrementUsage, type Plan } from './lib/rate-limiting';
 
 // Create Hono app with environment bindings
 const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
@@ -251,6 +252,191 @@ app.use('/v1/*', async (c, next) => {
   // Store validated key for handlers
   c.set('validatedKey', validatedKey);
 
+  await next();
+});
+
+// ============================================================================
+// Rate Limiting & Quota Enforcement Middleware
+// ============================================================================
+
+/**
+ * Rate limiting and quota enforcement for API proxy endpoints
+ * Checks both per-minute rate limits and monthly quotas based on plan
+ */
+app.use('/v1/chat/completions', async (c, next) => {
+  const validatedKey = c.get('validatedKey');
+  if (!validatedKey) {
+    // Should not happen - auth middleware should catch this
+    return c.json({ error: { message: 'Unauthorized', type: 'invalid_request_error', code: 'unauthorized' } }, 401);
+  }
+
+  const { project } = validatedKey;
+  const plan = (project.plan as Plan) || 'free';
+
+  // Check rate limit (requests per minute)
+  const rateLimitResult = await checkRateLimit(c.env, project.id, plan);
+  
+  // Add rate limit headers
+  c.header('X-RateLimit-Limit', rateLimitResult.limit.toString());
+  c.header('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+  c.header('X-RateLimit-Reset', rateLimitResult.resetAt.toString());
+
+  if (!rateLimitResult.allowed) {
+    c.header('Retry-After', (rateLimitResult.retryAfter || 60).toString());
+    return c.json(
+      {
+        error: {
+          message: `Rate limit exceeded. You can make ${rateLimitResult.limit} requests per minute on the ${plan} plan.`,
+          type: 'rate_limit_error',
+          code: 'rate_limit_exceeded',
+          details: {
+            limit: rateLimitResult.limit,
+            remaining: rateLimitResult.remaining,
+            resetAt: rateLimitResult.resetAt,
+            retryAfter: rateLimitResult.retryAfter,
+          },
+        },
+      },
+      429
+    );
+  }
+
+  // Check monthly quota
+  const quotaResult = await checkQuota(c.env, project.id, plan);
+
+  // Add quota headers
+  c.header('X-Quota-Limit', quotaResult.limit.toString());
+  c.header('X-Quota-Remaining', quotaResult.remaining.toString());
+  c.header('X-Quota-Reset', quotaResult.resetAt.toString());
+
+  if (!quotaResult.allowed) {
+    const resetDate = new Date(quotaResult.resetAt * 1000);
+    return c.json(
+      {
+        error: {
+          message: `Monthly quota exceeded. You've used ${quotaResult.used} of ${quotaResult.limit} requests on the ${plan} plan. Upgrade your plan or wait until ${resetDate.toLocaleDateString()}.`,
+          type: 'quota_exceeded_error',
+          code: 'quota_exceeded',
+          details: {
+            used: quotaResult.used,
+            limit: quotaResult.limit,
+            remaining: quotaResult.remaining,
+            resetAt: quotaResult.resetAt,
+            resetDate: resetDate.toISOString(),
+            upgradeUrl: `${c.env.APP_URL || 'https://watchllm.dev'}/dashboard/billing`,
+          },
+        },
+      },
+      429
+    );
+  }
+
+  // Increment usage counter after successful checks
+  await incrementUsage(c.env, project.id);
+
+  await next();
+});
+
+/**
+ * Rate limiting for other proxy endpoints (completions, embeddings)
+ */
+app.use('/v1/completions', async (c, next) => {
+  const validatedKey = c.get('validatedKey');
+  if (!validatedKey) {
+    return c.json({ error: { message: 'Unauthorized', type: 'invalid_request_error', code: 'unauthorized' } }, 401);
+  }
+
+  const { project } = validatedKey;
+  const plan = (project.plan as Plan) || 'free';
+
+  const rateLimitResult = await checkRateLimit(c.env, project.id, plan);
+  c.header('X-RateLimit-Limit', rateLimitResult.limit.toString());
+  c.header('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+  c.header('X-RateLimit-Reset', rateLimitResult.resetAt.toString());
+
+  if (!rateLimitResult.allowed) {
+    c.header('Retry-After', (rateLimitResult.retryAfter || 60).toString());
+    return c.json(
+      {
+        error: {
+          message: `Rate limit exceeded. You can make ${rateLimitResult.limit} requests per minute on the ${plan} plan.`,
+          type: 'rate_limit_error',
+          code: 'rate_limit_exceeded',
+        },
+      },
+      429
+    );
+  }
+
+  const quotaResult = await checkQuota(c.env, project.id, plan);
+  c.header('X-Quota-Limit', quotaResult.limit.toString());
+  c.header('X-Quota-Remaining', quotaResult.remaining.toString());
+  c.header('X-Quota-Reset', quotaResult.resetAt.toString());
+
+  if (!quotaResult.allowed) {
+    return c.json(
+      {
+        error: {
+          message: `Monthly quota exceeded. Upgrade your plan or wait until quota resets.`,
+          type: 'quota_exceeded_error',
+          code: 'quota_exceeded',
+        },
+      },
+      429
+    );
+  }
+
+  await incrementUsage(c.env, project.id);
+  await next();
+});
+
+app.use('/v1/embeddings', async (c, next) => {
+  const validatedKey = c.get('validatedKey');
+  if (!validatedKey) {
+    return c.json({ error: { message: 'Unauthorized', type: 'invalid_request_error', code: 'unauthorized' } }, 401);
+  }
+
+  const { project } = validatedKey;
+  const plan = (project.plan as Plan) || 'free';
+
+  const rateLimitResult = await checkRateLimit(c.env, project.id, plan);
+  c.header('X-RateLimit-Limit', rateLimitResult.limit.toString());
+  c.header('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+  c.header('X-RateLimit-Reset', rateLimitResult.resetAt.toString());
+
+  if (!rateLimitResult.allowed) {
+    c.header('Retry-After', (rateLimitResult.retryAfter || 60).toString());
+    return c.json(
+      {
+        error: {
+          message: `Rate limit exceeded. You can make ${rateLimitResult.limit} requests per minute on the ${plan} plan.`,
+          type: 'rate_limit_error',
+          code: 'rate_limit_exceeded',
+        },
+      },
+      429
+    );
+  }
+
+  const quotaResult = await checkQuota(c.env, project.id, plan);
+  c.header('X-Quota-Limit', quotaResult.limit.toString());
+  c.header('X-Quota-Remaining', quotaResult.remaining.toString());
+  c.header('X-Quota-Reset', quotaResult.resetAt.toString());
+
+  if (!quotaResult.allowed) {
+    return c.json(
+      {
+        error: {
+          message: `Monthly quota exceeded. Upgrade your plan or wait until quota resets.`,
+          type: 'quota_exceeded_error',
+          code: 'quota_exceeded',
+        },
+      },
+      429
+    );
+  }
+
+  await incrementUsage(c.env, project.id);
   await next();
 });
 
