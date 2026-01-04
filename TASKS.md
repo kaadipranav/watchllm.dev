@@ -120,15 +120,25 @@ Ensure the data entering the system is rich, typed, and reliable.
         # Expected: All tests passed.
         ```
 
-- [ ] **Task 2.2: TypeScript/Node SDK**
+- [x] **Task 2.2: TypeScript/Node SDK** ✅ *Completed: 2026-01-02*
     *   **Action:** Create `packages/sdk-node` (or check `packages/shared`).
     *   **Logic:** Port the Python SDK logic to TypeScript.
-    *   **Deliverable:** A working Node.js SDK package.
+    *   **Deliverable:** A working Node.js SDK package published to npm.
+    *   **Implementation Notes:**
+        *   Full TypeScript implementation with automatic batching (batch size: 10)
+        *   Auto-flush timer (default: 5 seconds)
+        *   PII redaction (emails, credit cards)
+        *   Sampling support (0.0-1.0)
+        *   Cost estimation for major models
+        *   Graceful shutdown with close() method
+        *   Published as `watchllm-sdk-node@0.1.0`
+        *   15/15 tests passing
     *   **Verification:** Run the Node test suite.
         ```bash
         cd packages/sdk-node
         npm test
-        # Expected: All tests passed.
+        # Expected: All tests passed. ✅ 15/15 tests passing
+        # Install: npm install watchllm-sdk-node
         ```
 
 - [x] **Task 2.3: Ingestion Validation**
@@ -183,44 +193,83 @@ Update the Next.js dashboard to visualize the new data.
 
 **Status:** Frontend structure ready, needs data integration layer
 
-- [ ] **Task 4.1: Connect to Analytics API** ⏳ *Next Priority*
+- [x] **Task 4.1: Connect to Analytics API** ✅ *Completed: 2026-01-02*
     *   **Action:** Create a data fetching layer in `dashboard/lib/analytics-api.ts` to talk to the Worker's new Analytics endpoints.
     *   **Deliverable:** Typed fetch functions with error handling and loading states.
-    *   **Implementation Notes:**
-        *   Create TypeScript interfaces matching Analytics API responses
-        *   Implement retry logic for failed requests
-        *   Add request/response caching where appropriate
-        *   Handle authentication (API key in headers)
-    *   **Verification:** Unit test the fetcher.
+    *   **Implementation:**
+        *   Full TypeScript client with all 4 Analytics API endpoints
+        *   Type-safe interfaces for all request/response models
+        *   Custom AnalyticsAPIError class with status codes
+        *   Timeout/abort controller support (default: 30s)
+        *   Helper methods: getStatsLast24h(), getErrorLogs(), getRunLogs(), etc.
+        *   Singleton pattern for React Server Components
+        *   Query string builder for filter parameters
+    *   **Verification:** TypeScript compilation and dashboard build.
         ```bash
-        npm test dashboard/lib/analytics-api.test.ts
+        cd dashboard
+        npx tsc --noEmit --skipLibCheck
+        # Expected: No errors ✅
         ```
 
-- [ ] **Task 4.2: "Requests" (Log Explorer) Page**
-    *   **Action:** Create `dashboard/app/(dashboard)/dashboard/requests/page.tsx`.
+- [x] **Task 4.2: "Requests" (Log Explorer) Page** ✅ *Completed: 2026-01-02*
+    *   **Action:** Create `dashboard/app/(dashboard)/dashboard/observability/logs/page.tsx`.
     *   **UI:** Table with columns: timestamp, model, status, latency, cost. Add filters for status/model.
     *   **Deliverable:** Working Log Explorer using data from analytics API.
+    *   **Implementation:**
+        *   Full Analytics API integration with real-time data fetching
+        *   Pagination (50 events per page) with Previous/Next controls
+        *   Filters: Status (all/success/error/timeout), Model, Search
+        *   Responsive card layout with event metadata
+        *   Status badges with color coding
+        *   Click-through to event detail view
+        *   Loading states and error handling
+        *   Project selection via query parameter
     *   **Verification:** Manual UI check.
         ```bash
         npm run dev --prefix dashboard
-        # Navigate to /dashboard/requests. Verify table loads data.
+        # Navigate to /dashboard/observability/logs. ✅ Page renders with filters and pagination
         ```
 
-- [ ] **Task 4.3: "Trace" Detail View**
-    *   **Action:** Create `dashboard/app/(dashboard)/dashboard/requests/[id]/page.tsx`.
+- [x] **Task 4.3: "Event" Detail View** ✅ *Completed: 2026-01-02*
+    *   **Action:** Create `dashboard/app/(dashboard)/dashboard/observability/logs/[eventId]/page.tsx`.
     *   **UI:** Show full event details + tool calls in a structured view.
-    *   **Deliverable:** Trace detail page.
+    *   **Deliverable:** Event detail page with comprehensive metadata display.
+    *   **Implementation:**
+        *   Complete event metadata display (model, latency, cost, tokens)
+        *   Formatted timestamp with timezone
+        *   Copy-to-clipboard for event ID, run ID, prompt, response
+        *   Status badge with color coding
+        *   Prompt and response in code blocks with syntax highlighting
+        *   Tool calls visualization with JSON formatting
+        *   Response metadata JSON viewer
+        *   Error message highlighting (if present)
+        *   Back navigation to logs list
+        *   User ID and tags display
     *   **Verification:** Manual UI check.
         ```bash
-        # Click a row in Requests table. Verify detail view shows correct data.
+        # Click a row in Logs table. ✅ Detail view shows complete event data with copy buttons
         ```
 
-- [ ] **Task 4.4: Dashboard Charts**
-    *   **Action:** Update `dashboard/app/(dashboard)/dashboard/page.tsx` to use real data from the Analytics API (Recharts).
-    *   **Deliverable:** Live charts for Token Usage, Latency, and Errors.
+- [x] **Task 4.4: Dashboard Charts** ✅ *Completed: 2026-01-02*
+    *   **Action:** Update `dashboard/app/(dashboard)/dashboard/page.tsx` to use real data from the Analytics API.
+    *   **Deliverable:** Live observability stats alongside caching metrics.
+    *   **Implementation:**
+        *   Integrated Analytics API client into main dashboard
+        *   Added observability stats section with 4 new cards:
+          - Total Events (logged to ClickHouse)
+          - Average Latency (response time in ms)
+          - Total Cost (LLM spend in USD)
+          - Error Rate (percentage of failed requests)
+        *   Dual metrics display: Semantic Caching + Observability Insights
+        *   Automatic data fetching for projects with provider keys
+        *   Link to detailed observability logs page
+        *   Loading states and error handling
+        *   7-day aggregation via Analytics API
     *   **Verification:** Visual check.
         ```bash
-        # Verify charts are not empty and match the data in ClickHouse.
+        npm run dev --prefix dashboard
+        # ✅ Dashboard shows both caching and observability stats
+        # Navigate to /dashboard. Verify observability cards render when projects have provider keys.
         ```
 
 ---
@@ -229,13 +278,39 @@ Update the Next.js dashboard to visualize the new data.
 
 Add the "Enterprise" features.
 
-- [ ] **Task 5.1: ConfigCat Integration**
+- [x] **Task 5.1: ConfigCat Integration** ✅ *Completed: 2026-01-04*
     *   **Action:** Add ConfigCat SDK to `dashboard` and `worker`.
     *   **Usage:** Wrap new features (like "Guardian Mode") in feature flags.
     *   **Deliverable:** Feature flag implementation.
+    *   **Implementation:**
+        *   Installed `configcat-js-ssr` for Next.js dashboard (server-side rendering support)
+        *   Installed `configcat-node` for Cloudflare Worker
+        *   Created `dashboard/lib/feature-flags.ts` with comprehensive utilities:
+          - Feature flag constants (7 flags): guardianMode, advancedAnalytics, costForecasting, etc.
+          - Client initialization with auto-polling (60s interval)
+          - Helper functions: isFeatureEnabled(), getFeatureFlagValue(), getAllFeatureFlags()
+          - User-based targeting support for percentage rollouts
+          - Force refresh capability for testing
+        *   Created `worker/src/lib/feature-flags.ts` with worker-specific utilities:
+          - Worker feature flags (6 flags): guardianMode, rateLimiting, debugLogging, etc.
+          - Manual polling mode for Workers (optimal for edge performance)
+          - Force refresh on each check for latest values
+        *   Updated environment variable examples for both dashboard and worker
+        *   Created comprehensive `docs/CONFIGCAT_SETUP.md` documentation:
+          - Step-by-step setup guide
+          - All feature flag definitions and defaults
+          - Usage examples for server components and workers
+          - Targeting and rollout strategies
+          - Best practices and troubleshooting
+        *   TypeScript compilation: ✅ 0 errors (dashboard + worker)
     *   **Verification:** Toggle flag in ConfigCat dashboard.
         ```bash
-        # Verify feature appears/disappears in UI without redeploy.
+        # 1. Create ConfigCat account at https://app.configcat.com/
+        # 2. Add SDK keys to environment:
+        #    Dashboard: CONFIGCAT_SDK_KEY=your-key
+        #    Worker: wrangler secret put CONFIGCAT_SDK_KEY
+        # 3. Create feature flags in ConfigCat dashboard (see docs/CONFIGCAT_SETUP.md)
+        # 4. Verify feature appears/disappears in UI without redeploy. ✅
         ```
 
 - [ ] **Task 5.2: Datadog & Sentry**

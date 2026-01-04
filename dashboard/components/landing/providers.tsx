@@ -3,10 +3,22 @@
 import { motion } from "framer-motion";
 
 const providers = [
-  { name: "OpenAI", logo: "openai", byok: true },
-  { name: "Anthropic", logo: "anthropic", byok: true },
-  { name: "Groq", logo: "groq", byok: true },
-  { name: "OpenRouter", logo: "openrouter", byok: false },
+  { 
+    name: "OpenAI",
+    byok: true 
+  },
+  { 
+    name: "Anthropic",
+    byok: true 
+  },
+  { 
+    name: "Groq",
+    byok: true 
+  },
+  { 
+    name: "OpenRouter",
+    byok: false 
+  },
 ];
 
 export function Providers() {
@@ -44,11 +56,11 @@ export function Providers() {
               className="group flex items-center justify-center"
             >
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xl font-semibold tracking-tight text-text-muted transition-colors duration-300 group-hover:text-text-secondary">
+                <span className="text-lg font-semibold tracking-tight text-text-muted transition-colors duration-300 group-hover:text-text-secondary">
                   {provider.name}
                 </span>
                 {provider.byok && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
                     BYOK
                   </span>
                 )}

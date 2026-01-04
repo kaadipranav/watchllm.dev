@@ -15,9 +15,12 @@ import {
   Plus,
   ArrowRight,
   ShieldCheck,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { createAnalyticsClient } from "@/lib/analytics-api";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { APP_CONFIG } from "@/lib/config";
@@ -39,6 +42,13 @@ export default function DashboardPage() {
     readyProjects: 0,
     missingProjects: [] as string[],
   });
+  const [observabilityStats, setObservabilityStats] = useState<{
+    totalRequests: number;
+    avgLatency: number;
+    totalCost: number;
+    errorRate: number;
+  } | null>(null);
+  const [isLoadingObservability, setIsLoadingObservability] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -195,6 +205,45 @@ export default function DashboardPage() {
 
         setChartData(Array.from(chartMap.values()));
 
+        // 3. Fetch Observability Stats (if user has projects with provider keys)
+        if (readyProjectIds.size > 0 && projectIds.length > 0) {
+          try {
+            setIsLoadingObservability(true);
+            const analyticsClient = createAnalyticsClient();
+            
+            // Get API key for the first ready project (in production, aggregate across all projects)
+            const firstReadyProject = projectIds.find(id => readyProjectIds.has(id));
+            if (firstReadyProject) {
+              const apiKey = localStorage.getItem(`project_${firstReadyProject}_api_key`);
+              if (apiKey) {
+                analyticsClient.setApiKey(apiKey);
+                
+                // Fetch last 7 days of observability stats
+                const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+                const now = new Date().toISOString();
+                
+                const observabilityData = await analyticsClient.getStats({
+                  project_id: firstReadyProject,
+                  date_from: sevenDaysAgo,
+                  date_to: now,
+                });
+                
+                setObservabilityStats({
+                  totalRequests: observabilityData.stats.total_requests,
+                  avgLatency: parseFloat(observabilityData.stats.avg_latency_ms),
+                  totalCost: parseFloat(observabilityData.stats.total_cost_usd),
+                  errorRate: parseFloat(observabilityData.stats.error_rate),
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching observability stats:", error);
+            // Don't block the dashboard if observability fails
+          } finally {
+            setIsLoadingObservability(false);
+          }
+        }
+
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -232,35 +281,89 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Requests"
-          value={stats.totalRequests.toLocaleString()}
-          description="last 7 days"
-          icon={Activity}
-          trend={{ value: 0, isPositive: true }} // Trends require historical data comparison
-        />
-        <StatsCard
-          title="Cache Hit Rate"
-          value={`${stats.cacheHitRate.toFixed(1)}%`}
-          description="average this week"
-          icon={Zap}
-          trend={{ value: 0, isPositive: true }}
-        />
-        <StatsCard
-          title="Total Savings"
-          value={`$${stats.totalSavings.toFixed(4)}`}
-          description="this week"
-          icon={DollarSign}
-          trend={{ value: 0, isPositive: true }}
-        />
-        <StatsCard
-          title="API Cost"
-          value={`$${stats.apiCost.toFixed(4)}`}
-          description="actual spend"
-          icon={TrendingUp}
-          trend={{ value: 0, isPositive: true }}
-        />
+      <div className="space-y-4">
+        {/* Caching Stats */}
+        <div>
+          <h2 className="text-sm font-medium text-white/70 mb-3">Semantic Caching Performance</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Total Requests"
+              value={stats.totalRequests.toLocaleString()}
+              description="last 7 days"
+              icon={Activity}
+              trend={{ value: 0, isPositive: true }} // Trends require historical data comparison
+            />
+            <StatsCard
+              title="Cache Hit Rate"
+              value={`${stats.cacheHitRate.toFixed(1)}%`}
+              description="average this week"
+              icon={Zap}
+              trend={{ value: 0, isPositive: true }}
+            />
+            <StatsCard
+              title="Total Savings"
+              value={`$${stats.totalSavings.toFixed(4)}`}
+              description="this week"
+              icon={DollarSign}
+              trend={{ value: 0, isPositive: true }}
+            />
+            <StatsCard
+              title="API Cost"
+              value={`$${stats.apiCost.toFixed(4)}`}
+              description="actual spend"
+              icon={TrendingUp}
+              trend={{ value: 0, isPositive: true }}
+            />
+          </div>
+        </div>
+
+        {/* Observability Stats */}
+        {observabilityStats && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-medium text-white/70">Observability Insights</h2>
+              <Link href="/dashboard/observability/logs" className="text-xs text-premium-accent hover:underline">
+                View Details →
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Total Events"
+                value={observabilityStats.totalRequests.toLocaleString()}
+                description="logged events"
+                icon={Activity}
+                trend={{ value: 0, isPositive: true }}
+              />
+              <StatsCard
+                title="Avg Latency"
+                value={`${Math.round(observabilityStats.avgLatency)}ms`}
+                description="response time"
+                icon={Clock}
+                trend={{ value: 0, isPositive: false }}
+              />
+              <StatsCard
+                title="Total Cost"
+                value={`$${observabilityStats.totalCost.toFixed(4)}`}
+                description="LLM spend"
+                icon={DollarSign}
+                trend={{ value: 0, isPositive: false }}
+              />
+              <StatsCard
+                title="Error Rate"
+                value={`${observabilityStats.errorRate.toFixed(1)}%`}
+                description="failed requests"
+                icon={AlertCircle}
+                trend={{ value: 0, isPositive: false }}
+              />
+            </div>
+          </div>
+        )}
+
+        {isLoadingObservability && (
+          <div className="text-center py-4">
+            <p className="text-sm text-white/50">Loading observability stats...</p>
+          </div>
+        )}
       </div>
 
       {/* Observability Readiness */}
