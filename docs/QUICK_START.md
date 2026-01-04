@@ -17,9 +17,39 @@ Start caching your AI requests usage in less than 2 minutes. WatchLLM is a drop-
 
 ## 2. Integrate with Your Code
 
-WatchLLM works by simply changing the `baseURL` in your existing OpenAI SDK setup. No logic changes required.
+WatchLLM offers two ways to integrate: using our dedicated SDK (recommended for observability) or as a drop-in replacement for the OpenAI SDK.
 
-### Node.js / TypeScript
+### Option A: Dedicated Node.js SDK (Recommended)
+
+Our dedicated SDK provides the best experience for observability, including automatic batching, PII redaction, and cost estimation.
+
+```bash
+npm install watchllm-sdk-node
+```
+
+```typescript
+import { WatchLLM } from 'watchllm-sdk-node';
+
+const watch = new WatchLLM({
+  apiKey: process.env.WATCHLLM_API_KEY,
+  projectId: 'your-project-id'
+});
+
+// Log an event
+watch.logEvent({
+  event_type: 'prompt_call',
+  model: 'gpt-4',
+  prompt: 'Hello world',
+  response: 'Hello! How can I help you?',
+  status: 'success'
+});
+```
+
+### Option B: OpenAI SDK Compatibility
+
+WatchLLM is a drop-in replacement for the OpenAI API. No logic changes required.
+
+#### Node.js / TypeScript
 
 ```typescript
 import OpenAI from "openai";
@@ -36,7 +66,7 @@ const chatCompletion = await client.chat.completions.create({
 });
 ```
 
-### Python
+#### Python
 
 ```python
 from openai import OpenAI

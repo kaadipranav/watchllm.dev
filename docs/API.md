@@ -532,16 +532,22 @@ date,model,tokens_used,cost_usd,cached,latency_ms
 
 The Analytics API provides high-performance querying of observability data from ClickHouse. This powers real-time dashboards and historical analysis.
 
-**📚 Full Documentation:** See [ANALYTICS_API.md](./ANALYTICS_API.md) for detailed endpoint specifications.
+#### Endpoints
 
-#### Quick Overview
+1. **GET /v1/analytics/stats**
+   - Returns aggregated project statistics (total requests, cost, avg latency).
+   - Query Params: `project_id` (required).
 
-**Available Endpoints:**
+2. **GET /v1/analytics/timeseries**
+   - Returns time-series data for charts.
+   - Query Params: `project_id` (required), `period` (`1h`, `6h`, `24h`, `7d`, `30d`).
 
-1. **GET /v1/analytics/stats** - Aggregated project statistics
-2. **GET /v1/analytics/timeseries** - Time-series data for charts
-3. **GET /v1/analytics/logs** - Paginated event logs
-4. **GET /v1/analytics/event/:eventId** - Single event details
+3. **GET /v1/analytics/logs**
+   - Returns paginated event logs.
+   - Query Params: `project_id` (required), `limit`, `offset`, `status`, `model`.
+
+4. **GET /v1/analytics/event/:eventId**
+   - Returns full details for a single event, including tool calls and metadata.
 
 **Example:**
 ```bash
@@ -768,26 +774,33 @@ async function makeRequestWithRetry(url, options, maxRetries = 3) {
 
 | Plan | Requests/Minute | Requests/Month |
 |------|-----------------|----------------|
-| Free | 10 | 10,000 |
-| Starter | 60 | 100,000 |
-| Pro | 600 | 1,000,000 |
-| Agency | 6,000 | 10,000,000 |
+| Free | 10 | 50,000 |
+| Starter | 50 | 250,000 |
+| Pro | 200 | 1,000,000 |
 
-### Rate Limit Headers
+### Rate Limit & Quota Headers
 
-Every response includes these headers:
+Every response includes these headers to help you manage your usage:
 
 ```
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 42
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 9
 X-RateLimit-Reset: 1702377660
+X-Quota-Limit: 50000
+X-Quota-Remaining: 49999
+X-Quota-Reset: 1704067200
 ```
 
 - `X-RateLimit-Limit` - Max requests per minute for your plan
-- `X-RateLimit-Remaining` - Requests remaining in current window
-- `X-RateLimit-Reset` - Unix timestamp when limit resets
+- `X-RateLimit-Remaining` - Requests remaining in current 1-minute window
+- `X-RateLimit-Reset` - Unix timestamp when the current rate limit window resets
+- `X-Quota-Limit` - Total requests allowed per month
+- `X-Quota-Remaining` - Total requests remaining for the current month
+- `X-Quota-Reset` - Unix timestamp when the monthly quota resets (1st of next month)
 
 ### Handling Rate Limits
+
+If you exceed your rate limit or monthly quota, the API will return a `429 Too Many Requests` status code.
 
 ```javascript
 const response = await fetch('https://proxy.watchllm.dev/v1/chat/completions', {
@@ -795,13 +808,15 @@ const response = await fetch('https://proxy.watchllm.dev/v1/chat/completions', {
 });
 
 if (response.status === 429) {
-  const resetTime = response.headers.get('X-RateLimit-Reset');
-  const waitSeconds = parseInt(resetTime) - Math.floor(Date.now() / 1000);
+  const retryAfter = response.headers.get('Retry-After');
+  const error = await response.json();
   
-  console.log(`Rate limited. Retry in ${waitSeconds} seconds`);
-  
-  await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
-  // Retry request
+  if (error.error.code === 'quota_exceeded') {
+    console.error('Monthly quota reached. Please upgrade your plan.');
+  } else {
+    console.log(`Rate limited. Retry in ${retryAfter} seconds`);
+    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+  }
 }
 ```
 
@@ -809,7 +824,40 @@ if (response.status === 429) {
 
 ## 8. SDKs & Examples
 
-### 8.1 JavaScript/TypeScript
+### 8.1 Dedicated Node.js SDK (Recommended)
+
+The official WatchLLM Node.js SDK provides automatic batching, PII redaction, and cost estimation.
+
+**Install:**
+```bash
+npm install watchllm-sdk-node
+```
+
+**Usage:**
+```typescript
+import { WatchLLM } from 'watchllm-sdk-node';
+
+const watch = new WatchLLM({
+  apiKey: process.env.WATCHLLM_API_KEY,
+  projectId: 'your-project-id'
+});
+
+// Log a custom event
+watch.logEvent({
+  event_type: 'prompt_call',
+  model: 'gpt-4',
+  prompt: 'What is the capital of France?',
+  response: 'The capital of France is Paris.',
+  tokens_input: 7,
+  tokens_output: 7,
+  status: 'success'
+});
+
+// Ensure all events are sent before exit
+await watch.close();
+```
+
+### 8.2 JavaScript/TypeScript (OpenAI Compatibility)
 
 **Install:**
 ```bash
@@ -821,9 +869,10 @@ npm install openai
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  apiKey: process.env.WatchLLM_API_KEY,
+  apiKey: process.env.WATCHLLM_API_KEY,
   baseURL: 'https://proxy.watchllm.dev/v1'
 });
+```
 
 // Chat completion
 const response = await client.chat.completions.create({
@@ -1014,6 +1063,14 @@ puts response.dig("choices", 0, "message", "content")
 ---
 
 ## Changelog
+
+### v1.1.0 (2026-01-04)
+- Added ClickHouse-backed Analytics API
+- Added dedicated Node.js SDK (`watchllm-sdk-node`)
+- Implemented sliding window rate limiting and monthly quotas
+- Added X-RateLimit and X-Quota response headers
+- Integrated ConfigCat for feature flags
+- Enhanced Sentry and Datadog monitoring
 
 ### v1.0.0 (2024-12-12)
 - Initial release
