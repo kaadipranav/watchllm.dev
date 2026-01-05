@@ -117,14 +117,18 @@ export default function RequestsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Request Logs</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-10 p-8">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+          Observability
+        </p>
+        <h1 className="text-4xl font-bold text-premium-text-primary">Request Logs</h1>
+        <p className="text-lg text-premium-text-secondary">
           Every LLM request is logged, priced, and traceable. Find what&apos;s costing you money.
         </p>
-      </div>
+      </header>
+
+      <section className="space-y-5">
 
       {!projectId && (
         <Alert className="border-yellow-500/20 bg-yellow-500/5">
@@ -315,6 +319,7 @@ export default function RequestsPage() {
           )}
         </CardContent>
       </Card>
+      </section>
     </div>
   );
 }

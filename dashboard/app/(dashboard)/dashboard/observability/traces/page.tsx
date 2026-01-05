@@ -18,14 +18,18 @@ export default function TracesPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Traces</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-10 p-8">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+          Observability
+        </p>
+        <h1 className="text-4xl font-bold text-premium-text-primary">Traces</h1>
+        <p className="text-lg text-premium-text-secondary">
           Detailed view of individual requests with tool calls and execution flow.
         </p>
-      </div>
+      </header>
+
+      <section className="space-y-5">
 
       <Alert className="border-white/[0.08] bg-white/[0.02]">
         <AlertTitle className="text-xs uppercase tracking-wide">Needs an active provider key</AlertTitle>
@@ -76,6 +80,7 @@ export default function TracesPage() {
           )}
         </CardContent>
       </Card>
+      </section>
     </div>
   );
 }

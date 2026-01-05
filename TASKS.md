@@ -435,3 +435,35 @@ Add the "Enterprise" features.
         ```
     *   **Note:** Verified via comprehensive unit tests (69/69 passing) and code audit of the ingestion pipeline. Script is ready for production deployment verification.
         ```
+
+---
+
+## Phase 7: Conversion & Billing Optimization (The "Money" Phase)
+
+Focus on features that drive user upgrades and revenue.
+
+- [x] **Task 7.1: Visualize Savings** ✅ *Completed: 2026-01-05*
+    *   **Action:** Add prominent savings visualization to the dashboard.
+    *   **Components:**
+        *   `SavingsHero`: Animated counter, efficiency grade, potential savings.
+        *   `SavingsTrendChart`: Stacked area chart showing savings vs spend.
+    *   **Deliverable:** Updated dashboard page with these components.
+    *   **Verification:** Visual check of `dashboard/page.tsx`.
+
+- [x] **Task 7.2: Billing Infrastructure** ✅ *Completed: 2026-01-05*
+    *   **Action:** Verify and finalize Stripe and Whop integration.
+    *   **Components:**
+        *   `lib/payments`: Abstraction layer for Stripe/Whop.
+        *   `api/create-checkout`, `api/create-portal`: Billing endpoints.
+        *   `api/webhooks`: Unified webhook handler.
+        *   `billing/page.tsx`: Billing management UI.
+    *   **Deliverable:** Working billing system for both providers.
+
+- [x] **Task 7.3: Cost Alerts** ✅ *Completed: 2026-01-05*
+    *   **Action:** Implement usage/cost alerts to keep users informed and safe.
+    *   **Components:**
+        *   `api/cron/cost-alerts`: Cron job to check thresholds (50%, 80%, etc.).
+        *   `sent_alerts` table: Deduplication of alerts.
+        *   `settings/page.tsx`: UI for configuring alert thresholds per project.
+        *   `packages/emails`: Usage alert email template.
+    *   **Deliverable:** End-to-end alert system.

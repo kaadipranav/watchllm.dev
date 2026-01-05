@@ -2,6 +2,8 @@
 
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { UsageChart } from "@/components/dashboard/usage-chart";
+import { SavingsHero } from "@/components/dashboard/savings-hero";
+import { SavingsTrendChart } from "@/components/dashboard/savings-trend-chart";
 import { ProjectCard } from "@/components/dashboard/project-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -253,24 +255,24 @@ export default function DashboardPage() {
           try {
             setIsLoadingObservability(true);
             const analyticsClient = createAnalyticsClient();
-            
+
             // Get API key for the first ready project (in production, aggregate across all projects)
             const firstReadyProject = projectIds.find(id => readyProjectIds.has(id));
             if (firstReadyProject) {
               const apiKey = localStorage.getItem(`project_${firstReadyProject}_api_key`);
               if (apiKey) {
                 analyticsClient.setApiKey(apiKey);
-                
+
                 // Fetch last 7 days of observability stats
                 const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
                 const now = new Date().toISOString();
-                
+
                 const observabilityData = await analyticsClient.getStats({
                   project_id: firstReadyProject,
                   date_from: sevenDaysAgo,
                   date_to: now,
                 });
-                
+
                 setObservabilityStats({
                   totalRequests: observabilityData.stats.total_requests,
                   avgLatency: parseFloat(observabilityData.stats.avg_latency_ms),
@@ -340,127 +342,97 @@ export default function DashboardPage() {
         isLoading={isLoadingInsights}
       />
 
-      {/* Stats Cards */}
-      <div className="space-y-4">
-        {/* Wasted Spend - The "Oh Sh*t" Metric */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-300">Wasted LLM Spend</CardTitle>
-              <CardDescription className="text-xs text-red-400/60">
-                Requests that missed cache but could have hit
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-400">
-                ${((stats.apiCost * (100 - stats.cacheHitRate) / 100) * 0.7).toFixed(2)}
-              </div>
-              <p className="text-xs text-red-400/70 mt-1">
-                {(100 - stats.cacheHitRate).toFixed(1)}% of requests are still costing you money
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-300">Money Saved</CardTitle>
-              <CardDescription className="text-xs text-green-400/60">
-                Cost avoided via caching
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-400">
-                ${stats.totalSavings.toFixed(2)}
-              </div>
-              <p className="text-xs text-green-400/70 mt-1">
-                {stats.cacheHitRate.toFixed(1)}% cache hit rate this week
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+      {/* 🎯 SAVINGS HERO - The "Dopamine Hit" that converts users */}
+      <SavingsHero
+        totalSavings={stats.totalSavings}
+        cacheHitRate={stats.cacheHitRate}
+        totalRequests={stats.totalRequests}
+        apiCost={stats.apiCost}
+        period="last 7 days"
+      />
 
-        {/* Caching Stats */}
+      {/* Caching Stats */}
+      <div>
+        <h2 className="text-sm font-medium text-white/70 mb-3">Performance Metrics</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Total Requests"
+            value={stats.totalRequests.toLocaleString()}
+            description="last 7 days"
+            icon={Activity}
+            trend={{ value: 0, isPositive: true }}
+          />
+          <StatsCard
+            title="Cache Miss Rate"
+            value={`${(100 - stats.cacheHitRate).toFixed(1)}%`}
+            description="requests costing money"
+            icon={AlertCircle}
+            trend={{ value: 0, isPositive: false }}
+          />
+          <StatsCard
+            title="Saved This Week"
+            value={`$${stats.totalSavings.toFixed(2)}`}
+            description="via caching"
+            icon={DollarSign}
+            trend={{ value: 0, isPositive: true }}
+          />
+          <StatsCard
+            title="Actual Spend"
+            value={`$${stats.apiCost.toFixed(2)}`}
+            description="LLM API cost"
+            icon={TrendingUp}
+            trend={{ value: 0, isPositive: true }}
+          />
+        </div>
+      </div>
+
+      {/* Observability Stats */}
+      {observabilityStats && (
         <div>
-          <h2 className="text-sm font-medium text-white/70 mb-3">Performance Metrics</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-white/70">Request Telemetry</h2>
+            <Link href="/dashboard/observability/logs" className="text-xs text-white/50 hover:text-white/70">
+              Every request is logged, priced, and traceable →
+            </Link>
+          </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
-              title="Total Requests"
-              value={stats.totalRequests.toLocaleString()}
-              description="last 7 days"
+              title="Logged Requests"
+              value={observabilityStats.totalRequests.toLocaleString()}
+              description="every call tracked"
               icon={Activity}
               trend={{ value: 0, isPositive: true }}
             />
             <StatsCard
-              title="Cache Miss Rate"
-              value={`${(100 - stats.cacheHitRate).toFixed(1)}%`}
-              description="requests costing money"
-              icon={AlertCircle}
+              title="Avg Latency"
+              value={`${Math.round(observabilityStats.avgLatency)}ms`}
+              description="response time"
+              icon={Clock}
               trend={{ value: 0, isPositive: false }}
             />
             <StatsCard
-              title="Saved This Week"
-              value={`$${stats.totalSavings.toFixed(2)}`}
-              description="via caching"
+              title="LLM Spend"
+              value={`$${observabilityStats.totalCost.toFixed(2)}`}
+              description="actual cost"
               icon={DollarSign}
-              trend={{ value: 0, isPositive: true }}
+              trend={{ value: 0, isPositive: false }}
             />
             <StatsCard
-              title="Actual Spend"
-              value={`$${stats.apiCost.toFixed(2)}`}
-              description="LLM API cost"
-              icon={TrendingUp}
-              trend={{ value: 0, isPositive: true }}
+              title="Error Rate"
+              value={`${observabilityStats.errorRate.toFixed(1)}%`}
+              description="failed requests"
+              icon={AlertCircle}
+              trend={{ value: 0, isPositive: false }}
             />
           </div>
         </div>
+      )}
 
-        {/* Observability Stats */}
-        {observabilityStats && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-medium text-white/70">Request Telemetry</h2>
-              <Link href="/dashboard/observability/logs" className="text-xs text-white/50 hover:text-white/70">
-                Every request is logged, priced, and traceable →
-              </Link>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title="Logged Requests"
-                value={observabilityStats.totalRequests.toLocaleString()}
-                description="every call tracked"
-                icon={Activity}
-                trend={{ value: 0, isPositive: true }}
-              />
-              <StatsCard
-                title="Avg Latency"
-                value={`${Math.round(observabilityStats.avgLatency)}ms`}
-                description="response time"
-                icon={Clock}
-                trend={{ value: 0, isPositive: false }}
-              />
-              <StatsCard
-                title="LLM Spend"
-                value={`$${observabilityStats.totalCost.toFixed(2)}`}
-                description="actual cost"
-                icon={DollarSign}
-                trend={{ value: 0, isPositive: false }}
-              />
-              <StatsCard
-                title="Error Rate"
-                value={`${observabilityStats.errorRate.toFixed(1)}%`}
-                description="failed requests"
-                icon={AlertCircle}
-                trend={{ value: 0, isPositive: false }}
-              />
-            </div>
-          </div>
-        )}
-
-        {isLoadingObservability && (
-          <div className="text-center py-4">
-            <p className="text-sm text-white/50">Loading observability stats...</p>
-          </div>
-        )}
-      </div>
+      {isLoadingObservability && (
+        <div className="text-center py-4">
+          <p className="text-sm text-white/50">Loading observability stats...</p>
+        </div>
+      )}
 
       {/* Observability Readiness */}
       <Card className="border-white/[0.08] bg-white/[0.02]">
@@ -487,7 +459,7 @@ export default function DashboardPage() {
           <Alert className="text-xs text-white/70 bg-white/[0.04] border-white/[0.06]">
             <AlertTitle className="text-[10px] uppercase tracking-wide">Storage controls</AlertTitle>
             <AlertDescription>
-              ClickHouse tables are partitioned by month and you can configure retention so logs don’t grow forever. Observability is scoped to the same project+provider key already protecting your caching data.
+              ClickHouse tables are partitioned by month and you can configure retention so logs don't grow forever. Observability is scoped to the same project+provider key already protecting your caching data.
             </AlertDescription>
           </Alert>
           <div className="flex flex-wrap gap-2">
@@ -505,7 +477,12 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Usage Chart */}
+      {/* 📈 Savings Trend Chart - Shows savings vs cost over time */}
+      {chartData.length > 0 && (
+        <SavingsTrendChart data={chartData} period="last 7 days" />
+      )}
+
+      {/* Usage Chart (Request Volume) */}
       {chartData.length > 0 && (
         <UsageChart data={chartData} type="requests" />
       )}
@@ -609,3 +586,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

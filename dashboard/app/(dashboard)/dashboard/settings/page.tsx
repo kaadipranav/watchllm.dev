@@ -16,19 +16,30 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
   const supabase = createClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    const getUser = async () => {
+    const getData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
         setName(user.user_metadata?.full_name || "");
         setEmail(user.email || "");
+
+        // Fetch projects for notification settings
+        const { data: userProjects } = await supabase
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (userProjects) {
+          setProjects(userProjects);
+        }
       }
     };
-    getUser();
+    getData();
   }, [supabase]);
 
   const handleUpdateProfile = async () => {
@@ -106,6 +117,41 @@ export default function SettingsPage() {
       title: "Account Deletion",
       description: "Please contact support to delete your account.",
     });
+  };
+
+  const handleUpdateProjectSettings = async (projectId: string, updates: any) => {
+    // Optimistic update
+    setProjects(projects.map(p =>
+      p.id === projectId ? { ...p, ...updates } : p
+    ));
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update(updates)
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Settings Updated",
+        description: "Project notification settings saved.",
+      });
+    } catch (error: any) {
+      // Revert on error
+      const { data: originalProject } = await supabase.from("projects").select("*").eq("id", projectId).single();
+      if (originalProject) {
+        setProjects(projects.map(p =>
+          p.id === projectId ? originalProject : p
+        ));
+      }
+
+      toast({
+        title: "Error",
+        description: "Failed to update settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -262,43 +308,87 @@ export default function SettingsPage() {
           <TabsContent value="notifications" className="space-y-6">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Notifications</p>
-              <h2 className="text-xl font-semibold text-premium-text-primary">Manage your inbox</h2>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Manage your usage alerts</h2>
+              <p className="text-premium-text-secondary">
+                Configure when you want to receive emails about your API usage and costs.
+              </p>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {[
-                {
-                  title: "Usage Alerts",
-                  description: "Get notified when you reach 80% of your monthly limit",
-                  state: "Enabled",
-                },
-                {
-                  title: "Weekly Reports",
-                  description: "Receive curated insights on usage and spend",
-                  state: "Disabled",
-                },
-                {
-                  title: "Product Updates",
-                  description: "Learn about new features and improvements",
-                  state: "Enabled",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="flex flex-col justify-between gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
-                >
-                  <div>
-                    <p className="text-base font-semibold text-premium-text-primary">{item.title}</p>
-                    <p className="text-sm text-premium-text-secondary">{item.description}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-premium-md border border-premium-border-subtle text-premium-text-muted"
+
+            {projects.length === 0 ? (
+              <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center shadow-premium-sm">
+                <p className="text-premium-text-secondary">You don't have any projects yet.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="flex flex-col gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
                   >
-                    {item.state}
-                  </Button>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
+                          <Badge variant={project.cost_alerts_enabled !== false ? "default" : "secondary"} className="text-[10px]">
+                            {project.cost_alerts_enabled !== false ? "Alerts Active" : "Alerts Paused"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-premium-text-secondary mt-1">
+                          Receive an email when usage hits <span className="text-premium-accent font-medium">{project.cost_alert_threshold || 80}%</span> of your plan limit.
+                        </p>
+                      </div>
+                      <Button
+                        variant={project.cost_alerts_enabled !== false ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleUpdateProjectSettings(project.id, { cost_alerts_enabled: !(project.cost_alerts_enabled !== false) })}
+                        className={project.cost_alerts_enabled !== false
+                          ? "bg-premium-accent text-white hover:bg-premium-accent/90"
+                          : "border-premium-border-subtle text-premium-text-muted"}
+                      >
+                        {project.cost_alerts_enabled !== false ? "Enabled" : "Disabled"}
+                      </Button>
+                    </div>
+
+                    {project.cost_alerts_enabled !== false && (
+                      <div className="pt-4 border-t border-premium-border-subtle">
+                        <div className="grid gap-2">
+                          <Label htmlFor={`threshold-${project.id}`}>Alert Threshold</Label>
+                          <div className="flex items-center gap-4">
+                            <Input
+                              id={`threshold-${project.id}`}
+                              type="number"
+                              min="10"
+                              max="100"
+                              value={project.cost_alert_threshold || 80}
+                              onChange={(e) => handleUpdateProjectSettings(project.id, { cost_alert_threshold: parseInt(e.target.value) })}
+                              className="w-24 bg-white/5 border-premium-border-subtle"
+                            />
+                            <span className="text-sm text-premium-text-muted">% of monthly limit</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-8 pt-8 border-t border-premium-border-subtle space-y-4">
+              <h3 className="text-lg font-medium text-premium-text-primary">Global Preferences</h3>
+              <div className="flex flex-col justify-between gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm">
+                <div>
+                  <p className="text-base font-semibold text-premium-text-primary">Weekly Reports</p>
+                  <p className="text-sm text-premium-text-secondary">Receive curated insights on usage and spend every Monday</p>
                 </div>
-              ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="rounded-premium-md border border-premium-border-subtle text-premium-text-muted w-fit"
+                >
+                  Enabled (Coming soon)
+                </Button>
+              </div>
             </div>
           </TabsContent>
 

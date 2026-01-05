@@ -15,14 +15,18 @@ export default function AnalyticsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-10 p-8">
+      <header className="space-y-1">
+        <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">
+          Observability
+        </p>
+        <h1 className="text-4xl font-bold text-premium-text-primary">Analytics</h1>
+        <p className="text-lg text-premium-text-secondary">
           See where your LLM spend is going. Costs, latency, and errors—all in one place.
         </p>
-      </div>
+      </header>
+
+      <section className="space-y-5">
 
       <Alert className="border-white/[0.08] bg-white/[0.02]">
         <AlertTitle className="text-xs uppercase tracking-wide">We&apos;ve set sensible defaults</AlertTitle>
@@ -107,6 +111,7 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+      </section>
     </div>
   );
 }
