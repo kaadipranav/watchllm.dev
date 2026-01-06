@@ -459,7 +459,7 @@ export default function DashboardPage() {
           <Alert className="text-xs text-white/70 bg-white/[0.04] border-white/[0.06]">
             <AlertTitle className="text-[10px] uppercase tracking-wide">Storage controls</AlertTitle>
             <AlertDescription>
-              ClickHouse tables are partitioned by month and you can configure retention so logs don't grow forever. Observability is scoped to the same project+provider key already protecting your caching data.
+              ClickHouse tables are partitioned by month and you can configure retention so logs don&apos;t grow forever. Observability is scoped to the same project+provider key already protecting your caching data.
             </AlertDescription>
           </Alert>
           <div className="flex flex-wrap gap-2">

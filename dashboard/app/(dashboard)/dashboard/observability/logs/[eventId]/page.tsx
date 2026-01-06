@@ -66,31 +66,7 @@ export default function EventDetailPage() {
     fetchEventDetail();
   }, [projectId, eventId, fetchEventDetail]);
 
-  const fetchEventDetail = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
 
-      const analyticsClient = createAnalyticsClient();
-
-      // Get API key from localStorage
-      const apiKey = localStorage.getItem(`project_${projectId}_api_key`);
-      if (apiKey) {
-        analyticsClient.setApiKey(apiKey);
-      }
-
-      const response = await analyticsClient.getEvent(eventId, {
-        project_id: projectId,
-      });
-
-      setEventDetail(response);
-    } catch (err) {
-      console.error('Failed to fetch event detail:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load event');
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, eventId]);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);

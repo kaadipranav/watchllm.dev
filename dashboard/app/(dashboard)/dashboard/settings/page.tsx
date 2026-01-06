@@ -316,7 +316,7 @@ export default function SettingsPage() {
 
             {projects.length === 0 ? (
               <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center shadow-premium-sm">
-                <p className="text-premium-text-secondary">You don't have any projects yet.</p>
+                <p className="text-premium-text-secondary">You don&apos;t have any projects yet.</p>
               </div>
             ) : (
               <div className="grid gap-4">
