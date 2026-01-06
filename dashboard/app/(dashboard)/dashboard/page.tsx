@@ -28,7 +28,7 @@ import type { InsightsResult } from "@/lib/insights";
 import { createClient } from "@/lib/supabase/client";
 import { createAnalyticsClient } from "@/lib/analytics-api";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { APP_CONFIG } from "@/lib/config";
 
 export default function DashboardPage() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -63,56 +63,9 @@ export default function ABTestingPage() {
         variantB: string;
     } | null>(null);
 
-    // Fetch Projects
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
 
-                const { data } = await supabase
-                    .from("projects")
-                    .select("*")
-                    .order("created_at", { ascending: false });
-
-                if (data && data.length > 0) {
-                    setProjects(data);
-                    setSelectedProjectId(data[0].id);
-                }
-            } catch (error) {
-                console.error("Error fetching projects", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProjects();
-    }, [supabase]);
-
-    // Load Project Config
-    useEffect(() => {
-        if (!selectedProjectId) return;
-
-        const project = projects.find(p => p.id === selectedProjectId);
-        if (project) {
-            setEnabled(project.ab_testing_enabled || false);
-            if (project.ab_testing_config) {
-                // Ensure valid config structure
-                const config = project.ab_testing_config as ABTestingConfig;
-                if (config.variants && Array.isArray(config.variants)) {
-                    setActiveConfig(config);
-                } else {
-                    setActiveConfig(DEFAULT_CONFIG);
-                }
-            } else {
-                setActiveConfig(DEFAULT_CONFIG);
-            }
-
-            // Fetch results
-            fetchResults(selectedProjectId);
-        }
-    }, [selectedProjectId, projects]);
-
-    const fetchResults = async (projectId: string) => {
+    // Fetch Results Handler
+    const fetchResults = useCallback(async (projectId: string) => {
         setStatsLoading(true);
         try {
             // Fetch logs for the last 30 days
@@ -209,7 +162,58 @@ export default function ABTestingPage() {
         } finally {
             setStatsLoading(false);
         }
-    };
+    }, [supabase, projects]);
+
+    // Fetch Projects
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { data } = await supabase
+                    .from("projects")
+                    .select("*")
+                    .order("created_at", { ascending: false });
+
+                if (data && data.length > 0) {
+                    setProjects(data);
+                    setSelectedProjectId(data[0].id);
+                }
+            } catch (error) {
+                console.error("Error fetching projects", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProjects();
+    }, [supabase]);
+
+    // Load Project Config
+    useEffect(() => {
+        if (!selectedProjectId) return;
+
+        const project = projects.find(p => p.id === selectedProjectId);
+        if (project) {
+            setEnabled(project.ab_testing_enabled || false);
+            if (project.ab_testing_config) {
+                // Ensure valid config structure
+                const config = project.ab_testing_config as ABTestingConfig;
+                if (config.variants && Array.isArray(config.variants)) {
+                    setActiveConfig(config);
+                } else {
+                    setActiveConfig(DEFAULT_CONFIG);
+                }
+            } else {
+                setActiveConfig(DEFAULT_CONFIG);
+            }
+
+            // Fetch results
+            fetchResults(selectedProjectId);
+        }
+    }, [selectedProjectId, projects, fetchResults]);
+
+
 
     const handleVariantChange = (index: number, field: keyof ABTestVariant, value: string | number) => {
         const newVariants = [...activeConfig.variants];

@@ -47,6 +47,8 @@ MARKETING_TRACKER.md
 PROFILE_README.md
 LANDING_PAGE_AUDIT.md
 marketing_launch.txt
+CHANGELOG.md
+TASKS.md
 
 # Git hooks
 .husky/

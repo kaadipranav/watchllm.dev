@@ -4,17 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  Activity, 
-  ArrowLeft, 
-  Clock, 
-  DollarSign, 
-  Zap, 
+import {
+  Activity,
+  ArrowLeft,
+  Clock,
+  DollarSign,
+  Zap,
   AlertCircle,
   Copy,
   Check
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createAnalyticsClient, type EventDetail } from '@/lib/analytics-api';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -24,39 +24,29 @@ export default function EventDetailPage() {
   const searchParams = useSearchParams();
   const eventId = params.eventId as string;
   const projectId = searchParams.get('project_id') || '';
-  
+
   const [eventDetail, setEventDetail] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!projectId || !eventId) {
-      setError('Missing project ID or event ID');
-      setLoading(false);
-      return;
-    }
-    
-    fetchEventDetail();
-  }, [projectId, eventId]);
-
-  const fetchEventDetail = async () => {
+  const fetchEventDetail = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const analyticsClient = createAnalyticsClient();
-      
+
       // Get API key from localStorage
       const apiKey = localStorage.getItem(`project_${projectId}_api_key`);
       if (apiKey) {
         analyticsClient.setApiKey(apiKey);
       }
-      
+
       const response = await analyticsClient.getEvent(eventId, {
         project_id: projectId,
       });
-      
+
       setEventDetail(response);
     } catch (err) {
       console.error('Failed to fetch event detail:', err);
@@ -64,7 +54,43 @@ export default function EventDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, eventId]);
+
+  useEffect(() => {
+    if (!projectId || !eventId) {
+      setError('Missing project ID or event ID');
+      setLoading(false);
+      return;
+    }
+
+    fetchEventDetail();
+  }, [projectId, eventId, fetchEventDetail]);
+
+  const fetchEventDetail = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const analyticsClient = createAnalyticsClient();
+
+      // Get API key from localStorage
+      const apiKey = localStorage.getItem(`project_${projectId}_api_key`);
+      if (apiKey) {
+        analyticsClient.setApiKey(apiKey);
+      }
+
+      const response = await analyticsClient.getEvent(eventId, {
+        project_id: projectId,
+      });
+
+      setEventDetail(response);
+    } catch (err) {
+      console.error('Failed to fetch event detail:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load event');
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, eventId]);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -339,7 +365,7 @@ export default function EventDetailPage() {
                     </Badge>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div>
                     <p className="text-sm font-medium mb-1">Input:</p>
@@ -347,7 +373,7 @@ export default function EventDetailPage() {
                       {JSON.stringify(JSON.parse(toolCall.tool_input || '{}'), null, 2)}
                     </pre>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm font-medium mb-1">Output:</p>
                     <pre className="bg-black/20 rounded p-2 text-xs overflow-x-auto">
