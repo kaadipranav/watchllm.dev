@@ -5,7 +5,7 @@
  * Run after Phase 6 to verify the complete flow
  */
 
-const https = require('https');
+const http = require('http');
 const { spawn } = require('child_process');
 
 async function runGoldenPathTest() {
@@ -94,7 +94,7 @@ async function sendToWorker(event) {
   };
 
   return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
+    const req = http.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
@@ -124,7 +124,7 @@ async function getClickHouseRowCount() {
   const url = `http://${host}:${port}/?user=${user}&password=${password}&database=${database}&query=${encodeURIComponent(query)}`;
 
   return new Promise((resolve, reject) => {
-    const req = https.get(url, (res) => {
+    const req = http.get(url, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
@@ -149,7 +149,7 @@ async function getAnalyticsStats(projectId) {
   };
 
   return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
+    const req = http.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
@@ -170,7 +170,7 @@ async function getAnalyticsStats(projectId) {
 
 async function checkDashboardHealth() {
   return new Promise((resolve) => {
-    const req = https.get('https://localhost:3000/api/health', (res) => {
+    const req = http.get('http://localhost:3000/api/health', (res) => {
       resolve(res.statusCode === 200);
     });
     req.on('error', () => resolve(false));

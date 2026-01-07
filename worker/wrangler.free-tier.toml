@@ -1,0 +1,59 @@
+name = "watchllm-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-19"
+compatibility_flags = ["nodejs_compat"]
+
+# Development environment bindings (use wrangler secret put for production)
+[vars]
+# Set these via wrangler secret put for production:
+# SUPABASE_URL = ""
+# SUPABASE_ANON_KEY = ""
+# UPSTASH_REDIS_REST_URL = ""
+# UPSTASH_REDIS_REST_TOKEN = ""
+# MONGODB_URI = ""
+# MONGODB_DATABASE = ""
+# MONGODB_COLLECTION = ""
+# OPENAI_API_KEY = ""
+# ANTHROPIC_API_KEY = ""
+# GROQ_API_KEY = ""
+
+# D1 Database for semantic caching
+[[d1_databases]]
+binding = "DB"
+database_name = "watchllm-cache"
+database_id = "05064211-5526-4438-8c68-f29824da1d60"
+
+# ============================================================================
+# FREE TIER CONFIGURATION
+# ============================================================================
+# Queues are disabled (requires Workers Paid plan)
+# Events will be written synchronously to ClickHouse instead
+# ============================================================================
+
+# Uncomment these when you upgrade to Workers Paid:
+# [[queues.producers]]
+# queue = "watchllm-observability-events"
+# binding = "OBSERVABILITY_QUEUE"
+# 
+# [[queues.consumers]]
+# queue = "watchllm-observability-events"
+# max_batch_size = 100
+# max_batch_timeout = 30
+# max_retries = 3
+# dead_letter_queue = "watchllm-observability-dlq"
+# 
+# [[queues.producers]]
+# queue = "watchllm-observability-dlq"
+# binding = "OBSERVABILITY_DLQ"
+
+# ============================================================================
+# Environments
+# ============================================================================
+
+[env.production]
+name = "watchllm-worker-prod"
+# Production-specific overrides here
+
+[env.staging]
+name = "watchllm-worker-staging"
+# Staging-specific overrides here
