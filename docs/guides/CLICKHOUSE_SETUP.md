@@ -134,6 +134,20 @@ By default, ClickHouse only listens on localhost. We need to enable remote acces
 
 ### Step 4: Create Database and User
 
+> If you get an error like:
+> `Not enough privileges. To execute this query, it's necessary to have the grant CREATE USER ON *.* (ACCESS_DENIED)`
+> you need to enable ClickHouse access management for the `default` user.
+>
+> **Fix (run on the server):**
+> ```bash
+> # Enable RBAC/admin operations for the default user
+> sudo sed -i 's/<!--[[:space:]]*<access_management>1<\/access_management>[[:space:]]*-->/<access_management>1<\/access_management>/' /etc/clickhouse-server/users.xml
+>
+> # Restart ClickHouse to apply changes
+> sudo systemctl restart clickhouse-server
+> ```
+> Then run the `CREATE USER` / `GRANT` commands again.
+
 1. Connect to ClickHouse client:
    ```bash
    clickhouse-client

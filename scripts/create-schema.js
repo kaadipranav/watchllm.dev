@@ -29,6 +29,40 @@ function log(message, color = 'reset') {
     console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
+/**
+ * Robustly load environment variables from multiple possible locations
+ */
+function loadEnv() {
+  const envPaths = [
+    path.join(__dirname, '../dashboard/.env.local'),
+    path.join(__dirname, '../worker/.dev.vars')
+  ];
+
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      content.split('\n').map(l => l.trim()).forEach(line => {
+        if (!line || line.startsWith('#')) return;
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          let value = parts.slice(1).join('=').trim();
+          // Remove quotes if present
+          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length - 1);
+          }
+          if (key && !process.env[key]) {
+            process.env[key] = value;
+          }
+        }
+      });
+    }
+  }
+}
+
+// Load environment variables
+loadEnv();
+
 async function makeRequest(url, query = '', method = 'GET') {
     return new Promise((resolve, reject) => {
         const urlObj = new URL(url);
@@ -94,10 +128,16 @@ async function createSchema() {
         const schemaContent = fs.readFileSync(schemaPath, 'utf8');
 
         // Split into individual statements (separated by semicolons)
-        const statements = schemaContent
+        // First remove comment lines
+        const lines = schemaContent.split('\n').filter(line => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith('--') && !trimmed.startsWith('/*');
+        });
+        const cleanedContent = lines.join('\n');
+        const statements = cleanedContent
             .split(';')
             .map(s => s.trim())
-            .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+            .filter(s => s.length > 0);
 
         log(`   Found ${statements.length} SQL statements\n`, 'blue');
 

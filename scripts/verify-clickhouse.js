@@ -15,6 +15,8 @@
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+const fs = require('fs');
+const path = require('path');
 
 // ANSI color codes for pretty output
 const colors = {
@@ -25,6 +27,37 @@ const colors = {
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
 };
+
+function loadEnv() {
+  const envPaths = [
+    path.join(__dirname, '../dashboard/.env.local'),
+    path.join(__dirname, '../worker/.dev.vars')
+  ];
+
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      content.split('\n').map(l => l.trim()).forEach(line => {
+        if (!line || line.startsWith('#')) return;
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          let value = parts.slice(1).join('=').trim();
+          // Remove quotes if present
+          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length - 1);
+          }
+          if (key && !process.env[key]) {
+            process.env[key] = value;
+          }
+        }
+      });
+    }
+  }
+}
+
+// Load environment variables before setting config
+loadEnv();
 
 function log(message, color = 'reset') {
   console.log(`${colors[color]}${message}${colors.reset}`);
@@ -38,9 +71,13 @@ async function makeRequest(url, query = '') {
     const options = {
       hostname: urlObj.hostname,
       port: urlObj.port,
-      path: urlObj.pathname + urlObj.search + (query ? `&query=${encodeURIComponent(query)}` : ''),
-      method: 'GET',
+      path: urlObj.pathname + urlObj.search,
+      method: query ? 'POST' : 'GET',
       timeout: 10000,
+      headers: query ? {
+        'Content-Type': 'text/plain',
+        'Content-Length': Buffer.byteLength(query),
+      } : {},
     };
 
     const req = protocol.request(options, (res) => {
@@ -59,6 +96,9 @@ async function makeRequest(url, query = '') {
       reject(new Error('Connection timeout'));
     });
 
+    if (query) {
+      req.write(query);
+    }
     req.end();
   });
 }
@@ -106,7 +146,7 @@ async function verifyClickHouse() {
     log('\n🔌 Attempting connection...', 'cyan');
 
     // Test 1: Ping
-    const pingResponse = await makeRequest(baseUrl);
+    const pingResponse = await makeRequest(baseUrl, 'SELECT 1');
     if (pingResponse.statusCode !== 200) {
       throw new Error(`Ping failed with status ${pingResponse.statusCode}: ${pingResponse.data}`);
     }
@@ -190,11 +230,11 @@ async function verifyClickHouse() {
       `SELECT message FROM ${testTableName} WHERE id = ${testId} FORMAT TabSeparated`
     );
 
-    if (readResponse.data === 'WatchLLM connection test') {
+    if (readResponse.data.trim() === 'WatchLLM connection test') {
       log('   ✅ Write test successful', 'green');
       log('   ✅ Read test successful', 'green');
     } else {
-      throw new Error('Read/write test failed: data mismatch');
+      throw new Error(`Read/write test failed: data mismatch (expected 'WatchLLM connection test', got '${readResponse.data.trim()}')`);
     }
 
     // Clean up test table

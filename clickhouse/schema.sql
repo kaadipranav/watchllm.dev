@@ -156,7 +156,6 @@ CREATE TABLE IF NOT EXISTS events (
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(timestamp)  -- Monthly partitions for efficient data management
 ORDER BY (project_id, timestamp, event_id)
-TTL timestamp + INTERVAL 90 DAY  -- Default retention: 90 days
 SETTINGS index_granularity = 8192;
 
 -- ============================================================================
@@ -196,7 +195,6 @@ CREATE TABLE IF NOT EXISTS tool_calls (
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (project_id, timestamp, event_id)
-TTL timestamp + INTERVAL 90 DAY
 SETTINGS index_granularity = 8192;
 
 -- ============================================================================
@@ -244,7 +242,6 @@ CREATE TABLE IF NOT EXISTS agent_steps (
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (project_id, run_id, step_number, timestamp)
-TTL timestamp + INTERVAL 90 DAY
 SETTINGS index_granularity = 8192;
 
 -- ============================================================================
