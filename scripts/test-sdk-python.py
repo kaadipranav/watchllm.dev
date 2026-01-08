@@ -8,7 +8,13 @@ import requests
 import time
 import json
 import uuid
+import sys
+import io
 from datetime import datetime
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Configuration
 WORKER_URL = "https://watchllm-worker.kiwi092020.workers.dev"

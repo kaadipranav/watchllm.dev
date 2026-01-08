@@ -48,7 +48,7 @@ async function makeRequest(): Promise<{
 
   return {
     status: response.status,
-    rateLimit: {
+    rate  imit: {
       limit: response.headers.get('X-RateLimit-Limit') || '0',
       remaining: response.headers.get('X-RateLimit-Remaining') || '0',
       reset: response.headers.get('X-RateLimit-Reset') || '0',
