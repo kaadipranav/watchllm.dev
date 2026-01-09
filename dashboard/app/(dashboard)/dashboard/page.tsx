@@ -501,9 +501,11 @@ export default function DashboardPage() {
         </div>
 
         {projects.length === 0 ? (
-          <div className="text-center py-10 border border-white/5 rounded-xl bg-white/[0.02]">
-            <p className="text-white/40 text-sm">No projects created yet.</p>
-            <Link href="/dashboard/projects" className="mt-2 inline-block text-premium-accent text-sm hover:underline">
+          <div className="text-center py-10 border border-green-500/20 rounded-xl bg-green-500/5">
+            <div className="text-green-400 text-3xl mb-2">$0.00</div>
+            <p className="text-white/60 text-sm mb-1">saved so far</p>
+            <p className="text-white/40 text-xs mb-4">Create a project to start tracking your savings</p>
+            <Link href="/dashboard/projects" className="inline-block text-green-400 text-sm hover:underline">
               Create your first project &rarr;
             </Link>
           </div>

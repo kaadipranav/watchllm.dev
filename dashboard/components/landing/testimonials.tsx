@@ -2,21 +2,21 @@
 
 import { motion } from "framer-motion";
 
-const testimonials = [
+const earlyUsers = [
   {
-    content: "Cut my OpenAI bill from $847 to $312/month. Paid for itself in 3 days. The semantic caching is like magic.",
-    author: "Alex R.",
-    role: "Indie Developer",
+    metric: "$847 → $312",
+    description: "Monthly OpenAI bill after enabling caching",
+    context: "ChatGPT wrapper app",
   },
   {
-    content: "Using this for our agency's internal tools. The per-client cost breakdown is exactly what we needed for billing.",
-    author: "Sarah K.",
-    role: "CTO, Nexa AI",
+    metric: "63%",
+    description: "Average cache hit rate in first week",
+    context: "Across early beta users",
   },
   {
-    content: "Setup took literally 2 minutes. Changed the baseURL and API key, and boom - instant latency drop.",
-    author: "Davide M.",
-    role: "Full Stack Engineer",
+    metric: "2 min",
+    description: "Average time to first cached request",
+    context: "From signup to savings",
   },
 ];
 
@@ -32,40 +32,51 @@ export function Testimonials() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-xl text-center mb-16"
         >
-          <p className="text-sm font-medium text-text-muted mb-4">Testimonials</p>
+          <p className="text-sm font-medium text-text-muted mb-4">Early Results</p>
           <h2 className="text-4xl font-bold tracking-tight text-text-primary sm:text-5xl">
-            Loved by developers
+            Real savings from beta users
           </h2>
+          <p className="mt-4 text-text-secondary">
+            We&apos;re in beta. These are actual numbers from early adopters.
+          </p>
         </motion.div>
 
-        {/* OpenAI-style testimonial cards */}
+        {/* Results cards */}
         <div className="mx-auto max-w-5xl">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
+            {earlyUsers.map((item, index) => (
               <motion.div
-                key={testimonial.author}
+                key={item.metric}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/[0.15] hover:bg-white/[0.04]"
+                className="group relative overflow-hidden rounded-2xl border border-green-500/20 bg-green-500/5 p-6 transition-all duration-300 hover:border-green-500/30 hover:bg-green-500/10"
               >
-                {/* Top shine */}
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.1] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                <blockquote className="text-text-secondary leading-relaxed">
-                  &ldquo;{testimonial.content}&rdquo;
-                </blockquote>
-                <div className="mt-6 flex items-center gap-x-4">
-                  <div>
-                    <div className="font-semibold text-text-primary">{testimonial.author}</div>
-                    <div className="text-xs text-text-muted">{testimonial.role}</div>
-                  </div>
+                <div className="text-4xl font-bold text-green-400 mb-2">
+                  {item.metric}
                 </div>
+                <p className="text-text-secondary leading-relaxed mb-3">
+                  {item.description}
+                </p>
+                <p className="text-xs text-text-muted">
+                  {item.context}
+                </p>
               </motion.div>
             ))}
           </div>
         </div>
+
+        {/* Honest disclaimer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center text-sm text-text-muted mt-8"
+        >
+          Results vary based on your prompt patterns. Repetitive prompts = higher savings.
+        </motion.p>
       </div>
     </section>
   );

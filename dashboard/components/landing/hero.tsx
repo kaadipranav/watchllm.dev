@@ -39,20 +39,20 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 }
 
 /**
- * Live stat ticker component
+ * Savings-focused stat ticker component
  */
-function LiveStatTicker() {
+function SavingsStatTicker() {
   return (
     <motion.div
-      className="inline-grid grid-cols-1 sm:grid-cols-3 gap-12 px-12 py-8 rounded-2xl border border-border-subtle bg-bg-surface/30 backdrop-blur-sm mt-12"
+      className="inline-grid grid-cols-1 sm:grid-cols-3 gap-12 px-12 py-8 rounded-2xl border border-green-500/20 bg-green-500/5 backdrop-blur-sm mt-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.4 }}
     >
       {[
-        { label: "Requests/s", value: 1200, suffix: "/s" },
-        { label: "Events processed", value: 9800, suffix: "/h" },
-        { label: "Avg. Latency", value: 45, suffix: "ms" },
+        { label: "Avg. Savings", value: 47, suffix: "%" },
+        { label: "Cache Hit Speed", value: 50, suffix: "ms" },
+        { label: "Setup Time", value: 5, suffix: "min" },
       ].map((stat, index) => (
         <motion.div
           key={stat.label}
@@ -165,7 +165,7 @@ export function Hero() {
             className="mb-10 flex items-center justify-center gap-4 text-[11px] font-semibold uppercase tracking-[0.4em] text-text-muted"
           >
             <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
-            <span>Edge caching → observability</span>
+            <span>Stop overpaying for AI</span>
             <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
           </motion.div>
 
@@ -177,9 +177,9 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="block">Caching and observability</span>
+              <span className="block">Your OpenAI bill is</span>
               <span className="block mt-3">
-                for any <Typewriter words={["stack", "model", "provider", "team"]} />
+                <Typewriter words={["40% waste", "too high", "fixable"]} />
               </span>
             </motion.h1>
 
@@ -190,8 +190,8 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <div className="text-lg sm:text-xl text-text-secondary font-medium leading-relaxed text-center">
-                <div>Drop-in gateway that reduces latency and spend with semantic caching.</div>
-                <div>Get request logs, traces, and ClickHouse-backed analytics for every call.</div>
+                <div>WatchLLM caches similar API requests so you never pay twice for the same answer.</div>
+                <div className="mt-2 text-green-400">See your savings in real-time. Setup takes 5 minutes.</div>
               </div>
             </motion.div>
           </motion.div>
@@ -203,9 +203,9 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-white/5 bg-white text-black hover:bg-white/90">
+            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-green-500/10 bg-green-500 text-white hover:bg-green-400">
               <Link href="/signup">
-                <span className="relative z-10 font-semibold">Start Building</span>
+                <span className="relative z-10 font-semibold">Start Saving — Free</span>
               </Link>
             </Button>
             <Button
@@ -214,8 +214,8 @@ export function Hero() {
               variant="outline"
               className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-white/50 hover:bg-white/5 text-text-primary transition-all"
             >
-              <Link href="#features">
-                View Documentation
+              <Link href="#how-it-works">
+                See How It Works
               </Link>
             </Button>
           </motion.div>
@@ -231,15 +231,15 @@ export function Hero() {
               No credit card required
             </span>
             <span className="flex items-center gap-2">
-              OpenAI-compatible
+              Works with OpenAI, Anthropic, Groq
             </span>
             <span className="flex items-center gap-2">
-              SOC2 Compliant
+              Change 1 line of code
             </span>
           </motion.div>
 
-          {/* Live stats ticker */}
-          <LiveStatTicker />
+          {/* Savings stats ticker */}
+          <SavingsStatTicker />
         </div>
 
       </div>

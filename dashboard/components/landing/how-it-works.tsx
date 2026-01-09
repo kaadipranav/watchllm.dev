@@ -71,7 +71,7 @@ function CodeBlock({ code, language = "typescript" }: { code: string; language?:
 
 export function HowItWorks() {
   return (
-    <section className="relative py-32 overflow-hidden">
+    <section id="how-it-works" className="relative py-32 overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
@@ -85,10 +85,10 @@ export function HowItWorks() {
             How It Works
           </h2>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
-            Three steps to 70% cost savings
+            Start saving in 3 steps
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Intelligent semantic caching that works transparently between your app and AI providers.
+            No infrastructure changes. No migrations. Just swap one URL.
           </p>
         </motion.div>
 

@@ -187,10 +187,10 @@ export function Pricing() {
             Pricing
           </h2>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
-            Transparent pricing
+            Pays for itself in days
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Start free, upgrade when you need more.
+            If you're spending $200+/month on OpenAI, these plans save you money.
           </p>
         </motion.div>
 

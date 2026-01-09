@@ -11,40 +11,40 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    title: "Observability Control Plane",
+    title: "Stop Paying Twice",
     description:
-      "Attach project + provider keys, enforce retention, and stream logs/metrics safely into ClickHouse without touching infrastructure.",
-    metric: "Keyed access",
+      "Similar questions get the same answers. WatchLLM detects when your users ask semantically similar prompts and returns cached responses instantly.",
+    metric: "40-70% savings",
   },
   {
-    title: "Semantic Caching",
+    title: "See Your Waste",
     description:
-      "Vector-based caching that understands intent. 95%+ accuracy with cosine similarity matching delivers massive cost savings and faster responses.",
-    metric: "70% savings",
-  },
-  {
-    title: "Analytics & Alerts",
-    description:
-      "Request-scale analytics, anomaly detection, and usage forecasts powered by ClickHouse so you can optimize spend in real time.",
+      "Your dashboard shows exactly how much money you're losing to duplicate requests. Watch it shrink as caching kicks in.",
     metric: "Real-time",
   },
   {
-    title: "Trace + Log Explorer",
+    title: "5 Minute Setup",
     description:
-      "Collect provider responses, prompts, and traces with configurable retention so you can debug confidently without exposing secrets.",
-    metric: "Full traces",
+      "Change your API base URL. That's it. No code changes, no infrastructure, no migrations. Works with your existing OpenAI/Anthropic/Groq code.",
+    metric: "1 line change",
   },
   {
-    title: "Zero Integration",
+    title: "Faster Responses",
     description:
-      "Drop-in OpenAI-compatible proxy—swap one endpoint, keep your code, and gain caching plus telemetry within minutes.",
-    metric: "5 min setup",
-  },
-  {
-    title: "Global Edge Observability",
-    description:
-      "Cloudflare Workers stream telemetry worldwide with sub-50ms latency while forwarding observability data to the dashboard.",
+      "Cache hits return in under 50ms instead of waiting 1-3 seconds for the API. Your users get instant answers.",
     metric: "<50ms",
+  },
+  {
+    title: "Usage Alerts",
+    description:
+      "Get notified when you hit 80% of your budget or when a specific endpoint starts burning through cash unexpectedly.",
+    metric: "Email alerts",
+  },
+  {
+    title: "Request History",
+    description:
+      "Every request is logged with cost, latency, and cache status. Export to CSV for your accountant or dig into the data yourself.",
+    metric: "Full logs",
   },
 ];
 
@@ -82,13 +82,13 @@ export function Features() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-4">
-            Features
+            Why WatchLLM
           </h2>
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-text-primary mb-6">
-            Observability-first caching
+            Cut your AI bill without cutting features
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Built for developers who need reliability, telemetry, and cost efficiency at scale.
+            Most apps send duplicate or near-duplicate prompts. You're paying full price every time. We fix that.
           </p>
         </motion.div>
 

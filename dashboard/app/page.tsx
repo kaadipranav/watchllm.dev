@@ -14,31 +14,27 @@ import { AuthCallbackHandler } from "@/components/auth/auth-callback-handler";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "WatchLLM - Semantic Caching & Observability Platform",
+  title: "WatchLLM - Cut Your OpenAI Bill by 40-70%",
   description:
-    "Drop-in semantic caching proxy with built-in observability, ClickHouse analytics, and trace-ready logs for OpenAI, Claude, Groq, and any LLM provider.",
+    "Stop paying twice for similar AI requests. WatchLLM caches semantically similar prompts so you only pay once. See your savings in real-time. 5 minute setup.",
   keywords: [
-    "semantic caching",
-    "observability",
-    "ClickHouse analytics",
-    "AI API proxy",
+    "reduce OpenAI costs",
+    "cut AI API bill",
     "OpenAI cost reduction",
     "Claude API savings",
-    "Groq optimization",
-    "LLM caching",
-    "cosine similarity",
-    "API cost optimization",
-    "AI gateway",
-    "trace explorer",
-    "embeddings cache",
-    "reduce AI costs",
-    "intelligent caching",
-    "vector database"
+    "AI caching",
+    "LLM cost optimization",
+    "semantic caching",
+    "API cost savings",
+    "reduce AI spend",
+    "ChatGPT API cheaper",
+    "AI API proxy",
+    "save money on AI"
   ],
   openGraph: {
-    title: "WatchLLM - Semantic Caching & Observability Platform",
+    title: "WatchLLM - Cut Your OpenAI Bill by 40-70%",
     description:
-      "Combine semantic caching with ClickHouse-powered observability, analytics, and trace exploration while cutting AI API costs by 70%.",
+      "Stop paying twice for similar AI requests. Cache semantically similar prompts and see your savings in real-time.",
     type: "website",
     url: "https://watchllm.dev",
     siteName: "WatchLLM",
@@ -48,21 +44,21 @@ export const metadata: Metadata = {
         url: "https://watchllm.dev/og-homepage-1200x630.png",
         width: 1200,
         height: 630,
-        alt: "WatchLLM - Semantic Caching for AI APIs",
+        alt: "WatchLLM - Cut Your OpenAI Bill",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "WatchLLM - Semantic Caching & Observability Platform",
+    title: "WatchLLM - Cut Your OpenAI Bill by 40-70%",
     description:
-      "True semantic caching meets ClickHouse-powered observability for OpenAI, Claude, Groq, and any API provider.",
+      "Stop paying twice for similar AI requests. See your savings in real-time.",
     creator: "@kaad_zz",
     site: "@watchllm",
     images: {
       url: "https://watchllm.dev/twitter-home-1200x600.png",
-      alt: "WatchLLM Semantic Caching Architecture",
+      alt: "WatchLLM - Cut Your OpenAI Bill",
       width: 1200,
       height: 600,
     },

@@ -48,8 +48,8 @@ export const ICP = {
 export const COPY = {
   // Dashboard
   dashboard: {
-    title: "Dashboard",
-    subtitle: "See where your LLM spend is leaking",
+    title: "Your Savings Dashboard",
+    subtitle: "Track how much you're saving (and wasting) on AI",
   },
   
   // Observability

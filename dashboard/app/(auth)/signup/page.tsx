@@ -145,15 +145,15 @@ function SignupForm() {
       <Card>
         <CardHeader className="text-center">
           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-6 w-6 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
+              <Zap className="h-6 w-6 text-white" />
             </div>
           </Link>
-          <CardTitle className="text-2xl">Start saving on AI costs</CardTitle>
+          <CardTitle className="text-2xl">Stop overpaying for AI</CardTitle>
           <CardDescription>
             {plan !== "free"
               ? `Start your free trial of the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan`
-              : "Get 50,000 free requests/month with semantic caching"
+              : "50,000 free requests/month. See your first savings in minutes."
             }
           </CardDescription>
         </CardHeader>
