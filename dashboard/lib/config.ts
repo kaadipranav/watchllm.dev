@@ -9,7 +9,7 @@ export const APP_CONFIG = {
     isTesting: process.env.NEXT_PUBLIC_APP_STAGE === "testing",
 
     // Feature Flags
-    showPricingComingSoon: process.env.NEXT_PUBLIC_SHOW_PRICING_COMING_SOON === "true",
+    showPricingComingSoon: false,  // Disabled - pricing is live
 
     // External URLs
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://watchllm.dev",

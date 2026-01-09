@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import fs from "fs/promises";
 import path from "path";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
@@ -108,6 +108,7 @@ const navigation = [
   {
     title: "Getting Started",
     items: [
+      { title: "Getting Started", href: "/docs/GETTING_STARTED" },
       { title: "Quick Start", href: "/docs/QUICK_START" },
       { title: "Deployment", href: "/docs/DEPLOYMENT" },
       { title: "Cheat Sheet", href: "/docs/CHEAT_SHEET" },
@@ -155,13 +156,22 @@ export default async function DocPage({ params }: { params: { slug: string[] } }
         <div className="flex flex-col lg:flex-row gap-12 py-12">
           {/* Sidebar Navigation */}
           <aside className="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-12 lg:h-[calc(100vh-6rem)] overflow-y-auto pr-4 scrollbar-hide">
-            <Link
-              href="/docs"
-              className="mb-8 flex items-center gap-2 text-sm font-medium text-premium-text-muted hover:text-white transition-colors group"
-            >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back to Overview
-            </Link>
+            <div className="space-y-2 mb-8">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-sm font-medium text-premium-text-muted hover:text-white transition-colors group"
+              >
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                Back to Home
+              </Link>
+              <Link
+                href="/docs"
+                className="flex items-center gap-2 text-sm font-medium text-premium-text-muted hover:text-white transition-colors group pl-6"
+              >
+                <ArrowRight className="h-3 w-3" />
+                Docs Overview
+              </Link>
+            </div>
 
             <nav className="space-y-8">
               {navigation.map((section) => (

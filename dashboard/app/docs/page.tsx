@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Book, Code, Terminal, Zap, Shield, Layout, FileText, Cpu, Server } from "lucide-react";
+import { ArrowRight, Book, Code, Terminal, Zap, Shield, Layout, FileText, Cpu, Server, ArrowLeft, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DocsIndexPage() {
@@ -11,8 +11,15 @@ export default function DocsIndexPage() {
       description: "Everything you need to get WatchLLM up and running in your project.",
       items: [
         {
+          title: "Getting Started",
+          description: "Complete beginner's guide from signup to first cached request.",
+          href: "/docs/GETTING_STARTED",
+          icon: Zap,
+          color: "bg-emerald-500/10 text-emerald-500",
+        },
+        {
           title: "Quick Start",
-          description: "2-minute integration guide to start caching.",
+          description: "2-minute integration guide for experienced developers.",
           href: "/docs/QUICK_START",
           icon: Zap,
           color: "bg-yellow-500/10 text-yellow-500",
@@ -22,14 +29,14 @@ export default function DocsIndexPage() {
           description: "Step-by-step production deployment guide.",
           href: "/docs/DEPLOYMENT",
           icon: Server,
-          color: "bg-emerald-500/10 text-emerald-500",
+          color: "bg-blue-500/10 text-blue-500",
         },
         {
           title: "Cheat Sheet",
           description: "Quick reference for SDKs and CLI commands.",
           href: "/docs/CHEAT_SHEET",
           icon: FileText,
-          color: "bg-blue-500/10 text-blue-500",
+          color: "bg-cyan-500/10 text-cyan-500",
         },
       ],
     },
@@ -98,7 +105,18 @@ export default function DocsIndexPage() {
         <div className="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-bl from-teal-500/5 via-transparent to-transparent blur-3xl opacity-40 mix-blend-screen" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
+      <div className="relative mx-auto max-w-7xl px-6 lg:px-8 py-12 sm:py-16">
+        {/* Back Button */}
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-medium text-premium-text-muted hover:text-white transition-colors group"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+            Back to Home
+          </Link>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-20">
           {/* Hero Section */}
           <div className="lg:w-1/3">
