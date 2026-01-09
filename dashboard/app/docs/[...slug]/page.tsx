@@ -17,7 +17,7 @@ import matter from "gray-matter";
 import { cache } from "react";
 
 function getDocFilePath(slugParts: string[]): string {
-  const baseDir = path.join(process.cwd(), "public", "docs");
+  const baseDir = path.join(process.cwd(), "app", "docs", "content");
   const safeParts = slugParts.filter(Boolean);
   const filePath = path.join(baseDir, ...safeParts) + ".md";
   return filePath;
