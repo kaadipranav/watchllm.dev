@@ -53,7 +53,7 @@ Your WatchLLM observability platform is **fully deployed and tested** in product
 ## What's Been Built
 
 ### ✅ Complete Infrastructure
-- **Cloudflare Worker**: Deployed at `https://watchllm-worker.kiwi092020.workers.dev`
+- **Cloudflare Worker**: Deployed at `https://proxy.watchllm.dev`
 - **ClickHouse Database**: Production instance operational (138.68.84.8:8123)
 - **Event Ingestion**: Full pipeline working
 - **Analytics Engine**: Metrics queries returning data
@@ -109,7 +109,7 @@ lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b
 ```javascript
 const watch = new WatchLLM({ 
   apiKey: "lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b",
-  baseURL: "https://watchllm-worker.kiwi092020.workers.dev"
+  baseURL: "https://proxy.watchllm.dev"
 });
 await watch.log({ prompt, response, model, ... });
 ```
@@ -118,7 +118,7 @@ await watch.log({ prompt, response, model, ... });
 ```python
 watch = WatchLLM(
   api_key="lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b",
-  base_url="https://watchllm-worker.kiwi092020.workers.dev"
+  base_url="https://proxy.watchllm.dev"
 )
 watch.log(prompt=..., response=..., model=...)
 ```

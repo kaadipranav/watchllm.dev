@@ -159,7 +159,7 @@ node scripts/verify-clickhouse.js
 - ✅ **Wrangler**: Logged in and configured
 - ✅ **Secrets**: Recent secret changes detected
 
-**Worker URL:** https://watchllm-worker.kiwi092020.workers.dev
+**Worker URL:** https://proxy.watchllm.dev
 
 **No action needed.** The Worker is fully deployed and operational with:
 - Semantic caching with D1 database

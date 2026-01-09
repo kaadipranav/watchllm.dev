@@ -9,7 +9,7 @@
   - TTL issues resolved
 
 - ✅ **Worker Deployment**: Cloudflare Workers (Free Tier)
-  - URL: `https://watchllm-worker.kiwi092020.workers.dev`
+  - URL: `https://proxy.watchllm.dev`
   - Latest Version: `43d671ba-310f-4f5a-9978-64b771b8fd3a`
   - Configuration: `wrangler.free-tier.toml` (Queues not available on free tier)
 
@@ -94,7 +94,7 @@ python scripts/test-sdk-python.py
 ### Environment Setup
 ```
 WATCHLLM_API_KEY=lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b
-WORKER_URL=https://watchllm-worker.kiwi092020.workers.dev
+WORKER_URL=https://proxy.watchllm.dev
 CLICKHOUSE_HOST=138.68.84.8
 CLICKHOUSE_PORT=8123
 CLICKHOUSE_USER=watchllm_user
@@ -107,7 +107,7 @@ CLICKHOUSE_PASSWORD=Pranav18fornowbutwillchange
 ```javascript
 const watch = new WatchLLM({ 
   apiKey: "lgw_proj_...", 
-  baseURL: "https://watchllm-worker.kiwi092020.workers.dev" 
+  baseURL: "https://proxy.watchllm.dev" 
 });
 await watch.log({ 
   event_id: uuid(),
@@ -126,7 +126,7 @@ await watch.log({
 from watchllm import WatchLLM
 watch = WatchLLM(
   api_key="lgw_proj_...",
-  base_url="https://watchllm-worker.kiwi092020.workers.dev"
+  base_url="https://proxy.watchllm.dev"
 )
 watch.log(
   event_id=str(uuid.uuid4()),
@@ -207,7 +207,7 @@ node scripts/test-proxy-free-model.js
 ```
 Client Application
     ↓
-[WatchLLM Worker] (https://watchllm-worker.kiwi092020.workers.dev)
+[WatchLLM Worker] (https://proxy.watchllm.dev)
     ├─ Proxy Layer (/v1/chat/completions)
     ├─ Observability (/v1/projects/{id}/events)
     └─ Analytics (/v1/projects/{id}/metrics)

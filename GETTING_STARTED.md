@@ -52,7 +52,7 @@ lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b
 // Node.js
 const watch = new WatchLLM({ 
   apiKey: "lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b",
-  baseURL: "https://watchllm-worker.kiwi092020.workers.dev"
+  baseURL: "https://proxy.watchllm.dev"
 });
 ```
 
@@ -60,14 +60,14 @@ const watch = new WatchLLM({
 # Python
 watch = WatchLLM(
   api_key="lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b",
-  base_url="https://watchllm-worker.kiwi092020.workers.dev"
+  base_url="https://proxy.watchllm.dev"
 )
 ```
 
 ## 🏗️ Infrastructure
 
 ### Deployed Components
-- **Worker**: `https://watchllm-worker.kiwi092020.workers.dev`
+- **Worker**: `https://proxy.watchllm.dev`
 - **Database**: ClickHouse on DigitalOcean (138.68.84.8:8123)
 - **Authentication**: Supabase (configured)
 - **Cache**: D1 Database on Cloudflare
@@ -188,7 +188,7 @@ All tables operational and receiving test data.
 ### Environment Variables
 ```env
 WATCHLLM_API_KEY=lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b
-WORKER_URL=https://watchllm-worker.kiwi092020.workers.dev
+WORKER_URL=https://proxy.watchllm.dev
 CLICKHOUSE_HOST=138.68.84.8
 CLICKHOUSE_PORT=8123
 CLICKHOUSE_USER=watchllm_user
@@ -246,7 +246,7 @@ console.log(metrics.stats.total_cost_usd);
 4. Check logs in terminal
 
 ### SDK Not Connecting?
-1. Verify URL: `https://watchllm-worker.kiwi092020.workers.dev`
+1. Verify URL: `https://proxy.watchllm.dev`
 2. Check API key format: `lgw_proj_...`
 3. Ensure Worker is deployed: Visit URL in browser
 

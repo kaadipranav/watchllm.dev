@@ -17,7 +17,7 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Configuration
-WORKER_URL = "https://watchllm-worker.kiwi092020.workers.dev"
+WORKER_URL = "https://proxy.watchllm.dev"
 API_KEY = "test-key"  # Using test key from worker
 
 def test_python_sdk():
