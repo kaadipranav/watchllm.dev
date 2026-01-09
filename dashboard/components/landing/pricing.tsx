@@ -190,7 +190,7 @@ export function Pricing() {
             Pays for itself in days
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            If you're spending $200+/month on OpenAI, these plans save you money.
+            If you&apos;re spending $200+/month on OpenAI, these plans save you money.
           </p>
         </motion.div>
 

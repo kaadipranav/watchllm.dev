@@ -93,9 +93,9 @@ export default function OnboardingPage() {
         {/* Left side - Form */}
         <Card className="w-full bg-white/5 border-white/10">
           <CardHeader>
-            <CardTitle className="text-xl">You're almost there</CardTitle>
+            <CardTitle className="text-xl">You&apos;re almost there</CardTitle>
             <CardDescription className="text-white/60">
-              Quick details, then you'll see your savings dashboard.
+              Quick details, then you&apos;ll see your savings dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
             />
           </div>
           <p className="mt-4 text-sm text-white/50 text-center">
-            You'll see your first savings after your first cached request
+            You&apos;ll see your first savings after your first cached request
           </p>
         </div>
       </div>

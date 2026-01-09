@@ -14,7 +14,7 @@ const features: Feature[] = [
     title: "Stop Paying Twice",
     description:
       "Similar questions get the same answers. WatchLLM detects when your users ask semantically similar prompts and returns cached responses instantly.",
-    metric: "40-70% savings",
+    metric: "40&ndash;70% savings",
   },
   {
     title: "See Your Waste",
@@ -88,7 +88,7 @@ export function Features() {
             Cut your AI bill without cutting features
           </h1>
           <p className="text-lg text-text-secondary leading-relaxed">
-            Most apps send duplicate or near-duplicate prompts. You're paying full price every time. We fix that.
+            Most apps send duplicate or near-duplicate prompts. You&apos;re paying full price every time. We fix that.
           </p>
         </motion.div>
 
