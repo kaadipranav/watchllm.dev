@@ -16,6 +16,7 @@
     "test": "pnpm --recursive test",
     "test:coverage": "pnpm --filter @watchllm/worker test:coverage && pnpm --filter @watchllm/dashboard test:coverage",
     "test:e2e": "pnpm --filter @watchllm/dashboard test:e2e",
+    "test:all": "node scripts/test-all.js",
     "lint": "pnpm --recursive lint",
     "type-check": "pnpm --recursive type-check",
     "clean": "pnpm --recursive clean && rm -rf node_modules",
