@@ -69,6 +69,20 @@ export async function GET(request: NextRequest) {
 
     if (queryError) {
       console.error('[AgentRuns] Query error:', queryError);
+      
+      // Check if table doesn't exist (migration not run)
+      if (queryError.message?.includes('relation') && queryError.message?.includes('does not exist')) {
+        // Return empty list instead of error - table hasn't been created yet
+        const emptyResponse: AgentRunsListResponse = {
+          runs: [],
+          total: 0,
+          has_more: false,
+          limit,
+          offset,
+        };
+        return NextResponse.json(emptyResponse);
+      }
+      
       return NextResponse.json(
         { error: 'Failed to fetch agent runs' },
         { status: 500 }

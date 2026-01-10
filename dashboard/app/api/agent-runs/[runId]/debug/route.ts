@@ -56,10 +56,28 @@ export async function GET(
       .eq('user_id', user.id)
       .single();
 
-    if (runError || !runLog) {
+    if (runError) {
+      // Check if table doesn't exist (migration not run)
+      if (runError.message?.includes('relation') && runError.message?.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Agent debug tables not found. Please run the database migration first.' },
+          { status: 404 }
+        );
+      }
+      
+      // Not found or other error
+      if (runError.code === 'PGRST116' || !runLog) {
+        return NextResponse.json(
+          { error: 'Agent run not found' },
+          { status: 404 }
+        );
+      }
+      
+      // Other error
+      console.error('[AgentRunDebug] Run query error:', runError);
       return NextResponse.json(
-        { error: 'Agent run not found' },
-        { status: 404 }
+        { error: 'Failed to fetch agent run' },
+        { status: 500 }
       );
     }
 
@@ -72,6 +90,15 @@ export async function GET(
 
     if (stepsError) {
       console.error('[AgentRunDebug] Steps query error:', stepsError);
+      
+      // Check if table doesn't exist (shouldn't happen if logs table exists, but handle it)
+      if (stepsError.message?.includes('relation') && stepsError.message?.includes('does not exist')) {
+        return NextResponse.json(
+          { error: 'Agent debug tables not found. Please run the database migration first.' },
+          { status: 404 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Failed to fetch run steps' },
         { status: 500 }
