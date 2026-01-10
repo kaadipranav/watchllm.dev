@@ -143,7 +143,7 @@ describe('Agent Debugger API Integration', () => {
  */
 describe('Parser + Fixture Integration', () => {
   it('parses all fixtures without error', async () => {
-    const { createAgentDebugParser, AgentRun } = await import('../index');
+    const { createAgentDebugParser } = await import('../index');
     
     // Import fixtures
     const normalRun = (await import('../fixtures/normal_run.json')).default;
