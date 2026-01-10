@@ -6,6 +6,9 @@ node_modules/
 # Testing
 coverage/
 *.lcov
+playwright-report/
+test-results/
+.playwright/
 
 # Production
 build/
