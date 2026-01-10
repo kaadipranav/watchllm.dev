@@ -1,0 +1,138 @@
+{
+  "run_id": "550e8400-e29b-41d4-a716-446655440001",
+  "started_at": "2026-01-10T10:00:00Z",
+  "ended_at": "2026-01-10T10:00:08Z",
+  "user_id": "user-123",
+  "project_id": "proj-456",
+  "agent_name": "order-assistant-v1",
+  "status": "completed",
+  "steps": [
+    {
+      "step_index": 0,
+      "timestamp": "2026-01-10T10:00:00Z",
+      "type": "user_input",
+      "summary": "User asked to place an order for 2 pizzas",
+      "raw": "Hi, I'd like to order 2 large margherita pizzas for delivery to 123 Main St."
+    },
+    {
+      "step_index": 1,
+      "timestamp": "2026-01-10T10:00:01Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "menu_search",
+      "tool_args": {
+        "query": "margherita pizza large",
+        "limit": 5
+      },
+      "summary": "Agent decided to search menu for pizza options",
+      "token_cost": 45,
+      "api_cost_usd": 0.000135,
+      "cache_hit": false
+    },
+    {
+      "step_index": 2,
+      "timestamp": "2026-01-10T10:00:02Z",
+      "type": "tool_call",
+      "tool": "menu_search",
+      "tool_args": {
+        "query": "margherita pizza large",
+        "limit": 5
+      },
+      "tool_output_summary": "Found 3 matches: Margherita Classic ($14.99), Margherita Deluxe ($18.99), Margherita Family ($24.99)",
+      "summary": "Menu search returned 3 pizza options",
+      "token_cost": 0,
+      "api_cost_usd": 0.0001,
+      "cache_hit": false
+    },
+    {
+      "step_index": 3,
+      "timestamp": "2026-01-10T10:00:03Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "check_availability",
+      "tool_args": {
+        "item_id": "pizza-margherita-classic",
+        "quantity": 2
+      },
+      "summary": "Agent checking availability for classic margherita",
+      "token_cost": 38,
+      "api_cost_usd": 0.000114,
+      "cache_hit": false
+    },
+    {
+      "step_index": 4,
+      "timestamp": "2026-01-10T10:00:04Z",
+      "type": "tool_call",
+      "tool": "check_availability",
+      "tool_args": {
+        "item_id": "pizza-margherita-classic",
+        "quantity": 2
+      },
+      "tool_output_summary": "Available: true, estimated_time: 25 minutes",
+      "summary": "Item is available with 25 min delivery time",
+      "token_cost": 0,
+      "api_cost_usd": 0.00005,
+      "cache_hit": true
+    },
+    {
+      "step_index": 5,
+      "timestamp": "2026-01-10T10:00:05Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "create_order",
+      "tool_args": {
+        "items": [
+          {
+            "item_id": "pizza-margherita-classic",
+            "quantity": 2,
+            "size": "large"
+          }
+        ],
+        "delivery_address": "123 Main St",
+        "user_id": "user-123"
+      },
+      "summary": "Agent creating the order",
+      "token_cost": 52,
+      "api_cost_usd": 0.000156,
+      "cache_hit": false
+    },
+    {
+      "step_index": 6,
+      "timestamp": "2026-01-10T10:00:06Z",
+      "type": "tool_call",
+      "tool": "create_order",
+      "tool_args": {
+        "items": [
+          {
+            "item_id": "pizza-margherita-classic",
+            "quantity": 2,
+            "size": "large"
+          }
+        ],
+        "delivery_address": "123 Main St",
+        "user_id": "user-123"
+      },
+      "tool_output_summary": "Order created: order_id=ORD-789, total=$29.98, eta=25min",
+      "summary": "Order successfully created",
+      "token_cost": 0,
+      "api_cost_usd": 0.0002,
+      "cache_hit": false
+    },
+    {
+      "step_index": 7,
+      "timestamp": "2026-01-10T10:00:07Z",
+      "type": "model_response",
+      "summary": "Agent confirmed order to user with details",
+      "raw": "Great! I've placed your order for 2 large Margherita Classic pizzas. Your order number is ORD-789 and the total is $29.98. Expected delivery time is about 25 minutes to 123 Main St. Is there anything else you'd like?",
+      "token_cost": 78,
+      "api_cost_usd": 0.000234,
+      "cache_hit": false
+    }
+  ],
+  "total_cost_usd": 0.001039,
+  "meta": {
+    "region": "us-west",
+    "env": "prod",
+    "version": "1.2.0"
+  }
+}

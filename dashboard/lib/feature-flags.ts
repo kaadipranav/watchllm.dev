@@ -31,6 +31,9 @@ export const FeatureFlags = {
   
   // Team Collaboration: Multi-user project access and roles
   TEAM_COLLABORATION: "teamCollaboration",
+  
+  // Agent Debugger: Debug and analyze agent runs with cost attribution
+  AGENT_DEBUGGER_V1: "agentDebuggerV1",
 } as const;
 
 // ConfigCat client singleton

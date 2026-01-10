@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Zap,
   Activity,
+  Bug,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -42,6 +43,7 @@ const observabilityNavigation = [
   { name: "Requests", href: "/dashboard/observability/logs", icon: Activity },
   { name: "Analytics", href: "/dashboard/observability/analytics", icon: BarChart3 },
   { name: "Traces", href: "/dashboard/observability/traces", icon: Zap },
+  { name: "Agent Debugger", href: "/dashboard/observability/agent-runs", icon: Bug },
 ];
 
 function NavSection({ title, icon: Icon, items, isOpen, onToggle }: { title: string; icon: any; items: any[]; isOpen: boolean; onToggle: () => void }) {

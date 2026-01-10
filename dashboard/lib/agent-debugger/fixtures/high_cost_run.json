@@ -1,0 +1,138 @@
+{
+  "run_id": "550e8400-e29b-41d4-a716-446655440003",
+  "started_at": "2026-01-10T14:00:00Z",
+  "ended_at": "2026-01-10T14:00:45Z",
+  "user_id": "user-789",
+  "project_id": "proj-enterprise",
+  "agent_name": "research-analyst-v3",
+  "status": "completed",
+  "steps": [
+    {
+      "step_index": 0,
+      "timestamp": "2026-01-10T14:00:00Z",
+      "type": "user_input",
+      "summary": "User requested comprehensive market analysis",
+      "raw": "Generate a comprehensive market analysis report for the electric vehicle industry, including competitor analysis, market trends, and 5-year projections."
+    },
+    {
+      "step_index": 1,
+      "timestamp": "2026-01-10T14:00:02Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "market_data_api",
+      "tool_args": {
+        "industry": "electric_vehicles",
+        "data_types": ["market_size", "growth_rate", "key_players", "regional_breakdown"],
+        "years": 5,
+        "depth": "comprehensive"
+      },
+      "summary": "Agent requesting comprehensive EV market data",
+      "token_cost": 156,
+      "api_cost_usd": 0.000468,
+      "cache_hit": false
+    },
+    {
+      "step_index": 2,
+      "timestamp": "2026-01-10T14:00:10Z",
+      "type": "tool_call",
+      "tool": "market_data_api",
+      "tool_args": {
+        "industry": "electric_vehicles",
+        "data_types": ["market_size", "growth_rate", "key_players", "regional_breakdown"],
+        "years": 5,
+        "depth": "comprehensive"
+      },
+      "tool_output_summary": "Retrieved 2.3MB of market data including 47 competitors, 12 regions, 5-year historical and projected data",
+      "summary": "Large dataset retrieved from market data API",
+      "token_cost": 0,
+      "api_cost_usd": 0.045,
+      "cache_hit": false
+    },
+    {
+      "step_index": 3,
+      "timestamp": "2026-01-10T14:00:15Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "competitor_intelligence",
+      "tool_args": {
+        "companies": ["Tesla", "BYD", "Volkswagen", "GM", "Ford", "Rivian", "Lucid", "NIO", "Hyundai", "BMW"],
+        "metrics": ["revenue", "market_share", "production_capacity", "technology_patents", "expansion_plans"],
+        "include_financials": true
+      },
+      "summary": "Agent requesting detailed competitor intelligence",
+      "token_cost": 245,
+      "api_cost_usd": 0.000735,
+      "cache_hit": false
+    },
+    {
+      "step_index": 4,
+      "timestamp": "2026-01-10T14:00:25Z",
+      "type": "tool_call",
+      "tool": "competitor_intelligence",
+      "tool_args": {
+        "companies": ["Tesla", "BYD", "Volkswagen", "GM", "Ford", "Rivian", "Lucid", "NIO", "Hyundai", "BMW"],
+        "metrics": ["revenue", "market_share", "production_capacity", "technology_patents", "expansion_plans"],
+        "include_financials": true
+      },
+      "tool_output_summary": "Retrieved detailed profiles for 10 companies with financial data, patent counts, and strategic plans",
+      "summary": "Comprehensive competitor data retrieved",
+      "token_cost": 0,
+      "api_cost_usd": 0.085,
+      "cache_hit": false
+    },
+    {
+      "step_index": 5,
+      "timestamp": "2026-01-10T14:00:28Z",
+      "type": "decision",
+      "decision": "call_tool",
+      "tool": "trend_analysis_engine",
+      "tool_args": {
+        "topic": "electric vehicles",
+        "data_sources": ["news", "research_papers", "social_media", "patent_filings", "regulatory_announcements"],
+        "time_range": "5_years",
+        "sentiment_analysis": true,
+        "forecast_model": "advanced"
+      },
+      "summary": "Agent requesting advanced trend analysis",
+      "token_cost": 312,
+      "api_cost_usd": 0.000936,
+      "cache_hit": false
+    },
+    {
+      "step_index": 6,
+      "timestamp": "2026-01-10T14:00:38Z",
+      "type": "tool_call",
+      "tool": "trend_analysis_engine",
+      "tool_args": {
+        "topic": "electric vehicles",
+        "data_sources": ["news", "research_papers", "social_media", "patent_filings", "regulatory_announcements"],
+        "time_range": "5_years",
+        "sentiment_analysis": true,
+        "forecast_model": "advanced"
+      },
+      "tool_output_summary": "Analyzed 15,000+ data points across 5 sources. Key trends: battery technology advancement, charging infrastructure growth, regulatory push for EV adoption",
+      "summary": "Advanced trend analysis completed",
+      "token_cost": 0,
+      "api_cost_usd": 0.125,
+      "cache_hit": false
+    },
+    {
+      "step_index": 7,
+      "timestamp": "2026-01-10T14:00:40Z",
+      "type": "model_response",
+      "summary": "Agent generated comprehensive 15-page market analysis report",
+      "raw": "# Electric Vehicle Industry Market Analysis Report\n\n## Executive Summary\nThe global EV market is projected to reach $957B by 2030...\n\n[Full 15-page report with charts, tables, and detailed analysis]\n\n## Key Findings\n1. Market growing at 23.1% CAGR\n2. Tesla maintains leadership but BYD closing gap\n3. Battery costs declining 15% annually\n4. Charging infrastructure expanding rapidly\n5. Regulatory tailwinds accelerating adoption\n\n## Recommendations\n...",
+      "token_cost": 8500,
+      "api_cost_usd": 0.0255,
+      "cache_hit": false
+    }
+  ],
+  "total_cost_usd": 0.283139,
+  "meta": {
+    "region": "us-west",
+    "env": "prod",
+    "version": "3.1.0",
+    "report_type": "comprehensive",
+    "tokens_generated": 8500
+  }
+}
