@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Animated counter for live stats
@@ -75,34 +75,71 @@ function SavingsStatTicker() {
  * Spotlight effect that follows the mouse
  */
 function Spotlight() {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
 
+  const spotlightRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const reduceMotionRef = useRef(false);
+
   useEffect(() => {
+    reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      targetRef.current = { x: e.clientX, y: e.clientY };
+
+      // In reduced motion mode, follow instantly.
+      if (reduceMotionRef.current) {
+        currentRef.current = { x: e.clientX, y: e.clientY };
+      }
     };
 
     const handleMouseEnter = () => setOpacity(1);
     const handleMouseLeave = () => setOpacity(0);
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     document.body.addEventListener("mouseenter", handleMouseEnter);
     document.body.addEventListener("mouseleave", handleMouseLeave);
+
+    const tick = () => {
+      const el = spotlightRef.current;
+      if (el) {
+        const ease = reduceMotionRef.current ? 1 : 0.085; // lower = more lag
+        const { x: tx, y: ty } = targetRef.current;
+        const cx = currentRef.current.x + (tx - currentRef.current.x) * ease;
+        const cy = currentRef.current.y + (ty - currentRef.current.y) * ease;
+        currentRef.current = { x: cx, y: cy };
+
+        // Brighter + warmer glow, still subtle.
+        el.style.background = `radial-gradient(520px circle at ${cx}px ${cy}px, rgba(255, 215, 125, 0.11), transparent 60%), radial-gradient(820px circle at ${cx}px ${cy}px, rgba(255, 255, 255, 0.045), transparent 72%)`;
+      }
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       document.body.removeEventListener("mouseenter", handleMouseEnter);
       document.body.removeEventListener("mouseleave", handleMouseLeave);
+
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
     };
   }, []);
 
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500"
+      ref={spotlightRef}
+      className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500 mix-blend-screen"
       style={{
         opacity,
-        background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255, 255, 255, 0.03), transparent 80%)`,
+        // Background is driven by rAF for smooth lag.
+        background:
+          "radial-gradient(520px circle at 0px 0px, rgba(255, 215, 125, 0.11), transparent 60%), radial-gradient(820px circle at 0px 0px, rgba(255, 255, 255, 0.045), transparent 72%)",
       }}
     />
   );
@@ -165,7 +202,7 @@ export function Hero() {
             className="mb-10 flex items-center justify-center gap-4 text-[11px] font-semibold uppercase tracking-[0.4em] text-text-muted"
           >
             <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
-            <span>Stop overpaying for AI</span>
+            <span>Stop overpaying for repeated AI requests</span>
             <span className="hidden sm:inline-block h-px w-10 bg-white/20" aria-hidden="true" />
           </motion.div>
 
@@ -203,7 +240,11 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button asChild size="lg" className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-green-500/10 bg-green-500 text-white hover:bg-green-400">
+            <Button
+              asChild
+              size="lg"
+              className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-green-500/10 bg-green-500 text-white hover:bg-green-400"
+            >
               <Link href="/signup">
                 <span className="relative z-10 font-semibold">Start Saving — Free</span>
               </Link>
@@ -214,9 +255,7 @@ export function Hero() {
               variant="outline"
               className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-white/50 hover:bg-white/5 text-text-primary transition-all"
             >
-              <Link href="#how-it-works">
-                See How It Works
-              </Link>
+              <Link href="#how-it-works">See How It Works</Link>
             </Button>
           </motion.div>
 
@@ -227,21 +266,14 @@ export function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.35 }}
           >
-            <span className="flex items-center gap-2">
-              No credit card required
-            </span>
-            <span className="flex items-center gap-2">
-              Works with OpenAI, Anthropic, Groq
-            </span>
-            <span className="flex items-center gap-2">
-              Change 1 line of code
-            </span>
+            <span className="flex items-center gap-2">No credit card required</span>
+            <span className="flex items-center gap-2">Works with OpenAI, Anthropic, Groq</span>
+            <span className="flex items-center gap-2">Change 1 line of code</span>
           </motion.div>
 
           {/* Savings stats ticker */}
           <SavingsStatTicker />
         </div>
-
       </div>
     </section>
   );
