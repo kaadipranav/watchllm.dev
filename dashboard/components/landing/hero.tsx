@@ -86,8 +86,19 @@ function Spotlight() {
   useEffect(() => {
     reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Ensure the effect is visible immediately on load (some browsers won't fire
+    // mouseenter if the pointer is already inside the viewport).
+    const initialX = window.innerWidth / 2;
+    const initialY = window.innerHeight / 3;
+    targetRef.current = { x: initialX, y: initialY };
+    currentRef.current = { x: initialX, y: initialY };
+    setOpacity(1);
+
     const handleMouseMove = (e: MouseEvent) => {
       targetRef.current = { x: e.clientX, y: e.clientY };
+
+      // If the user starts moving without triggering mouseenter, show it.
+      setOpacity(1);
 
       // In reduced motion mode, follow instantly.
       if (reduceMotionRef.current) {
@@ -111,8 +122,8 @@ function Spotlight() {
         const cy = currentRef.current.y + (ty - currentRef.current.y) * ease;
         currentRef.current = { x: cx, y: cy };
 
-        // Brighter + warmer glow, still subtle.
-        el.style.background = `radial-gradient(520px circle at ${cx}px ${cy}px, rgba(255, 215, 125, 0.11), transparent 60%), radial-gradient(820px circle at ${cx}px ${cy}px, rgba(255, 255, 255, 0.045), transparent 72%)`;
+        // Neutral grey glow (brighter/more noticeable), with a soft outer halo.
+        el.style.background = `radial-gradient(520px circle at ${cx}px ${cy}px, rgba(245, 245, 245, 0.10), transparent 60%), radial-gradient(820px circle at ${cx}px ${cy}px, rgba(180, 180, 180, 0.06), transparent 72%)`;
       }
 
       rafRef.current = window.requestAnimationFrame(tick);
@@ -139,7 +150,7 @@ function Spotlight() {
         opacity,
         // Background is driven by rAF for smooth lag.
         background:
-          "radial-gradient(520px circle at 0px 0px, rgba(255, 215, 125, 0.11), transparent 60%), radial-gradient(820px circle at 0px 0px, rgba(255, 255, 255, 0.045), transparent 72%)",
+          "radial-gradient(520px circle at 0px 0px, rgba(245, 245, 245, 0.10), transparent 60%), radial-gradient(820px circle at 0px 0px, rgba(180, 180, 180, 0.06), transparent 72%)",
       }}
     />
   );
@@ -214,7 +225,7 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="block">Your OpenAI bill is</span>
+              <span className="block">Your OpenAI bill is probably</span>
               <span className="block mt-3">
                 <Typewriter words={["40% waste", "too high", "fixable"]} />
               </span>
