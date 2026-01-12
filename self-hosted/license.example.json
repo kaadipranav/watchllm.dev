@@ -1,0 +1,15 @@
+{
+  "customer": "Example Corp",
+  "license_type": "enterprise",
+  "issued_at": "2025-01-01",
+  "expires_at": "2026-01-01",
+  "features": [
+    "self_hosted",
+    "audit_logs",
+    "advanced_analytics",
+    "priority_support"
+  ],
+  "max_users": 100,
+  "max_requests_per_month": 10000000,
+  "signature": "REPLACE_WITH_ACTUAL_SIGNATURE"
+}

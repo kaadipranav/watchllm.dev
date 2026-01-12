@@ -7,6 +7,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Pricing } from "@/components/landing/pricing";
+import { Enterprise } from "@/components/landing/enterprise";
 import { FAQ } from "@/components/landing/faq";
 import { Footer } from "@/components/landing/footer";
 import { LiveFlow } from "@/components/landing/live-flow";
@@ -118,6 +119,7 @@ export default function HomePage() {
         <PlatformShowcase />
         <Features />
         <Pricing />
+        <Enterprise />
         <FAQ />
       </main>
       <Footer />
