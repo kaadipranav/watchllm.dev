@@ -444,4 +444,6 @@ WatchLLM self-hosted deployments:
 - Include no warranty for specific compliance frameworks
 - Do not include automatic security patches (upgrade manually)
 
+**WatchLLM does not claim compliance certifications; self-hosting enables customers to meet their own regulatory requirements.**
+
 For compliance requirements (HIPAA, SOC2, etc.), please consult with your security team regarding your specific deployment configuration.

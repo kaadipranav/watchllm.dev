@@ -73,6 +73,10 @@ docker-compose exec -T postgres psql -U watchllm watchllm < backup.sql
 | Redis | 6379 | Caching |
 | ClickHouse | 8123 | Analytics (optional) |
 
+## Compliance
+
+**WatchLLM does not claim compliance certifications; self-hosting enables customers to meet their own regulatory requirements.**
+
 ## Support
 
 Enterprise support: **enterprise@watchllm.dev**

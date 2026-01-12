@@ -118,6 +118,9 @@ export function Enterprise() {
                 In self-hosted mode, WatchLLM does not receive, store, or process any of your data. 
                 All prompts, responses, logs, and analytics remain entirely within your infrastructure.
               </p>
+              <p className="text-xs text-text-muted mt-2">
+                WatchLLM does not claim compliance certifications; self-hosting enables customers to meet their own regulatory requirements.
+              </p>
             </div>
           </div>
         </motion.div>
