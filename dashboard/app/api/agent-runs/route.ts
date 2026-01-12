@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AgentRunsListResponse, AgentRunListItem } from '@/lib/agent-debugger';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/agent-runs
  * 
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createClient();
-    
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -69,7 +71,7 @@ export async function GET(request: NextRequest) {
 
     if (queryError) {
       console.error('[AgentRuns] Query error:', queryError);
-      
+
       // Check if table doesn't exist (migration not run)
       if (queryError.message?.includes('relation') && queryError.message?.includes('does not exist')) {
         // Return empty list instead of error - table hasn't been created yet
@@ -82,7 +84,7 @@ export async function GET(request: NextRequest) {
         };
         return NextResponse.json(emptyResponse);
       }
-      
+
       return NextResponse.json(
         { error: 'Failed to fetch agent runs' },
         { status: 500 }
