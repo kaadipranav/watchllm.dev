@@ -5,30 +5,23 @@ import { Button } from "@/components/ui/button";
 import { APP_CONFIG } from "@/lib/config";
 import { 
   Building2, 
-  Shield, 
-  Server, 
-  Lock, 
-  Headphones 
+  Shield
 } from "lucide-react";
 
 const features = [
   {
-    icon: Server,
     title: "Your Infrastructure",
     description: "Deploy entirely inside your VPC, on-prem, or private cloud"
   },
   {
-    icon: Shield,
     title: "Complete Data Isolation",
     description: "No data ever leaves your environment—prompts, logs, everything stays local"
   },
   {
-    icon: Lock,
     title: "Use Your Own Keys",
     description: "Works with your existing OpenAI, Anthropic, Azure, or other LLM API keys"
   },
   {
-    icon: Headphones,
     title: "Enterprise Support",
     description: "Annual license with optional dedicated support and SLAs"
   }
@@ -75,25 +68,18 @@ export function Enterprise() {
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              className="flex gap-4 p-6 rounded-lg bg-bg-surface/50 border border-border-subtle hover:border-border-default transition-colors"
+              className="p-5 rounded-lg bg-bg-surface/50 border border-border-subtle hover:border-border-default transition-colors"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.1 + index * 0.05 }}
             >
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-lg bg-accent-primary/10 flex items-center justify-center">
-                  <feature.icon className="w-5 h-5 text-accent-primary" />
-                </div>
-              </div>
-              <div>
-                <h3 className="font-medium text-text-primary mb-1">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-text-muted">
-                  {feature.description}
-                </p>
-              </div>
+              <h3 className="font-medium text-text-primary mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-sm text-text-muted leading-relaxed">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </motion.div>
