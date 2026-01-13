@@ -49,77 +49,46 @@ export function PlatformShowcase() {
 
         {/* Platform visualization */}
         <motion.div
-          className="relative mt-20"
+          className="relative mt-16"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7 }}
         >
           {/* Main platform container */}
-          <div className="relative bg-bg-surface/30 border border-border-subtle rounded-2xl p-12 backdrop-blur-sm overflow-hidden">
-            {/* Grid background */}
-            <div className="absolute inset-0 pointer-events-none">
-              <svg
-                className="w-full h-full opacity-[0.02]"
-                width="100%"
-                height="100%"
-              >
-                <defs>
-                  <pattern
-                    id="grid"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M 40 0 L 0 0 0 40"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="0.5"
-                    />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-              </svg>
-            </div>
-
-            <div className="relative space-y-8">
+          <div className="relative bg-bg-surface/30 border border-border-subtle rounded-xl p-8 backdrop-blur-sm overflow-hidden">
+            <div className="relative space-y-6">
               {/* Top tier: Input → Cache */}
               <motion.div
-                className="flex flex-col md:flex-row items-center justify-between gap-8"
+                className="flex flex-col md:flex-row items-center justify-between gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
                 {/* Input - API Requests */}
-                <div className="flex-1 bg-bg-elevated/50 border border-border-subtle rounded-xl p-6">
-                  <h3 className="font-semibold text-text-primary mb-2">API Requests</h3>
-                  <p className="text-sm text-text-secondary">
+                <div className="flex-1 bg-bg-elevated/50 border border-border-subtle rounded-lg p-4">
+                  <h3 className="font-semibold text-text-primary mb-1">API Requests</h3>
+                  <p className="text-xs text-text-secondary">
                     OpenAI, Claude, Groq, or any LLM endpoint
                   </p>
                 </div>
 
                 {/* Professional Arrow */}
                 <div className="hidden md:flex items-center justify-center flex-shrink-0">
-                  <div className="flex items-center">
-                    <div className="w-16 h-[2px] bg-white/30" />
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                    </svg>
-                  </div>
+                  <svg className="w-5 h-5 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                  </svg>
                 </div>
 
                 {/* Semantic Cache */}
-                <div className="flex-1 bg-bg-elevated/50 border border-border-subtle rounded-xl p-6 relative overflow-hidden">
-                  <div className="relative">
-                    <h3 className="font-semibold text-text-primary mb-3">Semantic Cache</h3>
-                    <p className="text-sm text-text-secondary mb-3">
-                      Vector matching + cosine similarity = 70% savings
-                    </p>
-                    <div className="mt-3 text-xs text-white font-mono bg-white/5 px-2 py-1 rounded border border-white/20 inline-block">
-                      95%+ match accuracy
-                    </div>
+                <div className="flex-1 bg-bg-elevated/50 border border-border-subtle rounded-lg p-4">
+                  <h3 className="font-semibold text-text-primary mb-1">Semantic Cache</h3>
+                  <p className="text-xs text-text-secondary mb-2">
+                    Vector matching + cosine similarity = 70% savings
+                  </p>
+                  <div className="text-[10px] text-white font-mono bg-white/5 px-2 py-0.5 rounded border border-white/20 inline-block">
+                    95%+ match accuracy
                   </div>
                 </div>
               </motion.div>
@@ -132,50 +101,43 @@ export function PlatformShowcase() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                  <div className="flex flex-col items-center">
-                    <div className="w-[2px] h-8 bg-white/30" />
-                    <svg className="w-6 h-6 text-white -mt-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                  </svg>
-                </div>
+                <svg className="w-5 h-5 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                </svg>
               </motion.div>
 
               {/* Bottom tier: Observability */}
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 {/* ClickHouse Telemetry */}
-                <div className="bg-bg-elevated/50 border border-border-subtle rounded-xl p-6 relative overflow-hidden">
-                  <div className="relative">
-                    <h3 className="font-semibold text-text-primary mb-3">Telemetry Stream</h3>
-                    <p className="text-sm text-text-secondary mb-3">
-                      Logs, metrics, and traces flow to ClickHouse
-                    </p>
-                    <ul className="space-y-1 text-xs text-text-muted">
-                      <li>✓ Request payloads (safe)</li>
-                      <li>✓ Provider responses</li>
-                      <li>✓ Latency metrics</li>
-                    </ul>
-                  </div>
+                <div className="bg-bg-elevated/50 border border-border-subtle rounded-lg p-4">
+                  <h3 className="font-semibold text-text-primary mb-1">Telemetry Stream</h3>
+                  <p className="text-xs text-text-secondary mb-2">
+                    Logs, metrics, and traces flow to ClickHouse
+                  </p>
+                  <ul className="space-y-0.5 text-[10px] text-text-muted">
+                    <li>✓ Request payloads (safe)</li>
+                    <li>✓ Provider responses</li>
+                    <li>✓ Latency metrics</li>
+                  </ul>
                 </div>
 
                 {/* Analytics Dashboard */}
-                <div className="bg-bg-elevated/50 border border-border-subtle rounded-xl p-6 relative overflow-hidden">
-                  <div className="relative">
-                    <h3 className="font-semibold text-text-primary mb-3">Analytics + Alerts</h3>
-                    <p className="text-sm text-text-secondary mb-3">
-                      Real-time insights and anomaly detection
-                    </p>
-                    <ul className="space-y-1 text-xs text-text-muted">
-                      <li>✓ Cache hit rate</li>
-                      <li>✓ Cost forecasting</li>
-                      <li>✓ Anomaly alerts</li>
-                    </ul>
-                  </div>
+                <div className="bg-bg-elevated/50 border border-border-subtle rounded-lg p-4">
+                  <h3 className="font-semibold text-text-primary mb-1">Analytics + Alerts</h3>
+                  <p className="text-xs text-text-secondary mb-2">
+                    Real-time insights and anomaly detection
+                  </p>
+                  <ul className="space-y-0.5 text-[10px] text-text-muted">
+                    <li>✓ Cache hit rate</li>
+                    <li>✓ Cost forecasting</li>
+                    <li>✓ Anomaly alerts</li>
+                  </ul>
                 </div>
               </motion.div>
 
@@ -187,30 +149,25 @@ export function PlatformShowcase() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                  <div className="flex flex-col items-center">
-                    <div className="w-[2px] h-6 bg-white/30" />
-                    <svg className="w-6 h-6 text-white -mt-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                  </svg>
-                </div>
+                <svg className="w-5 h-5 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                </svg>
               </motion.div>
 
               {/* Bottom: Key Management */}
               <motion.div
-                className="bg-bg-elevated/50 border border-border-subtle rounded-xl p-6 relative overflow-hidden"
+                className="bg-bg-elevated/50 border border-border-subtle rounded-lg p-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
-                <div className="relative">
-                  <h3 className="font-semibold text-text-primary mb-3">Provider + Project Keys</h3>
-                  <p className="text-sm text-text-secondary mb-3">
-                    Attach keys to unlock observability telemetry flow and secure access to ClickHouse analytics
-                  </p>
-                  <div className="text-xs text-white font-mono bg-white/5 px-2 py-1 rounded border border-white/20 inline-block">
-                    Required for observability features
-                  </div>
+                <h3 className="font-semibold text-text-primary mb-1">Provider + Project Keys</h3>
+                <p className="text-xs text-text-secondary mb-2">
+                  Attach keys to unlock observability telemetry flow and secure access to ClickHouse analytics
+                </p>
+                <div className="text-[10px] text-white font-mono bg-white/5 px-2 py-0.5 rounded border border-white/20 inline-block">
+                  Required for observability features
                 </div>
               </motion.div>
             </div>

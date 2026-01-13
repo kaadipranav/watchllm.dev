@@ -91,6 +91,19 @@ pnpm dev
 pnpm build
 ```
 
+### Testing
+
+```bash
+# Full regression (lint + type-check + unit + dashboard E2E)
+pnpm test:all
+
+# Dashboard E2E only
+pnpm test:e2e
+```
+
+E2E login uses Supabase admin to create/update a test user. Set these env vars (recommended in CI):
+`E2E_EMAIL`, `E2E_PASSWORD`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+
 ## 📧 Email Notifications
 
 WatchLLM can send Resend-powered emails for onboarding, usage alerts, billing retries, and weekly reports.

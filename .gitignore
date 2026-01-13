@@ -74,3 +74,10 @@ lerna-debug.log*
 # Misc
 .cache/
 .turbo/
+
+# Self-hosted / Enterprise
+# Never commit actual license files
+self-hosted/license.json
+self-hosted/.env
+*.license.json
+license.json

@@ -27,7 +27,7 @@ export function Footer() {
     { href: APP_CONFIG.socials.twitter, label: "Twitter" },
     { href: APP_CONFIG.socials.github, label: "GitHub" },
     { href: APP_CONFIG.socials.discord, label: "Discord" },
-  ];
+  ].filter((link): link is { href: string; label: string } => Boolean(link.href));
 
   return (
     <footer className="relative border-t border-border-subtle bg-bg-primary">

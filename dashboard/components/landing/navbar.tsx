@@ -22,8 +22,10 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
+    { href: "#power-features", label: "Agent Debugger", highlight: true },
     { href: "#features", label: "Features" },
     { href: "#pricing", label: "Pricing" },
+    { href: "#enterprise", label: "Self-Hosted" },
     { href: "/docs", label: "Docs" },
   ];
 
@@ -73,11 +75,18 @@ export function Navbar() {
                 href={link.href}
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-sm",
-                  "text-text-secondary hover:text-text-primary",
-                  "hover:bg-white/5 transition-colors duration-base"
+                  "hover:bg-white/5 transition-colors duration-base",
+                  link.highlight
+                    ? "text-purple-400 hover:text-purple-300"
+                    : "text-text-secondary hover:text-text-primary"
                 )}
               >
                 {link.label}
+                {link.highlight && (
+                  <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-400 rounded">
+                    New
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -94,7 +103,7 @@ export function Navbar() {
               >
                 <Link href="/login">Sign In</Link>
               </Button>
-              <Button asChild size="sm" className="bg-white text-black hover:bg-white/90">
+              <Button asChild variant="ghost" size="sm" className="!bg-white !text-black hover:!bg-white/90 border border-white/20">
                 <Link href="/signup">Get Started</Link>
               </Button>
             </div>
@@ -136,7 +145,7 @@ export function Navbar() {
                 <Button asChild variant="ghost" className="w-full justify-start">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button asChild className="w-full bg-white text-black hover:bg-white/90">
+                <Button asChild variant="ghost" className="w-full !bg-white !text-black hover:!bg-white/90 border border-white/20">
                   <Link href="/signup">Get Started</Link>
                 </Button>
               </div>

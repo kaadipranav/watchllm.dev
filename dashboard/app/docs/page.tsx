@@ -97,7 +97,7 @@ export default function DocsIndexPage() {
   ];
 
   return (
-    <div className="relative min-h-screen bg-premium-bg-primary text-white selection:bg-indigo-500/30">
+    <main className="relative min-h-screen bg-premium-bg-primary text-white selection:bg-indigo-500/30">
       {/* Cinematic Background Gradients */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.06),transparent)]" />
@@ -224,6 +224,6 @@ export default function DocsIndexPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

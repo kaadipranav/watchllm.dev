@@ -14,7 +14,7 @@ export default defineConfig({
   webServer: process.env.E2E_NO_WEBSERVER
     ? undefined
     : {
-        command: "pnpm dev -- -p 3000",
+        command: "pnpm dev",
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
@@ -23,14 +23,14 @@ export default defineConfig({
   projects: [
     {
       name: "public",
-      testMatch: /public\.spec\.ts/,
+      testMatch: /(public\.spec\.ts|auth\.spec\.ts)/,
       use: {
         baseURL,
       },
     },
     {
       name: "authenticated",
-      testIgnore: /public\.spec\.ts/,
+      testIgnore: /(public\.spec\.ts|auth\.spec\.ts)/,
       use: {
         baseURL,
         storageState,

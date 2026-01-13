@@ -149,7 +149,7 @@ function SignupForm() {
               <Zap className="h-6 w-6 text-white" />
             </div>
           </Link>
-          <CardTitle className="text-2xl">Stop overpaying for AI</CardTitle>
+          <h1 className="text-2xl font-semibold tracking-tight">Stop overpaying for AI</h1>
           <CardDescription>
             {plan !== "free"
               ? `Start your free trial of the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan`

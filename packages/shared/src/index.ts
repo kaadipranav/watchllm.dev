@@ -55,3 +55,6 @@ export const PLAN_LIMITS: PlanLimits = {
     requestsPerMinute: 200,
   },
 };
+
+// Self-hosted / Enterprise exports
+export * from './self-hosted';

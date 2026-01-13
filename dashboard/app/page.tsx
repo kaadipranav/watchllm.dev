@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/landing/providers";
+import { PowerFeatures } from "@/components/landing/power-features";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { PlatformShowcase } from "@/components/landing/platform-showcase";
 import { Testimonials } from "@/components/landing/testimonials";
@@ -7,6 +8,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
 import { Pricing } from "@/components/landing/pricing";
+import { Enterprise } from "@/components/landing/enterprise";
 import { FAQ } from "@/components/landing/faq";
 import { Footer } from "@/components/landing/footer";
 import { LiveFlow } from "@/components/landing/live-flow";
@@ -114,10 +116,12 @@ export default function HomePage() {
         </Suspense>
         <Hero />
         <Providers />
+        <PowerFeatures />
         <HowItWorks />
         <PlatformShowcase />
         <Features />
         <Pricing />
+        <Enterprise />
         <FAQ />
       </main>
       <Footer />

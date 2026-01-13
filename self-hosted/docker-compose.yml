@@ -1,0 +1,149 @@
+# =============================================================================
+# WatchLLM Self-Hosted - Docker Compose Configuration
+# =============================================================================
+# 
+# Quick Start:
+#   1. Copy .env.example to .env and configure your settings
+#   2. Run: docker-compose up -d
+#   3. Access: http://localhost:3000
+#
+# For production, use: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # WatchLLM Application
+  # ===========================================================================
+  watchllm:
+    build:
+      context: ..
+      dockerfile: self-hosted/Dockerfile
+    image: watchllm:latest
+    container_name: watchllm-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - WATCHLLM_MODE=self_hosted
+      - DATABASE_URL=postgresql://watchllm:${POSTGRES_PASSWORD:-watchllm}@postgres:5432/watchllm
+      - REDIS_URL=redis://redis:6379
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-watchllm}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-watchllm}
+      - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE:-watchllm}
+    env_file:
+      - .env
+    volumes:
+      - watchllm-data:/var/lib/watchllm/data
+      - watchllm-logs:/var/lib/watchllm/logs
+      - ./license.json:/etc/watchllm/license.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - watchllm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===========================================================================
+  # PostgreSQL Database
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: watchllm-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=watchllm
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-watchllm}
+      - POSTGRES_DB=watchllm
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - watchllm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watchllm -d watchllm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
+  # Redis (Caching & Rate Limiting)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: watchllm-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - watchllm-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
+  # ClickHouse (Analytics - Optional)
+  # ===========================================================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:24-alpine
+    container_name: watchllm-clickhouse
+    restart: unless-stopped
+    environment:
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-watchllm}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-watchllm}
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+      - ./clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - watchllm-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  watchllm-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  watchllm-data:
+    driver: local
+  watchllm-logs:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  clickhouse-data:
+    driver: local
+  clickhouse-logs:
+    driver: local
