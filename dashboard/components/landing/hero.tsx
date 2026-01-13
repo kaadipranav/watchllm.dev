@@ -44,7 +44,7 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
 function SavingsStatTicker() {
   return (
     <motion.div
-      className="inline-grid grid-cols-1 sm:grid-cols-3 gap-12 px-12 py-8 rounded-2xl border border-green-500/20 bg-green-500/5 backdrop-blur-sm mt-12"
+      className="inline-grid grid-cols-1 sm:grid-cols-3 gap-12 px-12 py-8 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm mt-12"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.4 }}
@@ -239,7 +239,7 @@ export function Hero() {
             >
               <div className="text-lg sm:text-xl text-text-secondary font-medium leading-relaxed text-center">
                 <div>WatchLLM caches similar API requests so you never pay twice for the same answer.</div>
-                <div className="mt-2 text-green-400">See your savings in real-time. Setup takes 5 minutes.</div>
+                <div className="mt-2 text-text-primary">See your savings in real-time. Setup takes 5 minutes.</div>
               </div>
             </motion.div>
           </motion.div>
@@ -253,18 +253,19 @@ export function Hero() {
           >
             <Button
               asChild
+              variant="ghost"
               size="lg"
-              className="h-14 px-10 text-lg min-w-[220px] relative overflow-hidden group shadow-lg shadow-green-500/10 bg-green-500 text-white hover:bg-green-400"
+              className="h-14 px-10 text-lg min-w-[220px] !bg-white !text-black hover:!bg-white/90 font-semibold shadow-lg shadow-white/10 border border-white/20"
             >
               <Link href="/signup">
-                <span className="relative z-10 font-semibold">Start Saving — Free</span>
+                <span className="relative z-10">Start Saving — Free</span>
               </Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="h-14 px-10 text-lg min-w-[220px] border-2 border-text-secondary/30 hover:border-white/50 hover:bg-white/5 text-text-primary transition-all"
+              className="h-14 px-10 text-lg min-w-[220px] border-2 border-white/20 hover:border-white/40 hover:bg-white/5 text-text-primary transition-all"
             >
               <Link href="#how-it-works">See How It Works</Link>
             </Button>

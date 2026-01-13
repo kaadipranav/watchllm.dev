@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/landing/providers";
+import { PowerFeatures } from "@/components/landing/power-features";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { PlatformShowcase } from "@/components/landing/platform-showcase";
 import { Testimonials } from "@/components/landing/testimonials";
@@ -115,6 +116,7 @@ export default function HomePage() {
         </Suspense>
         <Hero />
         <Providers />
+        <PowerFeatures />
         <HowItWorks />
         <PlatformShowcase />
         <Features />
