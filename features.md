@@ -1,274 +1,104 @@
-# WatchLLM - Complete Feature Breakdown
+# WatchLLM - Complete Feature Log
 
-## 🏗️ **WatchLLM - Complete Feature Breakdown**
-
-### **Core Product: AI API Cost Optimization Platform**
-**Tagline:** "Reduce your OpenAI costs by 40-70% through semantic caching"
+This document serves as a comprehensive inventory of all features currently implemented in WatchLLM. This log is designed to support marketing efforts, technical audits, and product roadmap planning.
 
 ---
 
-## **🎯 Core Features**
+## 🏗️ 1. Core Proxy & Performance
+*High-performance middleware for AI applications.*
 
-### **1. Semantic Caching Engine**
-- **Intelligent Prompt Matching**: Uses embeddings to find semantically similar requests
-- **Zero-Cost Cache Hits**: Returns cached responses with `x-WatchLLM-cached: HIT` header
-- **Configurable TTL**: Default 3600s (1 hour) cache expiration
-- **Multi-Provider Support**: OpenAI, Anthropic, Groq compatible
-- **Cost Savings**: Proven 40-70% reduction in API costs
-
-### **2. Drop-in API Compatibility**
-- **OpenAI-Compatible**: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`
-- **Base URL Replacement**: Change `baseURL` to `https://proxy.watchllm.dev/v1`
-- **API Key Format**: `lgw_proj_[32-char-hash]` or `lgw_test_[32-char-hash]`
-- **Transparent Proxying**: Maintains full OpenAI API compatibility
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Drop-in OpenAI Proxy** | Complete parity with OpenAI `/v1/chat/completions` and `/v1/embeddings` endpoints. | Change 1 line of code (`baseURL`) to integrate. |
+| **Global Edge Deployment** | Requests are proxied at the network edge for ultra-low latency. | Cloudflare Workers (Edge Computing). |
+| **Provider Agnostic Routing** | Unified API for OpenAI, Anthropic, Groq, and OpenRouter. | Standardized response schema mapping. |
+| **Semantic Caching Engine** | Embedding-based cache that recognizes semantically similar prompts. | Redis + Vector Similarity Search (HNSW). |
+| **Zero-Latency Cache Hits** | Instant retrieval of cached responses without hitting provider APIs. | `x-WatchLLM-cached: HIT` header support. |
+| **Configurable Cache TTL** | Granular control over how long data persists in the semantic cache. | Per-project TTL settings (default 3600s). |
+| **Smart Similarity Thresholds** | Tune the fuzziness of the semantic matching to balance quality vs. cost. | Variable similarity thresholding (0.0 to 1.0). |
 
 ---
 
-## **📊 Dashboard & Analytics**
+## 🔍 2. Observability & Debugging
+*Deep visibility into complex AI and Agentic workflows.*
 
-### **Main Dashboard**
-- **"Wasted LLM Spend" Metric**: Signature stat showing money lost to cache misses
-- **7-Day Usage Chart**: Requests, cache hits, costs, and savings visualization
-- **Project Overview Cards**: API keys count, monthly usage, cache hit rate, limits
-- **Observability Readiness**: Shows projects with/without provider keys
-- **Export Cost Report**: JSON export with 7-day summary and insights
-
-### **Actionable Insights Engine**
-- **Wasted Spend Insight**: Calculates money lost to cache misses
-- **Cost-Wasting Endpoints**: Identifies worst-performing API endpoints
-- **Over-Prompted Requests**: Finds requests exceeding token thresholds
-- **Cache Threshold Optimization**: Suggests optimal TTL settings
-- **Model Swap Suggestions**: Recommends cheaper model alternatives
-
-### **Usage Analytics Page**
-- **Time Range Filtering**: 7d, 30d, 90d views
-- **Interactive Charts**: Cost, requests, latency over time
-- **Model Breakdown**: Usage and costs by AI model
-- **Recent Requests Table**: Last 5 requests with details
-- **Export Functionality**: CSV/JSON export options
-
-### **Observability Suite**
-- **Request Logs**: Real-time logging of all LLM requests
-- **Analytics Dashboard**: Aggregated metrics and trends
-- **Traces**: Detailed request execution flow (planned)
-- **30-Day Retention**: Partitioned ClickHouse storage
-- **Provider-Specific Metrics**: OpenAI, Anthropic, Groq breakdowns
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Agent Debugger (V1)** | Visual timeline of multi-step agent runs, traces, and spans. | Chronological trace of tool calls & reasoning. |
+| **Cost Per Decision** | Attributed dollar cost to every single step in an agent workflow. | Per-span cost calculation (Input/Output tokens). |
+| **Loop Detection** | Automatically flags agents stuck in infinite tool-calling loops. | Anomaly detection in execution patterns. |
+| **LLM Reasoning Explainer** | Human-readable explanations for *why* an agent made a specific choice. | Optional "Self-Correction" LLM analysis. |
+| **Real-time Request Logs** | Searchable log of every API call with raw payloads and metadata. | 30-day data retention via ClickHouse. |
+| **PII & Sensitive Data Redaction** | Auto-scrubs names, emails, and CC numbers from captured logs. | Pattern-based redaction engine for compliance. |
+| **Latency Tracking** | Millisecond-level precision tracking of provider response times. | Avg. Latency (ms) trend visualization. |
 
 ---
 
-## **🔐 Authentication & Security**
+## 📊 3. Analytics & Business Intelligence
+*Data-driven insights for AI product management.*
 
-### **User Management**
-- **Supabase Auth**: Email/password authentication
-- **Profile Management**: Name, email updates
-- **Password Changes**: Secure password reset
-- **Account Deletion**: Complete data removal
-
-### **API Key Management**
-- **Project-Based Keys**: Keys scoped to specific projects
-- **Key Reveal**: One-time key visibility with masking
-- **Active/Inactive Status**: Enable/disable keys
-- **Usage Tracking**: Last used timestamps
-- **Key Prefix Display**: Security-focused key masking
-
-### **Provider Key Management (BYOK)**
-- **Bring Your Own Keys**: Store OpenAI/Anthropic/Groq keys securely
-- **Per-Project Keys**: Different keys for different projects
-- **Encrypted Storage**: Secure key storage in database
-- **Health Checks**: Provider API connectivity validation
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Wasted LLM Spend Metric** | Signature "Oh Sh*t" metric showing exactly how much money is lost to cache misses. | Potential Cost vs Actual Cost calculation. |
+| **ML-Powered Forecasting** | 30-day cost projections with confidence bands and trend analysis. | Time-series forecasting lib (Exponential Smoothing). |
+| **Cost Anomaly Detection** | Real-time alerts for unexpected spend spikes above baseline. | Statistical deviation monitoring. |
+| **Actionable Insights Engine** | Automated identification of cost-wasting endpoints and models. | Heuristic-based optimization engine. |
+| **Model Swap Suggestions** | Recommends cheaper alternatives (e.g., Llama/GPT-3.5) for specific use cases. | Use-case classification (Summarization vs Coding). |
+| **Token Usage Breakdown** | Detailed analysis of Input vs Output token ratios and volumes. | Usage by model and provider (Stacked Bar Charts). |
+| **Pre-calculated Aggregations** | High-performance dashboard charts that load in milliseconds. | Hourly/Daily ClickHouse pre-aggregation jobs. |
 
 ---
 
-## **💰 Billing & Subscriptions**
+## 🧪 4. A/B Testing & Evaluation
+*Side-by-side optimization of models and prompts.*
 
-### **Pricing Tiers**
-- **Free**: 50K requests/month, 3 projects, basic features
-- **Starter**: 250K requests/month, 5 projects, $29/month
-- **Pro**: 1M requests/month, unlimited projects, $99/month
-
-### **Payment Processing**
-- **Stripe Integration**: Checkout and customer portal
-- **Whop Support**: Alternative payment provider
-- **Subscription Management**: Upgrade/downgrade handling
-- **Prorated Billing**: Fair billing for plan changes
-
-### **Usage Limits & Alerts**
-- **Rate Limiting**: 10-200 requests/minute by plan
-- **Quota Enforcement**: Hard limits on monthly usage
-- **Usage Alerts**: Email notifications at 80% usage
-- **Billing Alerts**: Failed payment notifications
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Traffic Splitting (A/B)** | Split production traffic between multiple models (e.g., GPT-4 vs Claude-3). | Weighted random traffic distribution. |
+| **Statistical Quality Metrics** | Compare cost, latency, and response quality across test variants. | Side-by-side performance table. |
+| **Test Variant Management** | Enable/Disable model variants without re-deploying your app. | Dynamic routing configuration in dashboard. |
+| **History & Learnings Log** | Track previous test results to build internal model intuition. | Historical test data archival. |
 
 ---
 
-## **🔄 A/B Testing Framework**
+## 🛡️ 5. Enterprise & Security
+*Built for scale, privacy, and regulatory compliance.*
 
-### **Model Comparison**
-- **Variant Configuration**: Up to multiple model variants
-- **Traffic Splitting**: Configurable percentage-based routing
-- **Statistical Significance**: Automated A/B test analysis
-- **Performance Metrics**: Cost, latency, quality comparisons
-
-### **Test Management**
-- **Per-Project Tests**: Isolated testing environments
-- **Real-time Results**: Live performance monitoring
-- **Automated Recommendations**: Best model suggestions
-- **Historical Tracking**: Past test results and learnings
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Self-Hosted / VPC Deployment** | Deploy WatchLLM entirely within your own cloud or on-prem environment. | Docker-ready implementation. |
+| **100% Data Isolation** | Zero data leaves your VPC; full control over analytics and telemetry. | Air-gapped compatible mode. |
+| **Cryptographic License Check** | Secure, offline license validation for enterprise installations. | Ed25519 Signed License Files. |
+| **Bring Your Own Keys (BYOK)** | Securely manage your own provider keys (OpenAI/Anthropic/Groq). | AES-256 encrypted database storage. |
+| **Project-Based RBAC** | Isolation of API keys, logs, and settings per project/environment. | Project-scoped security policies. |
+| **GDPR/HIPAA Compliance Prep** | Tools for data deletion, redaction, and access control. | Automated data lifecycle management. |
 
 ---
 
-## **📧 Email Notification System**
+## 💰 6. Billing & Quota Management
+*Operational control over AI spend.*
 
-### **Transactional Emails**
-- **Welcome Emails**: Onboarding with setup instructions
-- **Usage Alerts**: 80% quota threshold notifications
-- **Billing Alerts**: Failed payment recovery emails
-- **Weekly Reports**: Automated usage summaries
-
-### **Email Templates**
-- **Resend Integration**: Professional email delivery
-- **Custom Branding**: WatchLLM-branded templates
-- **Dynamic Content**: Personalized data and recommendations
-- **Responsive Design**: Mobile-friendly email layouts
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Tiered Pricing (SaaS)** | Multi-tier plans (Free, Starter, Pro) based on request volume. | Stripe/Whop integration. |
+| **Usage Alerts & Quotas** | Automatic email notifications when projects hit 80% of their monthly limit. | Resend transactional email integration. |
+| **Distributed Rate Limiting** | Prevent accidental spend spikes with per-key rate limits. | Edge-based token bucket rate limiting. |
+| **Prorated Billing** | Fair subscription handling for mid-month upgrades/downgrades. | Stripe Customer Portal integration. |
+| **Failed Payment Recovery** | Automated workflows to handle billing issues without service interruption. | Dunning management system. |
 
 ---
 
-## **⚙️ Configuration & Settings**
+## 🛠️ 7. Developer Experience (DX)
+*Tools to make integration and maintenance effortless.*
 
-### **Smart Defaults**
-- **Observability Enabled**: Auto-enabled for all projects
-- **30-Day Retention**: Default data retention policy
-- **Cache TTL**: 3600s default expiration
-- **Alerts Enabled**: Automatic usage notifications
-
-### **Project Configuration**
-- **Custom Cache Settings**: TTL and threshold tuning
-- **Provider Preferences**: Default model selections
-- **Rate Limit Overrides**: Plan-based custom limits
-- **A/B Testing Config**: Variant and traffic settings
+| Feature | Description | Key Metric / Tech |
+| :--- | :--- | :--- |
+| **Universal Health Monitoring** | Real-time status checks for all provider API keys. | Automated heartbeat validation. |
+| **Python/JS/Go SDKs** | Lightweight client libraries for zero-friction integration. | REST-parity SDK design. |
+| **Mock Event Generation** | Fixtures and tools for testing observability without live traffic. | Event injection API. |
+| **Monochromatic Design System** | High-performance, high-contrast dashboard for focused engineering. | Dark-mode native, minimal color use. |
+| **Interactive Infrastructure Diagrams** | Visualizes complex data flows (Self-hosted vs SaaS). | SVG-based interactive diagrams. |
 
 ---
 
-## **🔍 Observability & Monitoring**
-
-### **Real-time Event Streaming**
-- **ClickHouse Analytics**: High-performance time-series database
-- **Event Types**: Prompt calls, tool calls, agent steps, errors
-- **PII Redaction**: Automatic sensitive data removal
-- **Custom Tags**: Flexible event categorization
-
-### **Performance Monitoring**
-- **Latency Tracking**: Request-to-response timing
-- **Error Rate Monitoring**: Success/failure percentages
-- **Cost Analytics**: Real-time spend monitoring
-- **Model Performance**: Per-model metrics and comparisons
-
----
-
-## **🛠️ Developer Tools**
-
-### **Python SDK**
-- **Easy Integration**: `pip install watchllm`
-- **Automatic Instrumentation**: Zero-code observability
-- **Event Batching**: Efficient data transmission
-- **Error Handling**: Robust failure recovery
-
-### **REST API**
-- **Analytics Endpoints**: `/v1/analytics/*` for metrics
-- **Event Ingestion**: `/v1/projects/*/events` for observability
-- **Health Checks**: `/health` endpoint monitoring
-- **CORS Support**: Configurable cross-origin access
-
-### **Webhook Support**
-- **Event Notifications**: Real-time webhook delivery
-- **Configurable Endpoints**: Custom webhook URLs
-- **Retry Logic**: Failed delivery handling
-- **Security**: Webhook signature validation
-
----
-
-## **🏗️ Infrastructure & Backend**
-
-### **Cloudflare Worker Proxy**
-- **Global Edge Deployment**: Worldwide low-latency routing
-- **Rate Limiting**: Distributed request throttling
-- **Request Validation**: Comprehensive input sanitization
-- **Error Handling**: Graceful failure management
-
-### **Database Architecture**
-- **Supabase PostgreSQL**: User data, projects, API keys
-- **ClickHouse Analytics**: High-volume observability data
-- **Redis Caching**: Semantic cache storage
-- **Partitioned Storage**: Month-based data partitioning
-
-### **Queue Processing**
-- **Background Jobs**: Async event processing
-- **Batch Operations**: Efficient bulk data handling
-- **Retry Mechanisms**: Failed job recovery
-- **Monitoring**: Queue health and performance metrics
-
----
-
-## **📈 Business Intelligence**
-
-### **Usage Analytics**
-- **Revenue Metrics**: Total spend and savings tracking
-- **User Segmentation**: Plan-based user analysis
-- **Growth Metrics**: Registration and upgrade funnels
-- **Churn Analysis**: Subscription lifecycle tracking
-
-### **Performance KPIs**
-- **Cache Hit Rates**: Effectiveness of semantic caching
-- **Cost Savings**: Dollar-value optimization metrics
-- **User Engagement**: Feature adoption and usage patterns
-- **System Reliability**: Uptime and error rate monitoring
-
----
-
-## **🔧 Administrative Features**
-
-### **System Health Monitoring**
-- **Service Status**: Worker, database, cache health checks
-- **Performance Metrics**: Latency and throughput monitoring
-- **Error Tracking**: Sentry integration for error reporting
-- **Log Aggregation**: Centralized logging system
-
-### **Data Management**
-- **Retention Policies**: Configurable data lifecycle management
-- **Backup Systems**: Automated data backup procedures
-- **Data Export**: User data portability features
-- **GDPR Compliance**: Data deletion and access controls
-
----
-
-## **🚀 Deployment & DevOps**
-
-### **Multi-Environment Support**
-- **Development**: Local development setup
-- **Staging**: Pre-production testing environment
-- **Production**: Live customer-facing deployment
-
-### **CI/CD Pipeline**
-- **Automated Testing**: Comprehensive test suites
-- **Build Optimization**: Efficient deployment bundles
-- **Environment Config**: Secure secret management
-- **Rollback Support**: Safe deployment reversion
-
----
-
-## **📚 Documentation & Support**
-
-### **In-App Documentation**
-- **Quick Start Guide**: 5-minute setup instructions
-- **API Reference**: Complete endpoint documentation
-- **Integration Guides**: SDK and API usage examples
-- **Troubleshooting**: Common issue resolution guides
-
-### **Community Resources**
-- **GitHub Repository**: Open-source codebase
-- **Discord Community**: User discussion and support
-- **Blog/Content**: Educational AI optimization content
-- **Status Page**: Real-time service availability
-
----
-
-This comprehensive feature set makes WatchLLM a complete AI cost optimization platform that goes beyond simple caching to provide enterprise-grade observability, business intelligence, and developer experience features. The application serves as both a cost-saving proxy and a full analytics platform for AI-powered applications.
+*This inventory is current as of January 13, 2026. WatchLLM is a full-stack AI Optimization & Observability platform.*
