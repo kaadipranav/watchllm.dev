@@ -11,6 +11,7 @@ import type { Env } from '../types';
 import type { ObservabilityEvent, EventQuery } from '../../../packages/shared/src/observability/types';
 import { createObservabilityIngestion } from './ingestion';
 import { validateObservabilityEvent, validateBatchObservabilityEvents } from '../lib/validation';
+import { createAgentDebugIngestion, type AgentRunInput, type AgentStep } from './agent-debug';
 
 // Create the observability sub-app with proper typing
 const observabilityApp = new Hono<{ 
@@ -290,6 +291,139 @@ observabilityApp.get('/v1/projects/:projectId/integrations', async (c) => {
     return c.json({ 
       error: error instanceof Error ? error.message : 'Failed to fetch integrations' 
     }, 500);
+  }
+});
+
+// ============================================================================
+// Agent Debugger Routes
+// ============================================================================
+
+/**
+ * POST /v1/agent-runs
+ * Ingest a complete agent run with all steps
+ * 
+ * @feature AGENT_DEBUGGER_V1
+ */
+observabilityApp.post('/v1/agent-runs', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // Validate required fields
+    if (!body.run_id || typeof body.run_id !== 'string') {
+      return c.json({ error: 'run_id is required and must be a string' }, 400);
+    }
+    if (!body.project_id || typeof body.project_id !== 'string') {
+      return c.json({ error: 'project_id is required and must be a string' }, 400);
+    }
+    if (!body.agent_name || typeof body.agent_name !== 'string') {
+      return c.json({ error: 'agent_name is required and must be a string' }, 400);
+    }
+    if (!body.started_at || typeof body.started_at !== 'string') {
+      return c.json({ error: 'started_at is required and must be an ISO8601 timestamp' }, 400);
+    }
+    if (!body.status || !['running', 'completed', 'failed', 'cancelled'].includes(body.status)) {
+      return c.json({ error: 'status is required and must be one of: running, completed, failed, cancelled' }, 400);
+    }
+    if (!Array.isArray(body.steps)) {
+      return c.json({ error: 'steps is required and must be an array' }, 400);
+    }
+
+    // Validate steps
+    const validStepTypes = ['user_input', 'decision', 'tool_call', 'tool_result', 'model_response', 'error', 'retry'];
+    for (let i = 0; i < body.steps.length; i++) {
+      const step = body.steps[i];
+      if (typeof step.step_index !== 'number') {
+        return c.json({ error: `steps[${i}].step_index is required and must be a number` }, 400);
+      }
+      if (!step.timestamp || typeof step.timestamp !== 'string') {
+        return c.json({ error: `steps[${i}].timestamp is required and must be an ISO8601 timestamp` }, 400);
+      }
+      if (!step.type || !validStepTypes.includes(step.type)) {
+        return c.json({ error: `steps[${i}].type is required and must be one of: ${validStepTypes.join(', ')}` }, 400);
+      }
+    }
+
+    const agentRun: AgentRunInput = {
+      run_id: body.run_id,
+      started_at: body.started_at,
+      ended_at: body.ended_at,
+      user_id: body.user_id,
+      project_id: body.project_id,
+      agent_name: body.agent_name,
+      status: body.status,
+      steps: body.steps as AgentStep[],
+      total_cost_usd: body.total_cost_usd,
+      meta: body.meta,
+    };
+
+    const ingestion = createAgentDebugIngestion(c.env);
+    const result = await ingestion.ingestRun(agentRun, apiKey);
+
+    if (result.success) {
+      return c.json({
+        success: true,
+        run_id: result.run_id,
+        flags: result.flags,
+        message: 'Agent run ingested successfully',
+      }, 201);
+    } else {
+      return c.json({ error: result.error }, 400);
+    }
+  } catch (error) {
+    console.error('[AgentRuns] Unexpected error:', error);
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/agent-runs/:runId/steps
+ * Add steps to an existing agent run (for streaming)
+ * 
+ * @feature AGENT_DEBUGGER_V1
+ */
+observabilityApp.post('/v1/agent-runs/:runId/steps', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!Array.isArray(body.steps)) {
+      return c.json({ error: 'steps is required and must be an array' }, 400);
+    }
+
+    // For now, return not implemented - full streaming support is Phase 2
+    return c.json({
+      error: 'Streaming steps not yet implemented. Please send complete runs to POST /v1/agent-runs',
+      hint: 'Send all steps in the initial POST /v1/agent-runs request',
+    }, 501);
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * PATCH /v1/agent-runs/:runId
+ * Update an agent run status (e.g., mark as completed)
+ * 
+ * @feature AGENT_DEBUGGER_V1
+ */
+observabilityApp.patch('/v1/agent-runs/:runId', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // For now, return not implemented - status updates are Phase 2
+    return c.json({
+      error: 'Run updates not yet implemented. Please send complete runs to POST /v1/agent-runs',
+      hint: 'Include ended_at and final status in the initial POST /v1/agent-runs request',
+    }, 501);
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
   }
 });
 
