@@ -279,6 +279,11 @@ export class AgentDebugIngestion {
         return { success: false, error: 'Invalid API key or project access' };
       }
 
+      // Use the canonical project_id from the database if available (handles mismatches)
+      if (authResult.projectId && authResult.projectId !== run.project_id) {
+        run.project_id = authResult.projectId;
+      }
+
       // 2. Sanitize PII from steps
       const sanitizedSteps = run.steps.map(sanitizeStep);
       const sanitizedRun = { ...run, steps: sanitizedSteps };
@@ -319,10 +324,12 @@ export class AgentDebugIngestion {
     apiKey: string,
     projectId: string
   ): Promise<{ valid: boolean; userId?: string; projectId?: string }> {
-    // Test key bypass for development
-    if (apiKey === 'test-key') {
+    // Test key bypass for development - REMOVED to enforce real DB validation
+    /*
+    if (apiKey === 'test-key' || apiKey === 'lgw_proj_625a37ef586d9d16676141cbc93010cacda50f56fe8d146f77319b02bb83a33b') {
       return { valid: true, userId: 'test-user', projectId };
     }
+    */
 
     try {
       const url = new URL(`${this.env.SUPABASE_URL}/rest/v1/api_keys`);
@@ -348,9 +355,10 @@ export class AgentDebugIngestion {
       }
 
       // Check project ID matches
-      if (data.project_id !== projectId) {
-        return { valid: false };
-      }
+      // Strict check disabled to allow auto-correction of project IDs
+      // if (data.project_id !== projectId) {
+      //   return { valid: false };
+      // }
 
       return {
         valid: true,
@@ -550,12 +558,12 @@ export class AgentDebugIngestion {
       step_index: step.step_index,
       timestamp: step.timestamp,
       type: step.type,
-      summary: step.summary,
-      decision: step.decision,
-      tool: step.tool,
+      summary: step.summary || null,
+      decision: step.decision || null,
+      tool: step.tool || null,
       tool_args: step.tool_args ? JSON.stringify(step.tool_args) : null,
-      tool_output_summary: step.tool_output_summary,
-      raw: step.raw,
+      tool_output_summary: step.tool_output_summary || null,
+      raw: step.raw || null,
       raw_truncated: step.raw ? step.raw.length > 5000 : false,
       token_cost: step.token_cost || 0,
       api_cost_usd: step.api_cost_usd || 0,
@@ -577,7 +585,7 @@ export class AgentDebugIngestion {
     if (!stepsResponse.ok) {
       const errorText = await stepsResponse.text();
       console.error('[AgentDebugIngestion] Failed to insert steps:', errorText);
-      // Don't throw - log record was created, steps are supplementary
+      throw new Error(`Failed to insert agent_debug_steps: ${errorText}`);
     }
 
     console.log(`[AgentDebugIngestion] Wrote run ${run.run_id} with ${run.steps.length} steps to Supabase`);
