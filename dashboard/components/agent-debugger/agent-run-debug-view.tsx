@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -36,6 +36,7 @@ import type {
   StepType,
   CostSummary,
 } from '@/lib/agent-debugger';
+import LoadingScreen from '@/components/loading-screen';
 
 /**
  * Agent Run Debug View Component
@@ -130,9 +131,11 @@ export default function AgentRunDebugView({ runId, isFixture = false }: AgentRun
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <LoadingScreen
+        title="Replaying agent decisions"
+        subtitle="Streaming telemetry"
+        detail="Rendering each step along with costs and flags."
+      />
     );
   }
 

@@ -328,8 +328,38 @@ export async function handleChatCompletions(
       }
     }
 
-    // Make request to provider
-    const response = await provider.chatCompletion(request, project.id);
+    // MOCK MODE FOR TESTING
+    let response: ChatCompletionResponse & { _isFreeModel?: boolean };
+
+    if (request.model.startsWith('test/mock-model')) {
+       // Mock Provider for Testing
+       await new Promise(resolve => setTimeout(resolve, 200)); // Simulate latency
+       response = {
+         id: 'chatcmpl-mock-' + Date.now(),
+         object: 'chat.completion',
+         created: Math.floor(Date.now() / 1000),
+         model: request.model,
+         choices: [
+           {
+             index: 0,
+             message: {
+               role: 'assistant',
+               content: `Mock response for: ${flattenChatText(request.messages).substring(0, 30)}...`,
+             },
+             finish_reason: 'stop',
+           },
+         ],
+         usage: {
+           prompt_tokens: 10,
+           completion_tokens: 5,
+           total_tokens: 15,
+         },
+         _isFreeModel: true,
+       };
+    } else {
+       response = await provider.chatCompletion(request, project.id);
+    }
+
     const latency = Date.now() - startTime;
     const { _isFreeModel, ...cleanResponse } = response;
 
