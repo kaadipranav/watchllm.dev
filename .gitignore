@@ -52,6 +52,7 @@ LANDING_PAGE_AUDIT.md
 marketing_launch.txt
 CHANGELOG.md
 TASKS.md
+docs/
 
 # Git hooks
 .husky/

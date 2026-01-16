@@ -367,9 +367,17 @@ export class AgentDebugIngestion {
    * Write agent steps to ClickHouse as observability events
    */
   private async writeToClickHouse(run: AgentRunInput, userId: string): Promise<void> {
-    // Queue events for ClickHouse ingestion
+    // Queue events for ClickHouse ingestion (if available)
     if (!this.env.OBSERVABILITY_QUEUE) {
-      console.warn('[AgentDebugIngestion] OBSERVABILITY_QUEUE not available, skipping ClickHouse');
+      console.log('[AgentDebugIngestion] OBSERVABILITY_QUEUE not available, writing directly to ClickHouse');
+
+      // Fallback: Write directly to ClickHouse without queue
+      try {
+        await this.writeDirectToClickHouse(run, userId);
+      } catch (error) {
+        console.error('[AgentDebugIngestion] Failed to write directly to ClickHouse:', error);
+        // Continue - Supabase write will still work
+      }
       return;
     }
 
@@ -406,6 +414,86 @@ export class AgentDebugIngestion {
       } catch (error) {
         console.error('[AgentDebugIngestion] Failed to queue event:', error);
       }
+    }
+  }
+
+  /**
+   * Direct write to ClickHouse (fallback when queues not available)
+   */
+  private async writeDirectToClickHouse(run: AgentRunInput, userId: string): Promise<void> {
+    // Import ClickHouse client dynamically to avoid issues if not available
+    try {
+      const { createClickHouseClient } = await import('../lib/clickhouse');
+      const client = createClickHouseClient(this.env);
+
+      const rowsEvents: any[] = [];
+      const rowsAgentSteps: any[] = [];
+
+      for (const step of run.steps) {
+        const row = {
+          event_id: `${run.run_id}-step-${step.step_index}`,
+          project_id: run.project_id,
+          run_id: run.run_id,
+          timestamp: new Date(step.timestamp).getTime(),
+          user_id: userId,
+          tags: [],
+          env: 'production',
+          event_type: 'agent_step',
+          step_number: step.step_index,
+          step_name: step.summary || `Step ${step.step_index}`,
+          step_type: mapStepTypeToClickHouse(step.type),
+          step_input_data: JSON.stringify(step.tool_args || {}),
+          step_output_data: JSON.stringify(step.tool_output_summary ? { summary: step.tool_output_summary } : {}),
+          step_reasoning: step.decision || null,
+          step_context: JSON.stringify({}),
+          latency_ms: 0,
+          status: 'success',
+        };
+
+        // Add to agent_steps table
+        rowsAgentSteps.push({
+          event_id: row.event_id,
+          project_id: row.project_id,
+          run_id: row.run_id,
+          timestamp: row.timestamp,
+          step_number: row.step_number,
+          step_name: row.step_name,
+          step_type: row.step_type,
+          input_data: row.step_input_data,
+          output_data: row.step_output_data,
+          reasoning: row.step_reasoning,
+          context: row.step_context,
+          latency_ms: row.latency_ms,
+          status: row.status,
+        });
+
+        rowsEvents.push(row);
+      }
+
+      // Bulk insert
+      const inserts: Promise<any>[] = [];
+
+      if (rowsEvents.length > 0) {
+        inserts.push(client.insert({
+          table: 'events',
+          values: rowsEvents,
+          format: 'JSONEachRow',
+        }));
+      }
+
+      if (rowsAgentSteps.length > 0) {
+        inserts.push(client.insert({
+          table: 'agent_steps',
+          values: rowsAgentSteps,
+          format: 'JSONEachRow',
+        }));
+      }
+
+      await Promise.all(inserts);
+      console.log(`[AgentDebugIngestion] Wrote ${run.steps.length} steps directly to ClickHouse`);
+    } catch (error) {
+      console.error('[AgentDebugIngestion] ClickHouse direct write failed:', error);
+      throw error;
     }
   }
 
