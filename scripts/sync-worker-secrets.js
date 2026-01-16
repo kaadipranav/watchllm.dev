@@ -8,6 +8,7 @@ const WORKER_DIR = path.join(__dirname, '..', 'worker');
 const REQUIRED_KEYS = [
     'SUPABASE_URL',
     'SUPABASE_ANON_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
     'OPENROUTER_API_KEY',

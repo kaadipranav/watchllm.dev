@@ -36,3 +36,21 @@ ADD COLUMN IF NOT EXISTS cost_alerts_enabled BOOLEAN DEFAULT true;
 COMMENT ON TABLE sent_alerts IS 'Tracks sent cost alerts to prevent duplicate notifications';
 COMMENT ON COLUMN projects.cost_alert_threshold IS 'Custom threshold (percentage) at which to send cost alerts. Default 80%.';
 COMMENT ON COLUMN projects.cost_alerts_enabled IS 'Whether to send cost alerts for this project. Default true.';
+
+-- RLS
+ALTER TABLE sent_alerts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own sent alerts" ON sent_alerts;
+CREATE POLICY "Users can view own sent alerts"
+    ON sent_alerts FOR SELECT
+    USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own sent alerts" ON sent_alerts;
+CREATE POLICY "Users can insert own sent alerts"
+    ON sent_alerts FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own sent alerts" ON sent_alerts;
+CREATE POLICY "Users can delete own sent alerts"
+    ON sent_alerts FOR DELETE
+    USING (auth.uid() = user_id);
