@@ -41,6 +41,9 @@ export interface Flag {
   description: string;
   severity: 'info' | 'warning' | 'error';
   details?: Record<string, unknown>;
+  // For REPEATED_TOOL flags, show potential savings with WatchLLM caching
+  potential_savings_usd?: number;
+  watchllm_recommendation?: string;
 }
 
 // ============================================================================

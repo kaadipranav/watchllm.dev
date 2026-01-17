@@ -158,6 +158,7 @@ export class AgentDebugParser {
   detectStepFlags(steps: AgentStep[]): AgentStep[] {
     const result: AgentStep[] = [];
     const toolCallCounts: Record<string, number> = {};
+    const toolCallIndices: Record<string, number[]> = {};
     const typeTimestamps: Record<string, Date[]> = {};
 
     for (let i = 0; i < steps.length; i++) {
@@ -166,6 +167,10 @@ export class AgentDebugParser {
       // Track tool calls
       if (step.tool) {
         toolCallCounts[step.tool] = (toolCallCounts[step.tool] ?? 0) + 1;
+        if (!toolCallIndices[step.tool]) {
+          toolCallIndices[step.tool] = [];
+        }
+        toolCallIndices[step.tool].push(i);
       }
 
       // Track type timestamps for loop detection
@@ -190,14 +195,25 @@ export class AgentDebugParser {
 
       // Check for repeated tool
       if (step.tool && toolCallCounts[step.tool] >= this.config.repeated_tool_threshold) {
+        // Calculate potential savings if WatchLLM caching was used
+        const potentialSavings = this.calculatePotentialSavings(
+          step.tool,
+          toolCallIndices[step.tool],
+          steps
+        );
+        
         step.flags.push({
           type: 'repeated_tool',
-          description: `Tool "${step.tool}" called ${toolCallCounts[step.tool]} times`,
+          description: `Tool "${step.tool}" called ${toolCallCounts[step.tool]} times (loop detected)`,
           severity: 'warning',
           details: {
             tool: step.tool,
             count: toolCallCounts[step.tool],
           },
+          potential_savings_usd: potentialSavings,
+          watchllm_recommendation: potentialSavings > 0 
+            ? `WatchLLM would've cached this after the 1st call and saved $${potentialSavings.toFixed(6)} on calls 2-${toolCallCounts[step.tool]}`
+            : undefined,
         });
       }
 
