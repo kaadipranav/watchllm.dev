@@ -204,7 +204,7 @@ export default function AgentRunDebugView({ runId, isFixture = false }: AgentRun
               Potential savings: <strong>{formatCurrency(debug.summary.cost.potential_savings_usd)}/run</strong>
             </p>
             <p className="mb-3 text-sm">
-              With WatchLLM semantic caching enabled, these requests would've cost $0.
+              With WatchLLM semantic caching enabled, these requests would&apos;ve cost $0.
             </p>
             <div className="flex gap-2 mt-3">
               <Button 
@@ -335,7 +335,7 @@ function CostSummaryCard({ summary, onShowHowCalculated }: CostSummaryCardProps)
             value={formatCurrency(cost.potential_savings_usd || 0)}
             icon={<Sparkles className="h-4 w-4 text-blue-400" />}
             tooltip={`We detected ${cost.cacheable_requests || 0} requests that were semantically similar to previous requests. If routed through WatchLLM's semantic caching, these would've returned from cache at $0 cost.`}
-            highlight={cost.potential_savings_usd > 0 ? 'info' : undefined}
+            highlight={cost.potential_savings_usd > 0 ? 'success' : undefined}
           />
           
           {/* Cache Hit Rate */}
@@ -495,7 +495,7 @@ function StepCard({ step, index, isExpanded, onToggle, totalCost, cachingOpportu
           )}
           {cachingOpportunity && !step.cache_hit && (
             <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/30">
-              Could've been cached ({(cachingOpportunity.similarity_score * 100).toFixed(0)}%)
+              Could&apos;ve been cached ({(cachingOpportunity.similarity_score * 100).toFixed(0)}%)
             </Badge>
           )}
           <div className="text-right min-w-[80px]">

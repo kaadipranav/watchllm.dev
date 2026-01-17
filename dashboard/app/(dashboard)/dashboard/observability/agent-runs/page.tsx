@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import LoadingScreen from '@/components/loading-screen';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -322,29 +323,7 @@ export default function AgentRunsPage() {
             </div>
           </CardContent>
         </Card>
-      "use client";
-
-      import { useState, useEffect } from 'react';
-      import Link from 'next/link';
-
-      import LoadingScreen from '@/components/loading-screen';
-      import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-      import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-      import { Badge } from '@/components/ui/badge';
-      import { Button } from '@/components/ui/button';
-      import { Input } from '@/components/ui/input';
-      import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-      import {
-        Bug,
-        Search,
-        ChevronLeft,
-        ChevronRight,
-        AlertTriangle,
-        CheckCircle,
-        XCircle,
-        Clock,
-        DollarSign,
-        Loader2,
-      } from 'lucide-react';
-      import { formatRelativeTime, formatCurrency } from '@/lib/utils';
-      import type { AgentRunsListResponse, AgentRunListItem, RunStatus } from '@/lib/agent-debugger';
+      </section>
+    </div>
+  );
+}
