@@ -4,12 +4,6 @@ IMPLEMENT: Automatic agent trace extraction in the proxy
 - Auto-tag agentic workflows (multi-step, loops, branching)
 - Store hierarchical traces (parent requests → child tool calls)
 
-IMPLEMENT: Automatic agent trace extraction in the proxy
-- Parse OpenAI function calls → extract tool usage
-- Detect LangChain trace IDs from headers
-- Auto-tag agentic workflows (multi-step, loops, branching)
-- Store hierarchical traces (parent requests → child tool calls)
-
 IMPLEMENT: Agent-level cost attribution & ROI dashboard
 - Group requests by agent_name/run_id
 - Calculate per-agent: cost, task count, latency, errors

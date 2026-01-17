@@ -427,4 +427,377 @@ observabilityApp.patch('/v1/agent-runs/:runId', async (c) => {
   }
 });
 
+// ============================================================================
+// Agent Trace Replay Routes
+// ============================================================================
+
+import {
+  type RunSnapshot,
+  type StepSnapshot,
+  type ReplayModification,
+  type ReplayResult,
+  type RunComparison,
+  type ModificationRecord,
+  type ModificationStats,
+  createStepSnapshot,
+  prepareReplayRequest,
+  snapshotToRequest,
+  compareRuns,
+  calculateRunMetrics,
+  createModificationRecord,
+  calculateModificationStats,
+  RunSnapshotStore,
+  ModificationStore,
+} from '../lib/traceReplay';
+
+// In-memory stores for replay functionality
+// In production, these would be backed by Supabase/ClickHouse
+const snapshotStore = new RunSnapshotStore(1000);
+const modificationStore = new ModificationStore(5000);
+
+/**
+ * POST /v1/agent-runs/:runId/snapshot
+ * Store a full snapshot of an agent run for replay
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.post('/v1/agent-runs/:runId/snapshot', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // Validate required fields
+    if (!body.projectId || typeof body.projectId !== 'string') {
+      return c.json({ error: 'projectId is required' }, 400);
+    }
+    if (!body.agentName || typeof body.agentName !== 'string') {
+      return c.json({ error: 'agentName is required' }, 400);
+    }
+    if (!Array.isArray(body.steps)) {
+      return c.json({ error: 'steps array is required' }, 400);
+    }
+
+    // Create the snapshot
+    const snapshot: RunSnapshot = {
+      runId,
+      projectId: body.projectId,
+      agentName: body.agentName,
+      startedAt: body.startedAt || new Date().toISOString(),
+      endedAt: body.endedAt,
+      status: body.status || 'completed',
+      steps: body.steps as StepSnapshot[],
+      totalCostUsd: body.totalCostUsd || 0,
+      totalTokens: body.totalTokens || 0,
+      meta: body.meta,
+    };
+
+    snapshotStore.set(runId, snapshot);
+
+    return c.json({
+      success: true,
+      runId,
+      message: 'Snapshot stored successfully',
+      stepCount: snapshot.steps.length,
+    }, 201);
+  } catch (error) {
+    console.error('[TraceReplay] Snapshot storage error:', error);
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/agent-runs/:runId/snapshot
+ * Get the stored snapshot for an agent run
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.get('/v1/agent-runs/:runId/snapshot', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  const snapshot = snapshotStore.get(runId);
+  
+  if (!snapshot) {
+    return c.json({ error: 'Snapshot not found for this run' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    snapshot,
+    metrics: calculateRunMetrics(snapshot),
+  });
+});
+
+/**
+ * GET /v1/agent-runs/:runId/steps/:stepIndex/replay-context
+ * Get the context needed to replay from a specific step
+ * Returns the request snapshot and preceding context
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.get('/v1/agent-runs/:runId/steps/:stepIndex/replay-context', async (c) => {
+  const runId = c.req.param('runId');
+  const stepIndex = parseInt(c.req.param('stepIndex'), 10);
+  const apiKey = c.get('apiKey');
+
+  if (isNaN(stepIndex) || stepIndex < 0) {
+    return c.json({ error: 'stepIndex must be a non-negative integer' }, 400);
+  }
+
+  const snapshot = snapshotStore.get(runId);
+  
+  if (!snapshot) {
+    return c.json({ error: 'Snapshot not found for this run' }, 404);
+  }
+
+  if (stepIndex >= snapshot.steps.length) {
+    return c.json({ 
+      error: `Step ${stepIndex} not found. Run has ${snapshot.steps.length} steps (0-${snapshot.steps.length - 1})` 
+    }, 404);
+  }
+
+  const step = snapshot.steps[stepIndex];
+  const precedingSteps = snapshot.steps.slice(0, stepIndex);
+
+  return c.json({
+    success: true,
+    runId,
+    stepIndex,
+    step,
+    precedingSteps,
+    replayableRequest: snapshotToRequest(step.request),
+    hint: 'Use POST /v1/agent-runs/:runId/replay to execute a modified replay',
+  });
+});
+
+/**
+ * POST /v1/agent-runs/:runId/replay
+ * Replay an agent run from a specific step with optional modifications
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.post('/v1/agent-runs/:runId/replay', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // Validate required fields
+    const fromStepIndex = body.fromStepIndex;
+    if (typeof fromStepIndex !== 'number' || fromStepIndex < 0) {
+      return c.json({ error: 'fromStepIndex is required and must be a non-negative integer' }, 400);
+    }
+
+    const snapshot = snapshotStore.get(runId);
+    if (!snapshot) {
+      return c.json({ error: 'Snapshot not found for this run' }, 404);
+    }
+
+    if (fromStepIndex >= snapshot.steps.length) {
+      return c.json({ 
+        error: `Step ${fromStepIndex} not found. Run has ${snapshot.steps.length} steps` 
+      }, 404);
+    }
+
+    // Build modification object
+    const modification: ReplayModification = {
+      fromStepIndex,
+      modifiedMessages: body.modifiedMessages,
+      modifiedTools: body.modifiedTools,
+      modifiedParams: body.modifiedParams,
+      modificationDescription: body.description,
+    };
+
+    // Prepare the replay request
+    const replayRequest = prepareReplayRequest(snapshot, modification);
+    const replayRunId = `replay_${runId}_${Date.now().toString(36)}`;
+
+    // In a real implementation, we would:
+    // 1. Execute the replay request through the proxy
+    // 2. Continue the agent execution from this point
+    // 3. Store the new run snapshot
+    // 4. Create a modification record
+    
+    // For now, return the prepared request for client-side execution
+    return c.json({
+      success: true,
+      originalRunId: runId,
+      replayRunId,
+      fromStepIndex,
+      modification,
+      replayRequest: snapshotToRequest(replayRequest),
+      precedingSteps: snapshot.steps.slice(0, fromStepIndex),
+      instructions: {
+        step1: 'Execute replayRequest through your agent',
+        step2: 'Continue agent execution from this point',
+        step3: `POST the complete replay run to /v1/agent-runs/${replayRunId}/snapshot`,
+        step4: `POST to /v1/agent-runs/${runId}/compare with replayRunId to get comparison`,
+      },
+    });
+  } catch (error) {
+    console.error('[TraceReplay] Replay error:', error);
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/agent-runs/:runId/compare
+ * Compare original run with a replay run
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.post('/v1/agent-runs/:runId/compare', async (c) => {
+  const originalRunId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    const replayRunId = body.replayRunId;
+    if (!replayRunId || typeof replayRunId !== 'string') {
+      return c.json({ error: 'replayRunId is required' }, 400);
+    }
+
+    const originalSnapshot = snapshotStore.get(originalRunId);
+    if (!originalSnapshot) {
+      return c.json({ error: 'Original run snapshot not found' }, 404);
+    }
+
+    const replaySnapshot = snapshotStore.get(replayRunId);
+    if (!replaySnapshot) {
+      return c.json({ error: 'Replay run snapshot not found' }, 404);
+    }
+
+    // Perform comparison
+    const comparison = compareRuns(originalSnapshot, replaySnapshot);
+
+    // Store modification record if fromStepIndex is provided
+    if (typeof body.fromStepIndex === 'number') {
+      const modificationRecord = createModificationRecord(
+        originalRunId,
+        replayRunId,
+        body.fromStepIndex,
+        body.modification || { fromStepIndex: body.fromStepIndex },
+        comparison,
+        originalSnapshot.projectId,
+        body.userId
+      );
+      modificationStore.add(modificationRecord);
+    }
+
+    return c.json({
+      success: true,
+      originalRunId,
+      replayRunId,
+      comparison,
+      summary: {
+        improved: comparison.improved,
+        improvementScore: comparison.improvementScore,
+        costDiff: `${comparison.diff.costDiff >= 0 ? '+' : ''}$${comparison.diff.costDiff.toFixed(4)}`,
+        costDiffPercent: `${comparison.diff.costDiffPercent >= 0 ? '+' : ''}${comparison.diff.costDiffPercent.toFixed(1)}%`,
+        successRateDiff: `${comparison.diff.successRateDiff >= 0 ? '+' : ''}${comparison.diff.successRateDiff.toFixed(1)}%`,
+        stepsChanged: comparison.stepDiffs.filter(d => d.diffType !== 'unchanged').length,
+      },
+    });
+  } catch (error) {
+    console.error('[TraceReplay] Comparison error:', error);
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/agent-runs/:runId/modifications
+ * Get all modification records for an original run
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.get('/v1/agent-runs/:runId/modifications', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  const modifications = modificationStore.getByOriginalRun(runId);
+
+  return c.json({
+    success: true,
+    runId,
+    totalModifications: modifications.length,
+    modifications: modifications.map(m => ({
+      id: m.id,
+      replayRunId: m.replayRunId,
+      fromStepIndex: m.fromStepIndex,
+      successful: m.successful,
+      improvementScore: m.comparison.improvementScore,
+      userRating: m.userRating,
+      createdAt: m.createdAt,
+    })),
+  });
+});
+
+/**
+ * GET /v1/projects/:projectId/modification-stats
+ * Get modification statistics for a project
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.get('/v1/projects/:projectId/modification-stats', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const stats = modificationStore.getProjectStats(projectId);
+
+  return c.json({
+    success: true,
+    projectId,
+    stats: {
+      totalModifications: stats.totalModifications,
+      successfulModifications: stats.successfulModifications,
+      successRate: `${stats.successRate.toFixed(1)}%`,
+      avgImprovementScore: stats.avgImprovementScore.toFixed(3),
+      topModificationTypes: stats.topModificationTypes,
+    },
+  });
+});
+
+/**
+ * POST /v1/modifications/:modificationId/feedback
+ * Add user feedback (rating/notes) to a modification
+ * 
+ * @feature AGENT_TRACE_REPLAY
+ */
+observabilityApp.post('/v1/modifications/:modificationId/feedback', async (c) => {
+  const modificationId = c.req.param('modificationId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    const rating = body.rating;
+    if (rating !== undefined && (typeof rating !== 'number' || rating < 1 || rating > 5)) {
+      return c.json({ error: 'rating must be a number between 1 and 5' }, 400);
+    }
+
+    const notes = body.notes;
+    if (notes !== undefined && typeof notes !== 'string') {
+      return c.json({ error: 'notes must be a string' }, 400);
+    }
+
+    const success = modificationStore.updateUserFeedback(modificationId, rating, notes);
+    
+    if (!success) {
+      return c.json({ error: 'Modification not found' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      modificationId,
+      message: 'Feedback recorded',
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
 export default observabilityApp;
