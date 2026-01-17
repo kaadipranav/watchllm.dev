@@ -43,8 +43,8 @@ export class AgentDebugParser {
       ? run.steps.map(step => sanitizeStep(step, this.config))
       : run.steps;
 
-    // Calculate cost summary
-    const costSummary = this.calculateCostSummary(sanitizedSteps);
+    // Calculate cost summary (pass meta to extract caching opportunities)
+    const costSummary = this.calculateCostSummary(sanitizedSteps, run.meta);
 
     // Detect flags for each step
     const stepsWithFlags = this.detectStepFlags(sanitizedSteps);
@@ -70,7 +70,7 @@ export class AgentDebugParser {
   /**
    * Calculate cost summary from steps
    */
-  calculateCostSummary(steps: AgentStep[]): CostSummary {
+  calculateCostSummary(steps: AgentStep[], runMeta?: Record<string, unknown>): CostSummary {
     let totalCost = 0;
     let wastedSpend = 0;
     let amountSaved = 0;
@@ -113,11 +113,18 @@ export class AgentDebugParser {
 
     const cacheHitRate = cacheableSteps > 0 ? (cacheHits / cacheableSteps) * 100 : 0;
 
+    // Extract caching opportunities from run meta (set during ingestion)
+    const cachingOpportunities = (runMeta?.caching_opportunities as any[]) || [];
+    const potentialSavings = cachingOpportunities.reduce((sum, opp) => sum + (opp.saved_cost || 0), 0);
+
     return {
       total_cost_usd: roundCurrency(totalCost),
       wasted_spend_usd: roundCurrency(wastedSpend),
       amount_saved_usd: roundCurrency(amountSaved),
+      potential_savings_usd: roundCurrency(potentialSavings),
       cache_hit_rate: roundPercentage(cacheHitRate),
+      cacheable_requests: cachingOpportunities.length,
+      caching_opportunities: cachingOpportunities,
       breakdown: {
         tool_calls_cost: roundCurrency(toolCallsCost),
         model_responses_cost: roundCurrency(modelResponsesCost),

@@ -6,6 +6,11 @@
  */
 
 import type { Env } from '../types';
+import { 
+  serializeToolArgs, 
+  calculateJaccardSimilarity,
+  calculateTextSimilarity 
+} from '../lib/similarityUtils';
 
 // ============================================================================
 // Types
@@ -132,8 +137,8 @@ function detectFlags(run: AgentRunInput): Flag[] {
 
   // 4. Empty tool output detection
   for (const step of steps) {
-    if ((step.type === 'tool_call' || step.type === 'tool_result') && 
-        step.tool_output_summary === '' || step.tool_output_summary === null) {
+    if ((step.type === 'tool_call' || step.type === 'tool_result') &&
+      step.tool_output_summary === '' || step.tool_output_summary === null) {
       flags.push({
         type: 'empty_tool_output',
         severity: 'warning',
@@ -158,6 +163,124 @@ function detectFlags(run: AgentRunInput): Flag[] {
 }
 
 // ============================================================================
+// Caching Opportunities Detection
+// ============================================================================
+
+export interface CachingOpportunity {
+  step_index: number;
+  similarity_score: number;
+  original_cost: number;
+  saved_cost: number;
+  reference_step_index: number;
+  message: string;
+}
+
+const SIMILARITY_THRESHOLD = 0.90; // Same as semantic cache default
+
+/**
+ * Detect caching opportunities in agent run steps
+ * Compares tool_call and model_response steps to find similar requests
+ * 
+ * @param steps - Array of agent steps
+ * @returns Array of caching opportunities
+ */
+function detectCachingOpportunities(steps: AgentStep[]): CachingOpportunity[] {
+  const opportunities: CachingOpportunity[] = [];
+  
+  // Filter to only cacheable steps that weren't already cached
+  const cacheableSteps = steps.filter(step => 
+    (step.type === 'tool_call' || step.type === 'model_response') &&
+    !step.cache_hit &&
+    (step.api_cost_usd || 0) > 0
+  );
+  
+  // Group by tool name for tool_call steps (only compare same tools)
+  const toolGroups = new Map<string, AgentStep[]>();
+  const modelResponseSteps: AgentStep[] = [];
+  
+  for (const step of cacheableSteps) {
+    if (step.type === 'tool_call' && step.tool) {
+      const toolName = step.tool;
+      if (!toolGroups.has(toolName)) {
+        toolGroups.set(toolName, []);
+      }
+      toolGroups.get(toolName)!.push(step);
+    } else if (step.type === 'model_response') {
+      modelResponseSteps.push(step);
+    }
+  }
+  
+  // Compare tool_call steps within same tool group
+  for (const [toolName, toolSteps] of toolGroups) {
+    for (let i = 1; i < toolSteps.length; i++) {
+      const currentStep = toolSteps[i];
+      const currentArgs = serializeToolArgs(currentStep.tool_args);
+      
+      // Compare with all previous steps of same tool
+      for (let j = 0; j < i; j++) {
+        const referenceStep = toolSteps[j];
+        const referenceArgs = serializeToolArgs(referenceStep.tool_args);
+        
+        // Calculate similarity (using string similarity, embeddings can be added later)
+        const similarity = calculateJaccardSimilarity(currentArgs, referenceArgs);
+        
+        if (similarity >= SIMILARITY_THRESHOLD) {
+          const savedCost = currentStep.api_cost_usd || 0;
+          
+          opportunities.push({
+            step_index: currentStep.step_index,
+            similarity_score: similarity,
+            original_cost: savedCost,
+            saved_cost: savedCost,
+            reference_step_index: referenceStep.step_index,
+            message: `This request was ${(similarity * 100).toFixed(1)}% similar to step ${referenceStep.step_index}. With semantic caching, cost would've been $0.`,
+          });
+          
+          // Only match with first similar step to avoid duplicates
+          break;
+        }
+      }
+    }
+  }
+  
+  // Compare model_response steps by their raw content
+  for (let i = 1; i < modelResponseSteps.length; i++) {
+    const currentStep = modelResponseSteps[i];
+    const currentText = currentStep.raw || currentStep.summary || '';
+    
+    if (!currentText) continue;
+    
+    // Compare with all previous model_response steps
+    for (let j = 0; j < i; j++) {
+      const referenceStep = modelResponseSteps[j];
+      const referenceText = referenceStep.raw || referenceStep.summary || '';
+      
+      if (!referenceText) continue;
+      
+      const similarity = calculateJaccardSimilarity(currentText, referenceText);
+      
+      if (similarity >= SIMILARITY_THRESHOLD) {
+        const savedCost = currentStep.api_cost_usd || 0;
+        
+        opportunities.push({
+          step_index: currentStep.step_index,
+          similarity_score: similarity,
+          original_cost: savedCost,
+          saved_cost: savedCost,
+          reference_step_index: referenceStep.step_index,
+          message: `This model response was ${(similarity * 100).toFixed(1)}% similar to step ${referenceStep.step_index}. With semantic caching, cost would've been $0.`,
+        });
+        
+        // Only match with first similar step
+        break;
+      }
+    }
+  }
+  
+  return opportunities;
+}
+
+// ============================================================================
 // Cost Calculations
 // ============================================================================
 
@@ -165,7 +288,10 @@ interface CostSummary {
   total_cost_usd: number;
   wasted_spend_usd: number;
   amount_saved_usd: number;
+  potential_savings_usd: number;
   cache_hit_rate: number;
+  cacheable_requests: number;
+  caching_opportunities: CachingOpportunity[];
 }
 
 function calculateCosts(steps: AgentStep[]): CostSummary {
@@ -196,15 +322,22 @@ function calculateCosts(steps: AgentStep[]): CostSummary {
     }
   }
 
-  const cacheHitRate = cacheableSteps > 0 
-    ? Math.round((cacheHits / cacheableSteps) * 100) 
+  const cacheHitRate = cacheableSteps > 0
+    ? Math.round((cacheHits / cacheableSteps) * 100)
     : 0;
+
+  // Detect caching opportunities
+  const opportunities = detectCachingOpportunities(steps);
+  const potentialSavings = opportunities.reduce((sum, opp) => sum + opp.saved_cost, 0);
 
   return {
     total_cost_usd: totalCost,
     wasted_spend_usd: wastedSpend,
     amount_saved_usd: amountSaved,
+    potential_savings_usd: potentialSavings,
     cache_hit_rate: cacheHitRate,
+    cacheable_requests: opportunities.length,
+    caching_opportunities: opportunities,
   };
 }
 
@@ -236,7 +369,7 @@ function sanitizeString(str: string): string {
 
 function sanitizeStep(step: AgentStep): AgentStep {
   const sanitized = { ...step };
-  
+
   if (sanitized.summary) {
     sanitized.summary = sanitizeString(sanitized.summary);
   }
@@ -250,7 +383,7 @@ function sanitizeStep(step: AgentStep): AgentStep {
       sanitized.raw = sanitized.raw.substring(0, 5000) + '... [truncated]';
     }
   }
-  
+
   return sanitized;
 }
 
@@ -532,7 +665,12 @@ export class AgentDebugIngestion {
       cache_hit_rate: costs.cache_hit_rate,
       total_steps: run.steps.length,
       flags: JSON.stringify(flags.map(f => f.type)),
-      meta: JSON.stringify(run.meta || {}),
+      meta: JSON.stringify({
+        ...(run.meta || {}),
+        potential_savings_usd: costs.potential_savings_usd,
+        cacheable_requests: costs.cacheable_requests,
+        caching_opportunities: costs.caching_opportunities,
+      }),
     };
 
     const logResponse = await fetch(`${supabaseUrl}/rest/v1/agent_debug_logs`, {
