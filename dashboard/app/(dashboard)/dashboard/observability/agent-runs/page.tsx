@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import LoadingScreen from '@/components/loading-screen';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -122,6 +123,16 @@ export default function AgentRunsPage() {
       run.run_id.toLowerCase().includes(search)
     );
   });
+
+  if (loading) {
+    return (
+      <LoadingScreen
+        title="Loading agent runs"
+        subtitle="Syncing with WatchLLM"
+        detail="Collecting telemetry from the edge, Supabase, and ClickHouse."
+      />
+    );
+  }
 
   return (
     <div className="space-y-10 p-8">

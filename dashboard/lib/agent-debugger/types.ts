@@ -104,11 +104,23 @@ export interface AgentRun {
 // Debug View Model (computed from AgentRun)
 // ============================================================================
 
+export interface CachingOpportunity {
+  step_index: number;
+  similarity_score: number;
+  original_cost: number;
+  saved_cost: number;
+  reference_step_index: number;
+  message: string;
+}
+
 export interface CostSummary {
   total_cost_usd: number;
   wasted_spend_usd: number;
   amount_saved_usd: number;
+  potential_savings_usd: number;
   cache_hit_rate: number;
+  cacheable_requests: number;
+  caching_opportunities: CachingOpportunity[];
   
   // Breakdown
   breakdown: {

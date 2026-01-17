@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -27,6 +27,7 @@ import {
   RefreshCw,
   User,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { formatRelativeTime, formatCurrency, cn } from '@/lib/utils';
 import type { 
@@ -36,6 +37,7 @@ import type {
   StepType,
   CostSummary,
 } from '@/lib/agent-debugger';
+import LoadingScreen from '@/components/loading-screen';
 
 /**
  * Agent Run Debug View Component
@@ -130,9 +132,11 @@ export default function AgentRunDebugView({ runId, isFixture = false }: AgentRun
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <LoadingScreen
+        title="Replaying agent decisions"
+        subtitle="Streaming telemetry"
+        detail="Rendering each step along with costs and flags."
+      />
     );
   }
 
@@ -187,6 +191,46 @@ export default function AgentRunDebugView({ runId, isFixture = false }: AgentRun
         </div>
       </div>
 
+      {/* CTA Banner for Non-Proxy Users */}
+      {debug.summary.cost.potential_savings_usd > 0 && (
+        <Alert className="bg-blue-500/10 border-blue-500/30">
+          <Sparkles className="h-4 w-4 text-blue-400" />
+          <AlertTitle className="text-blue-400 font-semibold">
+            💡 Optimization Opportunity Detected
+          </AlertTitle>
+          <AlertDescription className="text-text-secondary mt-2">
+            <p className="mb-3">
+              We found <strong>{debug.summary.cost.cacheable_requests}</strong> request{debug.summary.cost.cacheable_requests !== 1 ? 's' : ''} that could be cached.
+              Potential savings: <strong>{formatCurrency(debug.summary.cost.potential_savings_usd)}/run</strong>
+            </p>
+            <p className="mb-3 text-sm">
+              With WatchLLM semantic caching enabled, these requests would&apos;ve cost $0.
+            </p>
+            <div className="flex gap-2 mt-3">
+              <Button 
+                variant="default" 
+                size="sm"
+                asChild
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                <Link href="/docs" target="_blank">
+                  Enable Semantic Caching
+                </Link>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                asChild
+              >
+                <Link href="/docs/caching" target="_blank">
+                  Learn More
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Summary Card */}
       <CostSummaryCard 
         summary={debug.summary} 
@@ -213,16 +257,23 @@ export default function AgentRunDebugView({ runId, isFixture = false }: AgentRun
 
       {/* Steps Timeline */}
       <div className="space-y-3">
-        {debug.steps.map((step, index) => (
-          <StepCard
-            key={index}
-            step={step}
-            index={index}
-            isExpanded={expandedSteps.has(index)}
-            onToggle={() => toggleStep(index)}
-            totalCost={debug.summary.cost.total_cost_usd}
-          />
-        ))}
+        {debug.steps.map((step, index) => {
+          // Find caching opportunity for this step
+          const cachingOpp = debug.summary.cost.caching_opportunities?.find(
+            opp => opp.step_index === step.step_index
+          );
+          return (
+            <StepCard
+              key={index}
+              step={step}
+              index={index}
+              isExpanded={expandedSteps.has(index)}
+              onToggle={() => toggleStep(index)}
+              totalCost={debug.summary.cost.total_cost_usd}
+              cachingOpportunity={cachingOpp}
+            />
+          );
+        })}
       </div>
 
       {/* How Calculated Modal */}
@@ -276,6 +327,15 @@ function CostSummaryCard({ summary, onShowHowCalculated }: CostSummaryCardProps)
             icon={<Zap className="h-4 w-4 text-accent-success" />}
             tooltip="Savings from cache hits"
             highlight={cost.amount_saved_usd > 0 ? 'success' : undefined}
+          />
+          
+          {/* Potential Savings */}
+          <MetricBox
+            label="Potential Savings"
+            value={formatCurrency(cost.potential_savings_usd || 0)}
+            icon={<Sparkles className="h-4 w-4 text-blue-400" />}
+            tooltip={`We detected ${cost.cacheable_requests || 0} requests that were semantically similar to previous requests. If routed through WatchLLM's semantic caching, these would've returned from cache at $0 cost.`}
+            highlight={cost.potential_savings_usd > 0 ? 'success' : undefined}
           />
           
           {/* Cache Hit Rate */}
@@ -371,9 +431,17 @@ interface StepCardProps {
   isExpanded: boolean;
   onToggle: () => void;
   totalCost: number;
+  cachingOpportunity?: {
+    step_index: number;
+    similarity_score: number;
+    original_cost: number;
+    saved_cost: number;
+    reference_step_index: number;
+    message: string;
+  };
 }
 
-function StepCard({ step, index, isExpanded, onToggle, totalCost }: StepCardProps) {
+function StepCard({ step, index, isExpanded, onToggle, totalCost, cachingOpportunity }: StepCardProps) {
   const StepIcon = getStepIcon(step.type);
   const hasFlags = step.flags && step.flags.length > 0;
   
@@ -424,6 +492,11 @@ function StepCard({ step, index, isExpanded, onToggle, totalCost }: StepCardProp
           )}
           {step.cache_hit && (
             <Badge variant="success" className="text-xs">cached</Badge>
+          )}
+          {cachingOpportunity && !step.cache_hit && (
+            <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/30">
+              Could&apos;ve been cached ({(cachingOpportunity.similarity_score * 100).toFixed(0)}%)
+            </Badge>
           )}
           <div className="text-right min-w-[80px]">
             <div className="text-sm font-mono text-text-primary">
@@ -496,6 +569,30 @@ function StepCard({ step, index, isExpanded, onToggle, totalCost }: StepCardProp
                 {step.raw}
               </pre>
             </details>
+          )}
+
+          {/* Caching Opportunity */}
+          {cachingOpportunity && !step.cache_hit && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-blue-400 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-xs font-medium text-blue-400 mb-1">
+                    Caching Opportunity Detected
+                  </h4>
+                  <p className="text-sm text-text-secondary mb-2">
+                    {cachingOpportunity.message}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-text-muted">
+                    <span>Matched step #{cachingOpportunity.reference_step_index}</span>
+                    <span>•</span>
+                    <span>Original: {formatCurrency(cachingOpportunity.original_cost)}</span>
+                    <span>→</span>
+                    <span className="text-blue-400 font-medium">With caching: $0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Flags Detail */}

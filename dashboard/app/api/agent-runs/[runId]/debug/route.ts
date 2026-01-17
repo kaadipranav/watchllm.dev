@@ -105,6 +105,10 @@ export async function GET(
       );
     }
 
+    // Extract caching opportunities from meta if available
+    const meta = typeof runLog.meta === 'string' ? JSON.parse(runLog.meta) : (runLog.meta || {});
+    const cachingOpportunities = meta.caching_opportunities || [];
+    
     // Convert DB records to AgentRun format
     const agentRun: AgentRun = {
       run_id: runLog.run_id,
@@ -115,7 +119,10 @@ export async function GET(
       agent_name: runLog.agent_name,
       status: runLog.status,
       total_cost_usd: runLog.total_cost_usd,
-      meta: runLog.meta,
+      meta: {
+        ...meta,
+        caching_opportunities: cachingOpportunities, // Preserve for parser
+      },
       steps: (steps || []).map((step: any): AgentStep => ({
         step_index: step.step_index,
         timestamp: step.timestamp,
