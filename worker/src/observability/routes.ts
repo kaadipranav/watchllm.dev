@@ -1720,4 +1720,825 @@ observabilityApp.get('/v1/projects/:projectId/team-stats', async (c) => {
   });
 });
 
+// ============================================================================
+// Custom Evaluation Pipeline API Routes
+// @feature CUSTOM_EVALUATION
+// ============================================================================
+
+import {
+  type EvaluationRuleSet,
+  type EvaluationCriterion,
+  type EvaluationInput,
+  type EvaluationResult,
+  RuleSetStore,
+  ResultStore,
+  EvaluationQueue,
+  evaluateRuleSet,
+  matchesFilter,
+  shouldSample,
+  checkAlertThreshold,
+  createEvaluationAlertSlackMessage,
+  toClickHouseRow,
+  createRegexCriterion,
+  createContainsCriterion,
+  createLatencyCriterion,
+  createCostCriterion,
+  createRuleSet,
+} from '../lib/evaluationPipeline';
+
+// In-memory stores for evaluation features
+const ruleSetStore = new RuleSetStore();
+const resultStore = new ResultStore();
+const evaluationQueue = new EvaluationQueue();
+
+// ============================================================================
+// Rule Set Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/projects/:projectId/evaluations/rule-sets
+ * List all evaluation rule sets for a project
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/projects/:projectId/evaluations/rule-sets', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSets = ruleSetStore.getByProject(projectId);
+
+  return c.json({
+    success: true,
+    projectId,
+    totalRuleSets: ruleSets.length,
+    ruleSets: ruleSets.map(rs => ({
+      id: rs.id,
+      name: rs.name,
+      description: rs.description,
+      criteriaCount: rs.criteria.length,
+      enabled: rs.enabled,
+      async: rs.async,
+      sampleRate: rs.sampleRate,
+      hasAlerts: !!rs.alertConfig?.enabled,
+      createdAt: rs.createdAt,
+      updatedAt: rs.updatedAt,
+    })),
+  });
+});
+
+/**
+ * POST /v1/projects/:projectId/evaluations/rule-sets
+ * Create a new evaluation rule set
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/projects/:projectId/evaluations/rule-sets', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    if (!body.name || typeof body.name !== 'string') {
+      return c.json({ error: 'name is required' }, 400);
+    }
+
+    if (!body.criteria || !Array.isArray(body.criteria)) {
+      return c.json({ error: 'criteria array is required' }, 400);
+    }
+
+    const ruleSet = createRuleSet(projectId, body.name, body.criteria, {
+      description: body.description,
+      filter: body.filter,
+      sampleRate: body.sampleRate,
+      async: body.async,
+    });
+
+    if (body.alertConfig) {
+      ruleSet.alertConfig = body.alertConfig;
+    }
+
+    ruleSetStore.add(ruleSet);
+    evaluationQueue.addRuleSet(ruleSet);
+
+    return c.json({
+      success: true,
+      ruleSet: {
+        id: ruleSet.id,
+        name: ruleSet.name,
+        criteriaCount: ruleSet.criteria.length,
+        createdAt: ruleSet.createdAt,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/evaluations/rule-sets/:ruleSetId
+ * Get a specific rule set
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/evaluations/rule-sets/:ruleSetId', async (c) => {
+  const ruleSetId = c.req.param('ruleSetId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSet = ruleSetStore.get(ruleSetId);
+  if (!ruleSet) {
+    return c.json({ error: 'Rule set not found' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    ruleSet,
+  });
+});
+
+/**
+ * PUT /v1/evaluations/rule-sets/:ruleSetId
+ * Update a rule set
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.put('/v1/evaluations/rule-sets/:ruleSetId', async (c) => {
+  const ruleSetId = c.req.param('ruleSetId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    const existing = ruleSetStore.get(ruleSetId);
+    if (!existing) {
+      return c.json({ error: 'Rule set not found' }, 404);
+    }
+
+    const updates: Partial<EvaluationRuleSet> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.criteria !== undefined) updates.criteria = body.criteria;
+    if (body.filter !== undefined) updates.filter = body.filter;
+    if (body.async !== undefined) updates.async = body.async;
+    if (body.sampleRate !== undefined) updates.sampleRate = body.sampleRate;
+    if (body.alertConfig !== undefined) updates.alertConfig = body.alertConfig;
+    if (body.enabled !== undefined) updates.enabled = body.enabled;
+
+    const success = ruleSetStore.update(ruleSetId, updates);
+
+    if (!success) {
+      return c.json({ error: 'Failed to update rule set' }, 500);
+    }
+
+    const updated = ruleSetStore.get(ruleSetId);
+
+    return c.json({
+      success: true,
+      ruleSet: {
+        id: updated!.id,
+        name: updated!.name,
+        enabled: updated!.enabled,
+        updatedAt: updated!.updatedAt,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * DELETE /v1/evaluations/rule-sets/:ruleSetId
+ * Delete a rule set
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.delete('/v1/evaluations/rule-sets/:ruleSetId', async (c) => {
+  const ruleSetId = c.req.param('ruleSetId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSet = ruleSetStore.get(ruleSetId);
+  if (!ruleSet) {
+    return c.json({ error: 'Rule set not found' }, 404);
+  }
+
+  const success = ruleSetStore.delete(ruleSetId);
+
+  return c.json({
+    success,
+    message: success ? 'Rule set deleted' : 'Failed to delete',
+    ruleSetId,
+  });
+});
+
+// ============================================================================
+// Evaluation Execution Endpoints
+// ============================================================================
+
+/**
+ * POST /v1/evaluations/run
+ * Run evaluation on a request/response
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/evaluations/run', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    if (!body.ruleSetId || typeof body.ruleSetId !== 'string') {
+      return c.json({ error: 'ruleSetId is required' }, 400);
+    }
+
+    if (!body.input || typeof body.input !== 'object') {
+      return c.json({ error: 'input object is required' }, 400);
+    }
+
+    const ruleSet = ruleSetStore.get(body.ruleSetId);
+    if (!ruleSet) {
+      return c.json({ error: 'Rule set not found' }, 404);
+    }
+
+    if (!ruleSet.enabled) {
+      return c.json({ error: 'Rule set is disabled' }, 400);
+    }
+
+    const input: EvaluationInput = {
+      requestId: body.input.requestId || `req_${Date.now()}`,
+      projectId: ruleSet.projectId,
+      runId: body.input.runId,
+      agentName: body.input.agentName,
+      model: body.input.model || 'unknown',
+      path: body.input.path || '/v1/chat/completions',
+      input: body.input.input || '',
+      output: body.input.output || '',
+      requestBody: body.input.requestBody,
+      responseBody: body.input.responseBody,
+      latencyMs: body.input.latencyMs || 0,
+      cost: body.input.cost || 0,
+      requestedAt: body.input.requestedAt || new Date().toISOString(),
+      tags: body.input.tags,
+    };
+
+    // Check filter
+    if (!matchesFilter(ruleSet.filter, input)) {
+      return c.json({
+        success: true,
+        skipped: true,
+        reason: 'Request does not match filter',
+      });
+    }
+
+    // Check sample rate
+    if (!shouldSample(ruleSet.sampleRate)) {
+      return c.json({
+        success: true,
+        skipped: true,
+        reason: 'Not sampled',
+      });
+    }
+
+    // Run evaluation (async or sync)
+    if (ruleSet.async && body.async !== false) {
+      const jobId = evaluationQueue.enqueue(ruleSet.id, input);
+      return c.json({
+        success: true,
+        async: true,
+        jobId,
+        message: 'Evaluation queued',
+      });
+    } else {
+      const result = await evaluateRuleSet(ruleSet, input);
+      resultStore.add(result);
+
+      return c.json({
+        success: true,
+        result: {
+          id: result.id,
+          passed: result.passed,
+          score: result.score,
+          passedCount: result.passedCount,
+          failedCount: result.failedCount,
+          totalCount: result.totalCount,
+          maxSeverity: result.maxSeverity,
+          evaluationDurationMs: result.evaluationDurationMs,
+          criteriaResults: result.criteriaResults.map(cr => ({
+            criterionName: cr.criterionName,
+            passed: cr.passed,
+            score: cr.score,
+            message: cr.message,
+          })),
+        },
+      });
+    }
+  } catch (error) {
+    console.error('[Evaluation] Run error:', error);
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/evaluations/run-batch
+ * Run evaluations on multiple requests
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/evaluations/run-batch', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    if (!body.ruleSetId || typeof body.ruleSetId !== 'string') {
+      return c.json({ error: 'ruleSetId is required' }, 400);
+    }
+
+    if (!body.inputs || !Array.isArray(body.inputs)) {
+      return c.json({ error: 'inputs array is required' }, 400);
+    }
+
+    const ruleSet = ruleSetStore.get(body.ruleSetId);
+    if (!ruleSet) {
+      return c.json({ error: 'Rule set not found' }, 404);
+    }
+
+    const results: EvaluationResult[] = [];
+    const skipped: string[] = [];
+
+    for (const inputData of body.inputs) {
+      const input: EvaluationInput = {
+        requestId: inputData.requestId || `req_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        projectId: ruleSet.projectId,
+        runId: inputData.runId,
+        agentName: inputData.agentName,
+        model: inputData.model || 'unknown',
+        path: inputData.path || '/v1/chat/completions',
+        input: inputData.input || '',
+        output: inputData.output || '',
+        latencyMs: inputData.latencyMs || 0,
+        cost: inputData.cost || 0,
+        requestedAt: inputData.requestedAt || new Date().toISOString(),
+      };
+
+      if (!matchesFilter(ruleSet.filter, input) || !shouldSample(ruleSet.sampleRate)) {
+        skipped.push(input.requestId);
+        continue;
+      }
+
+      const result = await evaluateRuleSet(ruleSet, input);
+      resultStore.add(result);
+      results.push(result);
+    }
+
+    return c.json({
+      success: true,
+      totalInputs: body.inputs.length,
+      evaluated: results.length,
+      skipped: skipped.length,
+      passRate: results.length > 0 
+        ? results.filter(r => r.passed).length / results.length 
+        : 1,
+      avgScore: results.length > 0
+        ? results.reduce((sum, r) => sum + r.score, 0) / results.length
+        : 1,
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/evaluations/jobs/:jobId
+ * Get status of an async evaluation job
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/evaluations/jobs/:jobId', async (c) => {
+  const jobId = c.req.param('jobId');
+  const apiKey = c.get('apiKey');
+
+  const job = evaluationQueue.getJob(jobId);
+  if (!job) {
+    return c.json({ error: 'Job not found' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    job: {
+      id: job.id,
+      status: job.status,
+      createdAt: job.createdAt,
+      result: job.result ? {
+        id: job.result.id,
+        passed: job.result.passed,
+        score: job.result.score,
+      } : undefined,
+      error: job.error,
+    },
+  });
+});
+
+/**
+ * POST /v1/evaluations/process-queue
+ * Process pending evaluation jobs (for worker/cron)
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/evaluations/process-queue', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    const maxJobs = body.maxJobs || 10;
+
+    const processed: EvaluationResult[] = [];
+
+    for (let i = 0; i < maxJobs; i++) {
+      const result = await evaluationQueue.processNext();
+      if (!result) break;
+      resultStore.add(result);
+      processed.push(result);
+    }
+
+    const stats = evaluationQueue.getStats();
+
+    return c.json({
+      success: true,
+      processed: processed.length,
+      passRate: processed.length > 0 
+        ? processed.filter(r => r.passed).length / processed.length 
+        : 1,
+      queueStats: stats,
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+// ============================================================================
+// Evaluation Results & Metrics Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/projects/:projectId/evaluations/results
+ * Get evaluation results for a project
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/projects/:projectId/evaluations/results', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+  
+  const limit = parseInt(c.req.query('limit') || '100', 10);
+  const ruleSetId = c.req.query('ruleSetId');
+
+  let results: EvaluationResult[];
+  if (ruleSetId) {
+    results = resultStore.getByRuleSet(ruleSetId, limit);
+  } else {
+    results = resultStore.getByProject(projectId, limit);
+  }
+
+  return c.json({
+    success: true,
+    projectId,
+    totalResults: results.length,
+    results: results.map(r => ({
+      id: r.id,
+      ruleSetId: r.ruleSetId,
+      requestId: r.requestId,
+      model: r.model,
+      passed: r.passed,
+      score: r.score,
+      passedCount: r.passedCount,
+      failedCount: r.failedCount,
+      maxSeverity: r.maxSeverity,
+      evaluatedAt: r.evaluatedAt,
+    })),
+  });
+});
+
+/**
+ * GET /v1/evaluations/results/:resultId
+ * Get a specific evaluation result with details
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/evaluations/results/:resultId', async (c) => {
+  const resultId = c.req.param('resultId');
+  const apiKey = c.get('apiKey');
+
+  const result = resultStore.get(resultId);
+  if (!result) {
+    return c.json({ error: 'Result not found' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    result,
+  });
+});
+
+/**
+ * GET /v1/projects/:projectId/evaluations/metrics
+ * Get aggregated evaluation metrics
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/projects/:projectId/evaluations/metrics', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+  
+  const ruleSetId = c.req.query('ruleSetId');
+
+  const metrics = resultStore.getMetrics(projectId, ruleSetId);
+
+  return c.json({
+    success: true,
+    metrics: {
+      ...metrics,
+      passRate: `${(metrics.passRate * 100).toFixed(1)}%`,
+      avgScore: metrics.avgScore.toFixed(3),
+    },
+  });
+});
+
+/**
+ * GET /v1/projects/:projectId/evaluations/dashboard
+ * Get evaluation dashboard data
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/projects/:projectId/evaluations/dashboard', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSets = ruleSetStore.getByProject(projectId);
+  const metrics = resultStore.getMetrics(projectId);
+  const recentResults = resultStore.getByProject(projectId, 10);
+  const queueStats = evaluationQueue.getStats();
+
+  // Per-rule-set summary
+  const ruleSetSummaries = ruleSets.map(rs => {
+    const rsMetrics = resultStore.getMetrics(projectId, rs.id);
+    return {
+      id: rs.id,
+      name: rs.name,
+      enabled: rs.enabled,
+      passRate: rsMetrics.passRate,
+      totalEvaluations: rsMetrics.totalEvaluations,
+      hasAlert: !!rs.alertConfig?.enabled,
+    };
+  });
+
+  return c.json({
+    success: true,
+    dashboard: {
+      overview: {
+        totalRuleSets: ruleSets.length,
+        enabledRuleSets: ruleSets.filter(rs => rs.enabled).length,
+        totalEvaluations: metrics.totalEvaluations,
+        overallPassRate: `${(metrics.passRate * 100).toFixed(1)}%`,
+        avgScore: metrics.avgScore.toFixed(3),
+      },
+      queue: queueStats,
+      ruleSets: ruleSetSummaries,
+      scoreDistribution: metrics.scoreDistribution,
+      modelMetrics: metrics.modelMetrics,
+      recentResults: recentResults.map(r => ({
+        id: r.id,
+        ruleSetId: r.ruleSetId,
+        passed: r.passed,
+        score: r.score,
+        model: r.model,
+        evaluatedAt: r.evaluatedAt,
+      })),
+    },
+  });
+});
+
+// ============================================================================
+// Alert Endpoints
+// ============================================================================
+
+/**
+ * POST /v1/evaluations/rule-sets/:ruleSetId/check-alerts
+ * Check if alerts should fire for a rule set
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/evaluations/rule-sets/:ruleSetId/check-alerts', async (c) => {
+  const ruleSetId = c.req.param('ruleSetId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSet = ruleSetStore.get(ruleSetId);
+  if (!ruleSet) {
+    return c.json({ error: 'Rule set not found' }, 404);
+  }
+
+  if (!ruleSet.alertConfig) {
+    return c.json({
+      success: true,
+      alertsEnabled: false,
+      message: 'No alert configuration',
+    });
+  }
+
+  const recentResults = resultStore.getByRuleSet(ruleSetId);
+  const alertCheck = checkAlertThreshold(ruleSet.alertConfig, recentResults);
+
+  if (alertCheck.shouldAlert) {
+    // Update last alert time
+    ruleSet.alertConfig.lastAlertAt = new Date().toISOString();
+
+    // TODO: Actually send alert to channels
+    // For now, return the alert info
+    return c.json({
+      success: true,
+      alert: {
+        triggered: true,
+        passRate: `${(alertCheck.passRate * 100).toFixed(1)}%`,
+        threshold: `${(ruleSet.alertConfig.passRateThreshold * 100).toFixed(1)}%`,
+        sampleCount: alertCheck.sampleCount,
+        message: createEvaluationAlertSlackMessage(
+          ruleSet.name,
+          alertCheck.passRate,
+          ruleSet.alertConfig.passRateThreshold,
+          alertCheck.sampleCount,
+          'https://watchllm.com'
+        ),
+      },
+    });
+  }
+
+  return c.json({
+    success: true,
+    alert: {
+      triggered: false,
+      passRate: `${(alertCheck.passRate * 100).toFixed(1)}%`,
+      threshold: `${(ruleSet.alertConfig.passRateThreshold * 100).toFixed(1)}%`,
+      sampleCount: alertCheck.sampleCount,
+    },
+  });
+});
+
+// ============================================================================
+// Criterion Template Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/evaluations/criterion-templates
+ * Get available criterion templates
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/evaluations/criterion-templates', async (c) => {
+  return c.json({
+    success: true,
+    templates: [
+      {
+        type: 'regex_match',
+        name: 'Regex Match',
+        description: 'Check if response matches a regex pattern',
+        example: { pattern: '^\\{.*\\}$', flags: 's' },
+      },
+      {
+        type: 'contains',
+        name: 'Contains',
+        description: 'Check if response contains a substring',
+        example: { substring: 'success', caseSensitive: false },
+      },
+      {
+        type: 'json_schema',
+        name: 'JSON Schema',
+        description: 'Validate response against a JSON schema',
+        example: { schema: { type: 'object', required: ['result'] } },
+      },
+      {
+        type: 'latency_max',
+        name: 'Max Latency',
+        description: 'Check if latency is below threshold',
+        example: { maxValue: 5000, unit: 'ms' },
+      },
+      {
+        type: 'cost_max',
+        name: 'Max Cost',
+        description: 'Check if cost is below threshold',
+        example: { maxValue: 0.10, unit: 'dollars' },
+      },
+      {
+        type: 'sentiment',
+        name: 'Sentiment',
+        description: 'Check response sentiment',
+        example: { expectedSentiment: 'positive' },
+      },
+      {
+        type: 'pii_detection',
+        name: 'PII Detection',
+        description: 'Check for personally identifiable information',
+        example: {},
+      },
+      {
+        type: 'toxicity',
+        name: 'Toxicity Check',
+        description: 'Check for toxic content',
+        example: {},
+      },
+    ],
+  });
+});
+
+/**
+ * POST /v1/evaluations/criterion-templates/create
+ * Create a criterion from a template
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.post('/v1/evaluations/criterion-templates/create', async (c) => {
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    if (!body.type || typeof body.type !== 'string') {
+      return c.json({ error: 'type is required' }, 400);
+    }
+
+    if (!body.name || typeof body.name !== 'string') {
+      return c.json({ error: 'name is required' }, 400);
+    }
+
+    let criterion: EvaluationCriterion;
+
+    switch (body.type) {
+      case 'regex_match':
+        criterion = createRegexCriterion(body.name, body.pattern || '.*', {
+          flags: body.flags,
+          severity: body.severity,
+          weight: body.weight,
+        });
+        break;
+      case 'contains':
+        criterion = createContainsCriterion(body.name, body.substring || '', {
+          caseSensitive: body.caseSensitive,
+          severity: body.severity,
+          weight: body.weight,
+        });
+        break;
+      case 'latency_max':
+        criterion = createLatencyCriterion(body.name, body.maxValue || 5000, {
+          severity: body.severity,
+          weight: body.weight,
+        });
+        break;
+      case 'cost_max':
+        criterion = createCostCriterion(body.name, body.maxValue || 0.10, {
+          severity: body.severity,
+          weight: body.weight,
+        });
+        break;
+      default:
+        return c.json({ error: `Unsupported template type: ${body.type}` }, 400);
+    }
+
+    return c.json({
+      success: true,
+      criterion,
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/projects/:projectId/evaluations/stats
+ * Get evaluation statistics
+ * 
+ * @feature CUSTOM_EVALUATION
+ */
+observabilityApp.get('/v1/projects/:projectId/evaluations/stats', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const ruleSets = ruleSetStore.getByProject(projectId);
+  const metrics = resultStore.getMetrics(projectId);
+  const queueStats = evaluationQueue.getStats();
+
+  return c.json({
+    success: true,
+    projectId,
+    stats: {
+      totalRuleSets: ruleSets.length,
+      enabledRuleSets: ruleSets.filter(rs => rs.enabled).length,
+      totalEvaluations: metrics.totalEvaluations,
+      passRate: `${(metrics.passRate * 100).toFixed(1)}%`,
+      failedCount: metrics.failedCount,
+      avgScore: metrics.avgScore.toFixed(3),
+      queuePending: queueStats.pending,
+      queueCompleted: queueStats.completed,
+      queueFailed: queueStats.failed,
+    },
+  });
+});
+
 export default observabilityApp;
