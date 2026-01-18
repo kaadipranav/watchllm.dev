@@ -94,6 +94,26 @@ export default function DocsIndexPage() {
         },
       ],
     },
+    {
+      title: "SDKs",
+      description: "Complete SDK documentation for Node.js and Python integrations.",
+      items: [
+        {
+          title: "Node.js SDK",
+          description: "TypeScript SDK for Node.js applications with full type safety.",
+          href: "/docs/SDK_NODE",
+          icon: Code,
+          color: "bg-green-500/10 text-green-500",
+        },
+        {
+          title: "Python SDK",
+          description: "Python SDK for seamless integration with AI applications.",
+          href: "/docs/SDK_PYTHON",
+          icon: Code,
+          color: "bg-blue-500/10 text-blue-500",
+        },
+      ],
+    },
   ];
 
   return (
