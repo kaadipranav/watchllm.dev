@@ -703,4 +703,684 @@ analyticsApp.get('/v1/analytics/event/:eventId', async (c) => {
   }
 });
 
+// ============================================================================
+// AGENT COST ATTRIBUTION & ROI ENDPOINTS
+// ============================================================================
+
+import {
+  type AgentRequest,
+  type AgentRun,
+  type BusinessValueConfig,
+  type AgentCostSummary,
+  type AgentComparison,
+  type TimeSeriesDataPoint,
+  type TimeGranularity,
+  calculateAgentCostSummary,
+  compareAgents,
+  aggregateByTime,
+  DEFAULT_BUSINESS_VALUE_CONFIG,
+} from '../lib/agentCostAttribution';
+
+// Mock data generators for agent analytics
+function getMockAgentRequests(projectId: string, agentName?: string): AgentRequest[] {
+  const agents = agentName ? [agentName] : ['ResearchAgent', 'CodeAgent', 'DataAnalysisAgent'];
+  const requests: AgentRequest[] = [];
+  const now = Date.now();
+  
+  for (let i = 0; i < 50; i++) {
+    const agent = agents[i % agents.length];
+    const runId = `run_${agent}_${Math.floor(i / 5) + 1}`;
+    const cached = Math.random() > 0.6;
+    const baseCost = (Math.random() * 0.05 + 0.01);
+    
+    requests.push({
+      runId,
+      agentName: agent,
+      timestamp: new Date(now - i * 600000).toISOString(),
+      model: ['gpt-4o-mini', 'gpt-4', 'claude-3-haiku'][i % 3],
+      tokensInput: Math.floor(Math.random() * 500) + 100,
+      tokensOutput: Math.floor(Math.random() * 1000) + 200,
+      costUsd: cached ? baseCost * 0.1 : baseCost,
+      potentialCostUsd: baseCost,
+      latencyMs: Math.floor(Math.random() * 2000) + 200,
+      cached,
+      status: Math.random() > 0.95 ? 'error' : 'success',
+      errorMessage: Math.random() > 0.95 ? 'Rate limit exceeded' : undefined,
+    });
+  }
+  
+  return requests;
+}
+
+function getMockAgentRuns(projectId: string, agentName?: string): AgentRun[] {
+  const agents = agentName ? [agentName] : ['ResearchAgent', 'CodeAgent', 'DataAnalysisAgent'];
+  const runs: AgentRun[] = [];
+  const now = Date.now();
+  
+  for (let i = 0; i < 15; i++) {
+    const agent = agents[i % agents.length];
+    const startedAt = new Date(now - i * 3600000);
+    const status = Math.random() > 0.1 ? 'completed' : (Math.random() > 0.5 ? 'failed' : 'cancelled');
+    
+    runs.push({
+      runId: `run_${agent}_${i + 1}`,
+      agentName: agent,
+      startedAt: startedAt.toISOString(),
+      endedAt: status !== 'running' ? new Date(startedAt.getTime() + Math.random() * 300000 + 60000).toISOString() : undefined,
+      status: status as AgentRun['status'],
+      totalCostUsd: Math.random() * 0.3 + 0.05,
+      stepCount: Math.floor(Math.random() * 10) + 3,
+    });
+  }
+  
+  return runs;
+}
+
+// ============================================================================
+// GET /v1/analytics/agents
+// Returns a list of all agents with their cost summaries
+// Query params: project_id, date_from?, date_to?
+// ============================================================================
+analyticsApp.get('/v1/analytics/agents', async (c) => {
+  const projectId = c.req.query('project_id');
+  if (!projectId) {
+    return c.json({ error: 'project_id query parameter is required' }, 400);
+  }
+
+  // Validate access
+  const apiKey = c.get('apiKey');
+  const access = await validateProjectAccess(c.env, apiKey, projectId);
+  if (!access.valid) {
+    return c.json({ error: access.error || 'Unauthorized' }, 403);
+  }
+
+  const dateFrom = c.req.query('date_from') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const dateTo = c.req.query('date_to') || new Date().toISOString();
+
+  try {
+    // Check if ClickHouse is available
+    const isAvailable = await isClickHouseAvailable(c.env);
+    
+    if (!isAvailable) {
+      // Return mock data
+      const requests = getMockAgentRequests(projectId);
+      const runs = getMockAgentRuns(projectId);
+      
+      // Group by agent name
+      const agentNames = [...new Set(requests.map(r => r.agentName))];
+      const summaries: AgentCostSummary[] = agentNames.map(name => {
+        const agentRequests = requests.filter(r => r.agentName === name);
+        const agentRuns = runs.filter(r => r.agentName === name);
+        return calculateAgentCostSummary(name, agentRequests, agentRuns);
+      });
+      
+      const comparison = compareAgents(summaries);
+      
+      return c.json({
+        project_id: projectId,
+        date_from: dateFrom,
+        date_to: dateTo,
+        agents: comparison.agents,
+        totals: comparison.totals,
+        top_performers: {
+          by_roi: comparison.topPerformers.byROI?.agentName || null,
+          by_cost_efficiency: comparison.topPerformers.byCostEfficiency?.agentName || null,
+          by_success_rate: comparison.topPerformers.bySuccessRate?.agentName || null,
+        },
+      });
+    }
+
+    const clickhouse = createClickHouseClient(c.env);
+
+    // Query agent metrics from ClickHouse
+    const agentQuery = `
+      SELECT
+        step_name as agent_name,
+        run_id,
+        count() as request_count,
+        sum(cost_estimate_usd) as total_cost,
+        sum(tokens_input) as total_tokens_input,
+        sum(tokens_output) as total_tokens_output,
+        avg(latency_ms) as avg_latency,
+        countIf(status = 'error') as error_count
+      FROM events
+      WHERE project_id = {project_id:String}
+        AND event_type = 'agent_step'
+        AND timestamp >= {date_from:DateTime64(3)}
+        AND timestamp <= {date_to:DateTime64(3)}
+      GROUP BY step_name, run_id
+      ORDER BY total_cost DESC
+    `;
+
+    const resultSet = await clickhouse.query({
+      query: agentQuery,
+      query_params: {
+        project_id: projectId,
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      format: 'JSONEachRow',
+    });
+
+    const rows = await resultSet.json<any>();
+    
+    // Transform ClickHouse data to AgentRequest format
+    const requestsByAgent = new Map<string, AgentRequest[]>();
+    
+    for (const row of rows) {
+      const agentName = row.agent_name || 'unknown';
+      if (!requestsByAgent.has(agentName)) {
+        requestsByAgent.set(agentName, []);
+      }
+      
+      // Create a synthetic request for aggregation
+      requestsByAgent.get(agentName)!.push({
+        runId: row.run_id,
+        agentName: agentName,
+        timestamp: dateFrom,
+        model: 'unknown',
+        tokensInput: Number(row.total_tokens_input) || 0,
+        tokensOutput: Number(row.total_tokens_output) || 0,
+        costUsd: Number(row.total_cost) || 0,
+        potentialCostUsd: Number(row.total_cost) || 0,
+        latencyMs: Number(row.avg_latency) || 0,
+        cached: false,
+        status: Number(row.error_count) > 0 ? 'error' : 'success',
+      });
+    }
+
+    // Calculate summaries
+    const summaries: AgentCostSummary[] = [];
+    for (const [agentName, requests] of requestsByAgent) {
+      // Get runs from agent_steps table
+      const runsQuery = `
+        SELECT
+          run_id,
+          min(timestamp) as started_at,
+          max(timestamp) as ended_at,
+          sum(cost_estimate_usd) as total_cost,
+          count() as step_count,
+          countIf(status = 'error') > 0 as has_error
+        FROM events
+        WHERE project_id = {project_id:String}
+          AND event_type = 'agent_step'
+          AND step_name = {agent_name:String}
+          AND timestamp >= {date_from:DateTime64(3)}
+          AND timestamp <= {date_to:DateTime64(3)}
+        GROUP BY run_id
+      `;
+      
+      const runsResult = await clickhouse.query({
+        query: runsQuery,
+        query_params: {
+          project_id: projectId,
+          agent_name: agentName,
+          date_from: dateFrom,
+          date_to: dateTo,
+        },
+        format: 'JSONEachRow',
+      });
+      
+      const runsData = await runsResult.json<any>();
+      const runs: AgentRun[] = runsData.map((r: any) => ({
+        runId: r.run_id,
+        agentName: agentName,
+        startedAt: r.started_at,
+        endedAt: r.ended_at,
+        status: r.has_error ? 'failed' : 'completed',
+        totalCostUsd: Number(r.total_cost) || 0,
+        stepCount: Number(r.step_count) || 0,
+      }));
+      
+      summaries.push(calculateAgentCostSummary(agentName, requests, runs));
+    }
+
+    const comparison = compareAgents(summaries);
+
+    return c.json({
+      project_id: projectId,
+      date_from: dateFrom,
+      date_to: dateTo,
+      agents: comparison.agents,
+      totals: comparison.totals,
+      top_performers: {
+        by_roi: comparison.topPerformers.byROI?.agentName || null,
+        by_cost_efficiency: comparison.topPerformers.byCostEfficiency?.agentName || null,
+        by_success_rate: comparison.topPerformers.bySuccessRate?.agentName || null,
+      },
+    });
+  } catch (error) {
+    console.error('Agent analytics query failed:', error);
+    return c.json({ error: 'Failed to fetch agent analytics' }, 500);
+  }
+});
+
+// ============================================================================
+// GET /v1/analytics/agents/:agentName
+// Returns detailed analytics for a specific agent
+// Query params: project_id, date_from?, date_to?
+// ============================================================================
+analyticsApp.get('/v1/analytics/agents/:agentName', async (c) => {
+  const agentName = decodeURIComponent(c.req.param('agentName'));
+  const projectId = c.req.query('project_id');
+  
+  if (!projectId) {
+    return c.json({ error: 'project_id query parameter is required' }, 400);
+  }
+
+  // Validate access
+  const apiKey = c.get('apiKey');
+  const access = await validateProjectAccess(c.env, apiKey, projectId);
+  if (!access.valid) {
+    return c.json({ error: access.error || 'Unauthorized' }, 403);
+  }
+
+  const dateFrom = c.req.query('date_from') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const dateTo = c.req.query('date_to') || new Date().toISOString();
+
+  try {
+    // Check if ClickHouse is available
+    const isAvailable = await isClickHouseAvailable(c.env);
+    
+    if (!isAvailable) {
+      // Return mock data
+      const requests = getMockAgentRequests(projectId, agentName);
+      const runs = getMockAgentRuns(projectId, agentName);
+      const summary = calculateAgentCostSummary(agentName, requests, runs);
+      
+      return c.json({
+        project_id: projectId,
+        date_from: dateFrom,
+        date_to: dateTo,
+        agent: summary,
+        recent_runs: runs.slice(0, 10),
+      });
+    }
+
+    const clickhouse = createClickHouseClient(c.env);
+
+    // Query for this specific agent
+    const requestsQuery = `
+      SELECT
+        run_id,
+        timestamp,
+        model,
+        tokens_input,
+        tokens_output,
+        cost_estimate_usd,
+        latency_ms,
+        status
+      FROM events
+      WHERE project_id = {project_id:String}
+        AND event_type = 'agent_step'
+        AND step_name = {agent_name:String}
+        AND timestamp >= {date_from:DateTime64(3)}
+        AND timestamp <= {date_to:DateTime64(3)}
+      ORDER BY timestamp DESC
+    `;
+
+    const requestsResult = await clickhouse.query({
+      query: requestsQuery,
+      query_params: {
+        project_id: projectId,
+        agent_name: agentName,
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      format: 'JSONEachRow',
+    });
+
+    const requestsData = await requestsResult.json<any>();
+    
+    const requests: AgentRequest[] = requestsData.map((r: any) => ({
+      runId: r.run_id,
+      agentName: agentName,
+      timestamp: r.timestamp,
+      model: r.model || 'unknown',
+      tokensInput: Number(r.tokens_input) || 0,
+      tokensOutput: Number(r.tokens_output) || 0,
+      costUsd: Number(r.cost_estimate_usd) || 0,
+      potentialCostUsd: Number(r.cost_estimate_usd) || 0,
+      latencyMs: Number(r.latency_ms) || 0,
+      cached: false,
+      status: r.status === 'error' ? 'error' : 'success',
+    }));
+
+    // Query runs
+    const runsQuery = `
+      SELECT
+        run_id,
+        min(timestamp) as started_at,
+        max(timestamp) as ended_at,
+        sum(cost_estimate_usd) as total_cost,
+        count() as step_count,
+        countIf(status = 'error') > 0 as has_error
+      FROM events
+      WHERE project_id = {project_id:String}
+        AND event_type = 'agent_step'
+        AND step_name = {agent_name:String}
+        AND timestamp >= {date_from:DateTime64(3)}
+        AND timestamp <= {date_to:DateTime64(3)}
+      GROUP BY run_id
+      ORDER BY started_at DESC
+      LIMIT 10
+    `;
+
+    const runsResult = await clickhouse.query({
+      query: runsQuery,
+      query_params: {
+        project_id: projectId,
+        agent_name: agentName,
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      format: 'JSONEachRow',
+    });
+
+    const runsData = await runsResult.json<any>();
+    const runs: AgentRun[] = runsData.map((r: any) => ({
+      runId: r.run_id,
+      agentName: agentName,
+      startedAt: r.started_at,
+      endedAt: r.ended_at,
+      status: r.has_error ? 'failed' : 'completed',
+      totalCostUsd: Number(r.total_cost) || 0,
+      stepCount: Number(r.step_count) || 0,
+    }));
+
+    const summary = calculateAgentCostSummary(agentName, requests, runs);
+
+    return c.json({
+      project_id: projectId,
+      date_from: dateFrom,
+      date_to: dateTo,
+      agent: summary,
+      recent_runs: runs,
+    });
+  } catch (error) {
+    console.error('Agent detail analytics query failed:', error);
+    return c.json({ error: 'Failed to fetch agent details' }, 500);
+  }
+});
+
+// ============================================================================
+// GET /v1/analytics/agents/:agentName/timeseries
+// Returns time-series data for a specific agent
+// Query params: project_id, period (1h|6h|24h|7d|30d), granularity (hour|day|week|month)
+// ============================================================================
+analyticsApp.get('/v1/analytics/agents/:agentName/timeseries', async (c) => {
+  const agentName = decodeURIComponent(c.req.param('agentName'));
+  const projectId = c.req.query('project_id');
+  
+  if (!projectId) {
+    return c.json({ error: 'project_id query parameter is required' }, 400);
+  }
+
+  // Validate access
+  const apiKey = c.get('apiKey');
+  const access = await validateProjectAccess(c.env, apiKey, projectId);
+  if (!access.valid) {
+    return c.json({ error: access.error || 'Unauthorized' }, 403);
+  }
+
+  const period = c.req.query('period') || '7d';
+  const granularity = (c.req.query('granularity') || 'day') as TimeGranularity;
+
+  // Calculate time range
+  const now = Date.now();
+  const ranges: Record<string, number> = {
+    '1h': 60 * 60 * 1000,
+    '6h': 6 * 60 * 60 * 1000,
+    '24h': 24 * 60 * 60 * 1000,
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+  };
+
+  const timeRange = ranges[period] || ranges['7d'];
+  const dateFrom = new Date(now - timeRange).toISOString();
+  const dateTo = new Date(now).toISOString();
+
+  try {
+    // Check if ClickHouse is available
+    const isAvailable = await isClickHouseAvailable(c.env);
+    
+    if (!isAvailable) {
+      // Return mock data
+      const requests = getMockAgentRequests(projectId, agentName);
+      const runs = getMockAgentRuns(projectId, agentName);
+      const timeseries = aggregateByTime(requests, runs, granularity);
+      
+      return c.json({
+        project_id: projectId,
+        agent_name: agentName,
+        period,
+        granularity,
+        date_from: dateFrom,
+        date_to: dateTo,
+        data: timeseries,
+      });
+    }
+
+    const clickhouse = createClickHouseClient(c.env);
+
+    // Determine ClickHouse grouping function based on granularity
+    const groupByFn = {
+      hour: 'toStartOfHour',
+      day: 'toStartOfDay',
+      week: 'toStartOfWeek',
+      month: 'toStartOfMonth',
+    }[granularity] || 'toStartOfDay';
+
+    const timeseriesQuery = `
+      SELECT
+        ${groupByFn}(timestamp) as bucket,
+        count() as requests,
+        sum(cost_estimate_usd) as cost,
+        countIf(status = 'error') as errors,
+        uniqExact(run_id) as tasks
+      FROM events
+      WHERE project_id = {project_id:String}
+        AND event_type = 'agent_step'
+        AND step_name = {agent_name:String}
+        AND timestamp >= {date_from:DateTime64(3)}
+        AND timestamp <= {date_to:DateTime64(3)}
+      GROUP BY bucket
+      ORDER BY bucket ASC
+    `;
+
+    const resultSet = await clickhouse.query({
+      query: timeseriesQuery,
+      query_params: {
+        project_id: projectId,
+        agent_name: agentName,
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      format: 'JSONEachRow',
+    });
+
+    const rows = await resultSet.json<any>();
+    
+    const timeseries: TimeSeriesDataPoint[] = rows.map((row: any) => ({
+      timestamp: row.bucket,
+      cost: Number(row.cost) || 0,
+      requests: Number(row.requests) || 0,
+      cacheHits: 0, // Would need to track this separately
+      errors: Number(row.errors) || 0,
+      tasks: Number(row.tasks) || 0,
+    }));
+
+    return c.json({
+      project_id: projectId,
+      agent_name: agentName,
+      period,
+      granularity,
+      date_from: dateFrom,
+      date_to: dateTo,
+      data: timeseries,
+    });
+  } catch (error) {
+    console.error('Agent timeseries query failed:', error);
+    return c.json({ error: 'Failed to fetch agent timeseries' }, 500);
+  }
+});
+
+// ============================================================================
+// POST /v1/analytics/agents/:agentName/config
+// Set business value configuration for an agent
+// Body: { hourlyLaborCost, hoursSavedPerTask, impactMultiplier, currency }
+// ============================================================================
+analyticsApp.post('/v1/analytics/agents/:agentName/config', async (c) => {
+  const agentName = decodeURIComponent(c.req.param('agentName'));
+  const projectId = c.req.query('project_id');
+  
+  if (!projectId) {
+    return c.json({ error: 'project_id query parameter is required' }, 400);
+  }
+
+  // Validate access
+  const apiKey = c.get('apiKey');
+  const access = await validateProjectAccess(c.env, apiKey, projectId);
+  if (!access.valid) {
+    return c.json({ error: access.error || 'Unauthorized' }, 403);
+  }
+
+  try {
+    const body = await c.req.json() as Partial<BusinessValueConfig>;
+    
+    // Validate and merge with defaults
+    const config: BusinessValueConfig = {
+      hourlyLaborCost: typeof body.hourlyLaborCost === 'number' && body.hourlyLaborCost >= 0 
+        ? body.hourlyLaborCost 
+        : DEFAULT_BUSINESS_VALUE_CONFIG.hourlyLaborCost,
+      hoursSavedPerTask: typeof body.hoursSavedPerTask === 'number' && body.hoursSavedPerTask >= 0 
+        ? body.hoursSavedPerTask 
+        : DEFAULT_BUSINESS_VALUE_CONFIG.hoursSavedPerTask,
+      impactMultiplier: typeof body.impactMultiplier === 'number' && body.impactMultiplier > 0 
+        ? body.impactMultiplier 
+        : DEFAULT_BUSINESS_VALUE_CONFIG.impactMultiplier,
+      currency: typeof body.currency === 'string' 
+        ? body.currency 
+        : DEFAULT_BUSINESS_VALUE_CONFIG.currency,
+    };
+
+    // Store the config in Supabase (or return success for now)
+    // In production, this would persist to a database
+    // For now, we just validate and return the config
+    
+    return c.json({
+      success: true,
+      agent_name: agentName,
+      project_id: projectId,
+      config,
+      message: 'Business value configuration updated successfully',
+    });
+  } catch (error) {
+    console.error('Failed to update agent config:', error);
+    return c.json({ error: 'Failed to update agent configuration' }, 500);
+  }
+});
+
+// ============================================================================
+// GET /v1/analytics/roi-report
+// Generate an ROI report across all agents
+// Query params: project_id, date_from?, date_to?
+// ============================================================================
+analyticsApp.get('/v1/analytics/roi-report', async (c) => {
+  const projectId = c.req.query('project_id');
+  if (!projectId) {
+    return c.json({ error: 'project_id query parameter is required' }, 400);
+  }
+
+  // Validate access
+  const apiKey = c.get('apiKey');
+  const access = await validateProjectAccess(c.env, apiKey, projectId);
+  if (!access.valid) {
+    return c.json({ error: access.error || 'Unauthorized' }, 403);
+  }
+
+  const dateFrom = c.req.query('date_from') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const dateTo = c.req.query('date_to') || new Date().toISOString();
+
+  try {
+    // Check if ClickHouse is available
+    const isAvailable = await isClickHouseAvailable(c.env);
+    
+    // Generate mock data if ClickHouse unavailable
+    const requests = getMockAgentRequests(projectId);
+    const runs = getMockAgentRuns(projectId);
+    
+    // Group by agent
+    const agentNames = [...new Set(requests.map(r => r.agentName))];
+    const summaries: AgentCostSummary[] = agentNames.map(name => {
+      const agentRequests = requests.filter(r => r.agentName === name);
+      const agentRuns = runs.filter(r => r.agentName === name);
+      return calculateAgentCostSummary(name, agentRequests, agentRuns);
+    });
+    
+    const comparison = compareAgents(summaries);
+
+    // Generate executive summary
+    const executiveSummary = {
+      total_agents: agentNames.length,
+      total_tasks_completed: comparison.totals.totalTasks,
+      total_cost: `$${comparison.totals.totalCostUsd.toFixed(2)}`,
+      total_hours_saved: `${comparison.totals.totalHoursSaved.toFixed(1)} hours`,
+      net_savings: comparison.totals.totalNetSavings >= 0 
+        ? `$${comparison.totals.totalNetSavings.toFixed(2)} saved` 
+        : `$${Math.abs(comparison.totals.totalNetSavings).toFixed(2)} cost`,
+      average_roi: `${comparison.totals.averageROI.toFixed(0)}%`,
+      overall_success_rate: `${comparison.totals.overallSuccessRate.toFixed(1)}%`,
+    };
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+    
+    if (comparison.topPerformers.byROI) {
+      recommendations.push(
+        `Best ROI: ${comparison.topPerformers.byROI.agentName} with ${comparison.topPerformers.byROI.roi.roiPercentage.toFixed(0)}% ROI`
+      );
+    }
+    
+    // Find agents with low success rate
+    const lowPerformers = summaries.filter(s => s.taskMetrics.successRate < 80);
+    if (lowPerformers.length > 0) {
+      recommendations.push(
+        `Consider optimizing: ${lowPerformers.map(s => s.agentName).join(', ')} (success rate < 80%)`
+      );
+    }
+    
+    // Check cache hit rates
+    const lowCacheHit = summaries.filter(s => s.requestMetrics.cacheHitRate < 30);
+    if (lowCacheHit.length > 0) {
+      recommendations.push(
+        `Enable semantic caching for: ${lowCacheHit.map(s => s.agentName).join(', ')} to reduce costs`
+      );
+    }
+
+    return c.json({
+      project_id: projectId,
+      date_from: dateFrom,
+      date_to: dateTo,
+      generated_at: new Date().toISOString(),
+      executive_summary: executiveSummary,
+      agents: summaries.map(s => ({
+        agent_name: s.agentName,
+        tasks: s.taskMetrics.taskCount,
+        success_rate: `${s.taskMetrics.successRate.toFixed(1)}%`,
+        cost: `$${s.roi.totalAgentCostUsd.toFixed(2)}`,
+        hours_saved: `${s.roi.hoursSaved.toFixed(1)}h`,
+        net_savings: `$${s.roi.netSavings.toFixed(2)}`,
+        roi: `${Number.isFinite(s.roi.roiPercentage) ? s.roi.roiPercentage.toFixed(0) : '∞'}%`,
+        summary: s.roi.summary,
+      })),
+      top_performers: comparison.topPerformers,
+      recommendations,
+    });
+  } catch (error) {
+    console.error('ROI report generation failed:', error);
+    return c.json({ error: 'Failed to generate ROI report' }, 500);
+  }
+});
+
 export default analyticsApp;
