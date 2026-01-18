@@ -800,4 +800,924 @@ observabilityApp.post('/v1/modifications/:modificationId/feedback', async (c) =>
   }
 });
 
+// ============================================================================
+// Team Workspace API Routes
+// @feature TEAM_WORKSPACE
+// ============================================================================
+
+import {
+  type TeamMember,
+  type ShareableLink,
+  type TraceComment,
+  type SlackWebhookConfig,
+  type UserRole,
+  TeamMemberStore,
+  ShareLinkStore,
+  CommentStore,
+  hasPermission,
+  canManageRole,
+  getRoleDisplayName,
+  createShareableLink,
+  isShareLinkValid,
+  isDomainAllowed,
+  getShareUrl,
+  createComment,
+  extractMentions,
+  getThreadSummary,
+  sendSlackMessage,
+  createRunFailedSlackMessage,
+  createNewCommentSlackMessage,
+  shouldNotifySlack,
+  generateInviteToken,
+  DEFAULT_WORKSPACE_SETTINGS,
+  DEFAULT_SLACK_CONFIG,
+} from '../lib/teamWorkspace';
+
+// In-memory stores for team features
+const teamMemberStore = new TeamMemberStore();
+const shareLinkStore = new ShareLinkStore();
+const commentStore = new CommentStore();
+
+// ============================================================================
+// Team Member Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/projects/:projectId/team
+ * Get all team members for a project
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/projects/:projectId/team', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const members = teamMemberStore.getByProject(projectId);
+
+  return c.json({
+    success: true,
+    projectId,
+    totalMembers: members.length,
+    members: members.map(m => ({
+      id: m.id,
+      userId: m.userId,
+      email: m.email,
+      displayName: m.displayName,
+      avatarUrl: m.avatarUrl,
+      role: m.role,
+      roleDisplayName: getRoleDisplayName(m.role),
+      status: m.status,
+      invitedAt: m.invitedAt,
+      acceptedAt: m.acceptedAt,
+    })),
+  });
+});
+
+/**
+ * POST /v1/projects/:projectId/team/invite
+ * Invite a new team member
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/projects/:projectId/team/invite', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // Validate required fields
+    if (!body.email || typeof body.email !== 'string') {
+      return c.json({ error: 'email is required' }, 400);
+    }
+    
+    const role = body.role || 'viewer';
+    if (!['admin', 'developer', 'viewer'].includes(role)) {
+      return c.json({ error: 'role must be admin, developer, or viewer' }, 400);
+    }
+
+    const inviterId = body.inviterId || 'system';
+    
+    // Create the team member with pending status
+    const member: TeamMember = {
+      id: `member_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`,
+      userId: '', // Will be set when invitation is accepted
+      email: body.email.toLowerCase(),
+      displayName: body.displayName,
+      role: role as UserRole,
+      projectId,
+      invitedBy: inviterId,
+      invitedAt: new Date().toISOString(),
+      status: 'pending',
+    };
+
+    teamMemberStore.add(member);
+
+    const inviteToken = generateInviteToken();
+
+    return c.json({
+      success: true,
+      message: 'Invitation sent',
+      invitation: {
+        memberId: member.id,
+        email: member.email,
+        role: member.role,
+        roleDisplayName: getRoleDisplayName(member.role),
+        inviteToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * PUT /v1/projects/:projectId/team/:memberId/role
+ * Update a team member's role
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.put('/v1/projects/:projectId/team/:memberId/role', async (c) => {
+  const projectId = c.req.param('projectId');
+  const memberId = c.req.param('memberId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    const newRole = body.role;
+    if (!newRole || !['admin', 'developer', 'viewer'].includes(newRole)) {
+      return c.json({ error: 'role must be admin, developer, or viewer' }, 400);
+    }
+
+    const member = teamMemberStore.get(memberId);
+    if (!member || member.projectId !== projectId) {
+      return c.json({ error: 'Team member not found' }, 404);
+    }
+
+    // Can't change owner role
+    if (member.role === 'owner') {
+      return c.json({ error: 'Cannot change owner role' }, 403);
+    }
+
+    const oldRole = member.role;
+    const success = teamMemberStore.updateRole(memberId, newRole as UserRole);
+
+    if (!success) {
+      return c.json({ error: 'Failed to update role' }, 500);
+    }
+
+    return c.json({
+      success: true,
+      message: 'Role updated',
+      member: {
+        id: memberId,
+        email: member.email,
+        oldRole,
+        newRole,
+        roleDisplayName: getRoleDisplayName(newRole as UserRole),
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * DELETE /v1/projects/:projectId/team/:memberId
+ * Remove a team member
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.delete('/v1/projects/:projectId/team/:memberId', async (c) => {
+  const projectId = c.req.param('projectId');
+  const memberId = c.req.param('memberId');
+  const apiKey = c.get('apiKey');
+
+  const member = teamMemberStore.get(memberId);
+  if (!member || member.projectId !== projectId) {
+    return c.json({ error: 'Team member not found' }, 404);
+  }
+
+  if (member.role === 'owner') {
+    return c.json({ error: 'Cannot remove project owner' }, 403);
+  }
+
+  const success = teamMemberStore.remove(memberId);
+
+  return c.json({
+    success,
+    message: success ? 'Team member removed' : 'Failed to remove member',
+    removedMember: {
+      id: memberId,
+      email: member.email,
+      role: member.role,
+    },
+  });
+});
+
+/**
+ * GET /v1/users/:userId/teams
+ * Get all teams/projects a user belongs to
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/users/:userId/teams', async (c) => {
+  const userId = c.req.param('userId');
+  const apiKey = c.get('apiKey');
+
+  const memberships = teamMemberStore.getByUser(userId);
+
+  return c.json({
+    success: true,
+    userId,
+    totalTeams: memberships.length,
+    teams: memberships.map(m => ({
+      projectId: m.projectId,
+      role: m.role,
+      roleDisplayName: getRoleDisplayName(m.role),
+      status: m.status,
+      joinedAt: m.acceptedAt || m.invitedAt,
+    })),
+  });
+});
+
+// ============================================================================
+// Shareable Link Endpoints
+// ============================================================================
+
+/**
+ * POST /v1/agent-runs/:runId/share
+ * Create a shareable link for a run
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/agent-runs/:runId/share', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    const projectId = body.projectId;
+    if (!projectId || typeof projectId !== 'string') {
+      return c.json({ error: 'projectId is required' }, 400);
+    }
+
+    const createdBy = body.createdBy || 'system';
+    
+    const link = createShareableLink(runId, projectId, createdBy, {
+      accessLevel: body.accessLevel,
+      expiresInHours: body.expiresInHours,
+      password: body.password,
+      message: body.message,
+      allowedDomains: body.allowedDomains,
+    });
+
+    shareLinkStore.add(link);
+
+    const baseUrl = body.baseUrl || 'https://watchllm.com';
+
+    return c.json({
+      success: true,
+      link: {
+        id: link.id,
+        token: link.token,
+        url: getShareUrl(link, baseUrl),
+        accessLevel: link.accessLevel,
+        expiresAt: link.expiresAt,
+        hasPassword: !!link.password,
+        allowedDomains: link.allowedDomains,
+        createdAt: link.createdAt,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/shared/:token
+ * Access a shared run via token
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/shared/:token', async (c) => {
+  const token = c.req.param('token');
+
+  const link = shareLinkStore.getByToken(token);
+  
+  if (!link) {
+    return c.json({ error: 'Share link not found' }, 404);
+  }
+
+  if (!isShareLinkValid(link)) {
+    return c.json({ 
+      error: 'Share link has expired or been deactivated',
+      expired: true,
+    }, 410);
+  }
+
+  // Check password if required
+  const password = c.req.query('password');
+  if (link.password && link.password !== password) {
+    return c.json({ 
+      error: 'Password required',
+      passwordRequired: true,
+    }, 401);
+  }
+
+  // Check domain restriction if any
+  const email = c.req.query('email');
+  if (link.allowedDomains && link.allowedDomains.length > 0) {
+    if (!email || !isDomainAllowed(link, email)) {
+      return c.json({ 
+        error: 'Access restricted to specific email domains',
+        domainRestricted: true,
+        allowedDomains: link.allowedDomains,
+      }, 403);
+    }
+  }
+
+  // Record access
+  shareLinkStore.recordAccess(token);
+
+  return c.json({
+    success: true,
+    runId: link.runId,
+    accessLevel: link.accessLevel,
+    message: link.message,
+    viewCount: link.viewCount + 1,
+  });
+});
+
+/**
+ * GET /v1/agent-runs/:runId/shares
+ * Get all share links for a run
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/agent-runs/:runId/shares', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  const links = shareLinkStore.getByRun(runId);
+
+  return c.json({
+    success: true,
+    runId,
+    totalLinks: links.length,
+    links: links.map(l => ({
+      id: l.id,
+      token: l.token,
+      accessLevel: l.accessLevel,
+      isActive: l.isActive,
+      isValid: isShareLinkValid(l),
+      expiresAt: l.expiresAt,
+      viewCount: l.viewCount,
+      lastViewedAt: l.lastViewedAt,
+      hasPassword: !!l.password,
+      createdAt: l.createdAt,
+      createdBy: l.createdBy,
+    })),
+  });
+});
+
+/**
+ * DELETE /v1/shares/:linkId
+ * Deactivate a share link
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.delete('/v1/shares/:linkId', async (c) => {
+  const linkId = c.req.param('linkId');
+  const apiKey = c.get('apiKey');
+
+  const link = shareLinkStore.get(linkId);
+  if (!link) {
+    return c.json({ error: 'Share link not found' }, 404);
+  }
+
+  const success = shareLinkStore.deactivate(linkId);
+
+  return c.json({
+    success,
+    message: success ? 'Share link deactivated' : 'Failed to deactivate',
+    linkId,
+  });
+});
+
+// ============================================================================
+// Comment Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/agent-runs/:runId/comments
+ * Get all comments for a run
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/agent-runs/:runId/comments', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+  
+  const stepIndex = c.req.query('stepIndex');
+
+  let comments: TraceComment[];
+  if (stepIndex !== undefined) {
+    comments = commentStore.getByStep(runId, parseInt(stepIndex, 10));
+  } else {
+    comments = commentStore.getByRun(runId);
+  }
+
+  const summary = getThreadSummary(comments);
+
+  return c.json({
+    success: true,
+    runId,
+    stepIndex: stepIndex ? parseInt(stepIndex, 10) : undefined,
+    summary,
+    comments: comments.map(c => ({
+      id: c.id,
+      stepIndex: c.stepIndex,
+      authorId: c.authorId,
+      authorName: c.authorName,
+      authorAvatarUrl: c.authorAvatarUrl,
+      content: c.content,
+      createdAt: c.createdAt,
+      isEdited: c.isEdited,
+      editedAt: c.editedAt,
+      parentId: c.parentId,
+      reactions: c.reactions,
+      isResolved: c.isResolved,
+      resolvedBy: c.resolvedBy,
+      resolvedAt: c.resolvedAt,
+    })),
+  });
+});
+
+/**
+ * POST /v1/agent-runs/:runId/comments
+ * Add a comment to a run
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/agent-runs/:runId/comments', async (c) => {
+  const runId = c.req.param('runId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    // Validate required fields
+    if (!body.content || typeof body.content !== 'string') {
+      return c.json({ error: 'content is required' }, 400);
+    }
+    
+    if (!body.projectId || typeof body.projectId !== 'string') {
+      return c.json({ error: 'projectId is required' }, 400);
+    }
+
+    const author = {
+      id: body.authorId || 'anonymous',
+      name: body.authorName || 'Anonymous',
+      email: body.authorEmail || '',
+      avatarUrl: body.authorAvatarUrl,
+    };
+
+    const comment = createComment(runId, body.projectId, author, body.content, {
+      stepIndex: body.stepIndex,
+      parentId: body.parentId,
+    });
+
+    commentStore.add(comment);
+
+    return c.json({
+      success: true,
+      comment: {
+        id: comment.id,
+        runId: comment.runId,
+        stepIndex: comment.stepIndex,
+        content: comment.content,
+        authorId: comment.authorId,
+        authorName: comment.authorName,
+        createdAt: comment.createdAt,
+        mentions: comment.mentions,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * PUT /v1/comments/:commentId
+ * Update a comment
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.put('/v1/comments/:commentId', async (c) => {
+  const commentId = c.req.param('commentId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!body.content || typeof body.content !== 'string') {
+      return c.json({ error: 'content is required' }, 400);
+    }
+
+    const existingComment = commentStore.get(commentId);
+    if (!existingComment) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    const success = commentStore.update(commentId, body.content);
+
+    if (!success) {
+      return c.json({ error: 'Failed to update comment' }, 500);
+    }
+
+    const updatedComment = commentStore.get(commentId);
+
+    return c.json({
+      success: true,
+      comment: {
+        id: updatedComment!.id,
+        content: updatedComment!.content,
+        isEdited: updatedComment!.isEdited,
+        editedAt: updatedComment!.editedAt,
+        mentions: extractMentions(updatedComment!.content),
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * DELETE /v1/comments/:commentId
+ * Delete a comment
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.delete('/v1/comments/:commentId', async (c) => {
+  const commentId = c.req.param('commentId');
+  const apiKey = c.get('apiKey');
+
+  const comment = commentStore.get(commentId);
+  if (!comment) {
+    return c.json({ error: 'Comment not found' }, 404);
+  }
+
+  const success = commentStore.delete(commentId);
+
+  return c.json({
+    success,
+    message: success ? 'Comment deleted' : 'Failed to delete comment',
+    commentId,
+  });
+});
+
+/**
+ * POST /v1/comments/:commentId/reactions
+ * Add a reaction to a comment
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/comments/:commentId/reactions', async (c) => {
+  const commentId = c.req.param('commentId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!body.emoji || typeof body.emoji !== 'string') {
+      return c.json({ error: 'emoji is required' }, 400);
+    }
+
+    const success = commentStore.addReaction(commentId, body.emoji);
+
+    if (!success) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    const comment = commentStore.get(commentId);
+
+    return c.json({
+      success: true,
+      reactions: comment!.reactions,
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * DELETE /v1/comments/:commentId/reactions/:emoji
+ * Remove a reaction from a comment
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.delete('/v1/comments/:commentId/reactions/:emoji', async (c) => {
+  const commentId = c.req.param('commentId');
+  const emoji = c.req.param('emoji');
+  const apiKey = c.get('apiKey');
+
+  const success = commentStore.removeReaction(commentId, emoji);
+
+  if (!success) {
+    return c.json({ error: 'Comment or reaction not found' }, 404);
+  }
+
+  const comment = commentStore.get(commentId);
+
+  return c.json({
+    success: true,
+    reactions: comment!.reactions,
+  });
+});
+
+/**
+ * POST /v1/comments/:commentId/resolve
+ * Resolve a comment thread
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/comments/:commentId/resolve', async (c) => {
+  const commentId = c.req.param('commentId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    const resolvedBy = body.resolvedBy || 'system';
+
+    const success = commentStore.resolve(commentId, resolvedBy);
+
+    if (!success) {
+      return c.json({ error: 'Comment not found' }, 404);
+    }
+
+    const comment = commentStore.get(commentId);
+
+    return c.json({
+      success: true,
+      comment: {
+        id: comment!.id,
+        isResolved: comment!.isResolved,
+        resolvedBy: comment!.resolvedBy,
+        resolvedAt: comment!.resolvedAt,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/comments/:commentId/unresolve
+ * Unresolve a comment thread
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/comments/:commentId/unresolve', async (c) => {
+  const commentId = c.req.param('commentId');
+  const apiKey = c.get('apiKey');
+
+  const success = commentStore.unresolve(commentId);
+
+  if (!success) {
+    return c.json({ error: 'Comment not found' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    message: 'Comment unresolved',
+    commentId,
+  });
+});
+
+// ============================================================================
+// Slack Integration Endpoints
+// ============================================================================
+
+/**
+ * PUT /v1/projects/:projectId/integrations/slack
+ * Configure Slack webhook for a project
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.put('/v1/projects/:projectId/integrations/slack', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!body.webhookUrl || typeof body.webhookUrl !== 'string') {
+      return c.json({ error: 'webhookUrl is required' }, 400);
+    }
+
+    // Validate webhook URL format
+    if (!body.webhookUrl.startsWith('https://hooks.slack.com/')) {
+      return c.json({ error: 'Invalid Slack webhook URL format' }, 400);
+    }
+
+    const config: SlackWebhookConfig = {
+      webhookUrl: body.webhookUrl,
+      channel: body.channel,
+      enabled: body.enabled !== false,
+      events: body.events || DEFAULT_SLACK_CONFIG.events,
+      minSeverity: body.minSeverity || DEFAULT_SLACK_CONFIG.minSeverity,
+      digestMode: body.digestMode || false,
+      digestTime: body.digestTime,
+    };
+
+    // TODO: Store in persistent storage (Supabase)
+    // For now, just validate and return success
+
+    return c.json({
+      success: true,
+      message: 'Slack integration configured',
+      config: {
+        webhookUrl: '***' + config.webhookUrl.slice(-20), // Mask URL
+        channel: config.channel,
+        enabled: config.enabled,
+        events: config.events,
+        minSeverity: config.minSeverity,
+        digestMode: config.digestMode,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/projects/:projectId/integrations/slack/test
+ * Send a test message to configured Slack webhook
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/projects/:projectId/integrations/slack/test', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!body.webhookUrl || typeof body.webhookUrl !== 'string') {
+      return c.json({ error: 'webhookUrl is required' }, 400);
+    }
+
+    const testMessage = {
+      blocks: [
+        {
+          type: 'header' as const,
+          text: {
+            type: 'plain_text' as const,
+            text: '✅ WatchLLM Test Message',
+            emoji: true,
+          },
+        },
+        {
+          type: 'section' as const,
+          text: {
+            type: 'mrkdwn' as const,
+            text: `Your Slack integration is working! Project: *${projectId}*`,
+          },
+        },
+        {
+          type: 'context' as const,
+          elements: [
+            {
+              type: 'mrkdwn',
+              text: `Sent at ${new Date().toISOString()}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = await sendSlackMessage(body.webhookUrl, testMessage);
+
+    if (result.success) {
+      return c.json({
+        success: true,
+        message: 'Test message sent successfully',
+      });
+    } else {
+      return c.json({
+        success: false,
+        error: result.error,
+      }, 400);
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * POST /v1/projects/:projectId/integrations/slack/notify
+ * Manually send a notification to Slack
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.post('/v1/projects/:projectId/integrations/slack/notify', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    if (!body.webhookUrl || typeof body.webhookUrl !== 'string') {
+      return c.json({ error: 'webhookUrl is required' }, 400);
+    }
+    
+    if (!body.eventType || typeof body.eventType !== 'string') {
+      return c.json({ error: 'eventType is required' }, 400);
+    }
+
+    const dashboardUrl = body.dashboardUrl || 'https://watchllm.com';
+    let message;
+
+    switch (body.eventType) {
+      case 'run_failed':
+        message = createRunFailedSlackMessage(
+          body.runId || 'unknown',
+          body.agentName || 'Unknown Agent',
+          body.error || 'Unknown error',
+          dashboardUrl
+        );
+        break;
+      case 'new_comment':
+        if (!body.comment) {
+          return c.json({ error: 'comment object is required for new_comment event' }, 400);
+        }
+        message = createNewCommentSlackMessage(
+          body.comment as TraceComment,
+          body.runName || 'Unknown Run',
+          dashboardUrl
+        );
+        break;
+      default:
+        return c.json({ 
+          error: `Unsupported event type: ${body.eventType}. Supported: run_failed, new_comment` 
+        }, 400);
+    }
+
+    const result = await sendSlackMessage(body.webhookUrl, message);
+
+    if (result.success) {
+      return c.json({
+        success: true,
+        message: 'Notification sent',
+        eventType: body.eventType,
+      });
+    } else {
+      return c.json({
+        success: false,
+        error: result.error,
+      }, 400);
+    }
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/projects/:projectId/team-stats
+ * Get team activity statistics
+ * 
+ * @feature TEAM_WORKSPACE
+ */
+observabilityApp.get('/v1/projects/:projectId/team-stats', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const members = teamMemberStore.getByProject(projectId);
+  const activeMembers = members.filter(m => m.status === 'active');
+  const pendingInvites = members.filter(m => m.status === 'pending');
+
+  // Count by role
+  const roleBreakdown: Record<string, number> = {};
+  for (const member of members) {
+    roleBreakdown[member.role] = (roleBreakdown[member.role] || 0) + 1;
+  }
+
+  return c.json({
+    success: true,
+    projectId,
+    stats: {
+      totalMembers: members.length,
+      activeMembers: activeMembers.length,
+      pendingInvites: pendingInvites.length,
+      roleBreakdown,
+      totalShareLinks: shareLinkStore.getSize(),
+      totalComments: commentStore.getSize(),
+    },
+  });
+});
+
 export default observabilityApp;
