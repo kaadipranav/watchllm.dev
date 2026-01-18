@@ -12,6 +12,15 @@ import type { ObservabilityEvent, EventQuery } from '../../../packages/shared/sr
 import { createObservabilityIngestion } from './ingestion';
 import { validateObservabilityEvent, validateBatchObservabilityEvents } from '../lib/validation';
 import { createAgentDebugIngestion, type AgentRunInput, type AgentStep } from './agent-debug';
+import {
+  LeaderboardStore,
+  createLeaderboardEntry,
+  validateShareRequest,
+  generateSocialMetadata,
+  type ShareAgentRequest,
+  type LeaderboardFilter,
+  type LeaderboardEntry,
+} from '../lib/leaderboard';
 
 // Create the observability sub-app with proper typing
 const observabilityApp = new Hono<{ 
@@ -1751,6 +1760,9 @@ const ruleSetStore = new RuleSetStore();
 const resultStore = new ResultStore();
 const evaluationQueue = new EvaluationQueue();
 
+// In-memory store for leaderboard
+const leaderboardStore = new LeaderboardStore();
+
 // ============================================================================
 // Rule Set Endpoints
 // ============================================================================
@@ -2538,6 +2550,353 @@ observabilityApp.get('/v1/projects/:projectId/evaluations/stats', async (c) => {
       queueCompleted: queueStats.completed,
       queueFailed: queueStats.failed,
     },
+  });
+});
+
+// ============================================================================
+// Leaderboard Endpoints
+// ============================================================================
+
+/**
+ * POST /v1/projects/:projectId/leaderboard/share
+ * Share agent to public leaderboard
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.post('/v1/projects/:projectId/leaderboard/share', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body: ShareAgentRequest = await c.req.json();
+    
+    // Validate request
+    const validationError = validateShareRequest(body);
+    if (validationError) {
+      return c.json({ error: validationError }, 400);
+    }
+
+    // In production, fetch runs from ClickHouse/Supabase
+    // For now, using mock data
+    const mockRuns = body.runIds.map((runId, i) => ({
+      id: runId,
+      agent_name: body.agentName,
+      status: i % 5 === 0 ? 'failed' : 'completed',
+      success: i % 5 !== 0,
+      cost: 0.01 + Math.random() * 0.05,
+      latency_ms: 100 + Math.random() * 900,
+      input: `Sample input ${i + 1}`,
+      output: `Sample output ${i + 1}`,
+    }));
+
+    // Create leaderboard entry
+    const userId = 'user_123'; // In production, extract from API key
+    const entry = createLeaderboardEntry(body, userId, mockRuns);
+
+    // Store entry
+    leaderboardStore.add(entry);
+
+    return c.json({
+      success: true,
+      entry: {
+        id: entry.id,
+        displayName: entry.displayName,
+        displayAuthor: entry.displayAuthor,
+        successRate: entry.successRate,
+        avgCostPerTask: entry.avgCostPerTask,
+        totalRuns: entry.totalRuns,
+        sharedAt: entry.sharedAt,
+        shareUrl: `https://watchllm.com/leaderboard/${entry.id}`,
+      },
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/leaderboard
+ * Get public leaderboard entries
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/leaderboard', async (c) => {
+  const category = c.req.query('category');
+  const tags = c.req.query('tags')?.split(',').filter(Boolean);
+  const minSuccessRate = c.req.query('minSuccessRate') ? parseFloat(c.req.query('minSuccessRate')!) : undefined;
+  const maxCostPerTask = c.req.query('maxCostPerTask') ? parseFloat(c.req.query('maxCostPerTask')!) : undefined;
+  const sortBy = (c.req.query('sortBy') || 'popularity') as any;
+  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
+  const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
+
+  const filter: LeaderboardFilter = {
+    category,
+    tags,
+    minSuccessRate,
+    maxCostPerTask,
+    sortBy,
+    limit,
+    offset,
+  };
+
+  const entries = leaderboardStore.filter(filter);
+  const stats = leaderboardStore.getStats();
+
+  return c.json({
+    success: true,
+    entries: entries.map(e => ({
+      id: e.id,
+      displayName: e.displayName,
+      displayAuthor: e.displayAuthor,
+      category: e.category,
+      tags: e.tags,
+      successRate: e.successRate,
+      avgCostPerTask: e.avgCostPerTask,
+      avgLatencyMs: e.avgLatencyMs,
+      totalRuns: e.totalRuns,
+      views: e.views,
+      upvotes: e.upvotes,
+      sharedAt: e.sharedAt,
+    })),
+    stats,
+    pagination: {
+      offset,
+      limit,
+      total: leaderboardStore.getPublic().length,
+    },
+  });
+});
+
+/**
+ * GET /v1/leaderboard/featured
+ * Get featured agents
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/leaderboard/featured', async (c) => {
+  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 10;
+  
+  const featured = leaderboardStore.getFeatured().slice(0, limit);
+
+  return c.json({
+    success: true,
+    featured: featured.map(e => ({
+      id: e.id,
+      displayName: e.displayName,
+      displayAuthor: e.displayAuthor,
+      description: e.agentDescription,
+      category: e.category,
+      tags: e.tags,
+      successRate: e.successRate,
+      avgCostPerTask: e.avgCostPerTask,
+      avgLatencyMs: e.avgLatencyMs,
+      totalRuns: e.totalRuns,
+      views: e.views,
+      upvotes: e.upvotes,
+      featuredRank: e.featuredRank,
+    })),
+  });
+});
+
+/**
+ * GET /v1/leaderboard/:entryId
+ * Get leaderboard entry details
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/leaderboard/:entryId', async (c) => {
+  const entryId = c.req.param('entryId');
+
+  const entry = leaderboardStore.get(entryId);
+  if (!entry || !entry.isPublic) {
+    return c.json({ error: 'Entry not found' }, 404);
+  }
+
+  // Increment view count
+  leaderboardStore.incrementViews(entryId);
+
+  return c.json({
+    success: true,
+    entry: {
+      id: entry.id,
+      displayName: entry.displayName,
+      displayAuthor: entry.displayAuthor,
+      description: entry.agentDescription,
+      category: entry.category,
+      tags: entry.tags,
+      successRate: entry.successRate,
+      avgCostPerTask: entry.avgCostPerTask,
+      avgLatencyMs: entry.avgLatencyMs,
+      totalRuns: entry.totalRuns,
+      sampleInputs: entry.sampleInputs,
+      sampleOutputs: entry.sampleOutputs,
+      views: entry.views + 1, // Include the current view
+      upvotes: entry.upvotes,
+      sharedAt: entry.sharedAt,
+    },
+  });
+});
+
+/**
+ * POST /v1/leaderboard/:entryId/upvote
+ * Upvote a leaderboard entry
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.post('/v1/leaderboard/:entryId/upvote', async (c) => {
+  const entryId = c.req.param('entryId');
+
+  const entry = leaderboardStore.get(entryId);
+  if (!entry || !entry.isPublic) {
+    return c.json({ error: 'Entry not found' }, 404);
+  }
+
+  // In production, track unique upvotes per user
+  leaderboardStore.incrementUpvotes(entryId);
+
+  return c.json({
+    success: true,
+    upvotes: entry.upvotes + 1,
+  });
+});
+
+/**
+ * DELETE /v1/leaderboard/:entryId
+ * Remove entry from leaderboard (owner only)
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.delete('/v1/leaderboard/:entryId', async (c) => {
+  const entryId = c.req.param('entryId');
+  const apiKey = c.get('apiKey');
+
+  const entry = leaderboardStore.get(entryId);
+  if (!entry) {
+    return c.json({ error: 'Entry not found' }, 404);
+  }
+
+  // In production, verify ownership via API key -> userId
+  // For now, just delete
+  const success = leaderboardStore.delete(entryId);
+
+  if (!success) {
+    return c.json({ error: 'Failed to delete entry' }, 500);
+  }
+
+  return c.json({
+    success: true,
+    message: 'Entry removed from leaderboard',
+  });
+});
+
+/**
+ * PUT /v1/leaderboard/:entryId
+ * Update leaderboard entry (owner only)
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.put('/v1/leaderboard/:entryId', async (c) => {
+  const entryId = c.req.param('entryId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+    
+    const entry = leaderboardStore.get(entryId);
+    if (!entry) {
+      return c.json({ error: 'Entry not found' }, 404);
+    }
+
+    // In production, verify ownership
+    
+    const updates: Partial<LeaderboardEntry> = {};
+    if (body.displayName) updates.displayName = body.displayName;
+    if (body.displayAuthor) updates.displayAuthor = body.displayAuthor;
+    if (body.description) updates.agentDescription = body.description;
+    if (body.category) updates.category = body.category;
+    if (body.tags) updates.tags = body.tags;
+    if (body.isPublic !== undefined) updates.isPublic = body.isPublic;
+
+    const success = leaderboardStore.update(entryId, updates);
+
+    if (!success) {
+      return c.json({ error: 'Failed to update entry' }, 500);
+    }
+
+    return c.json({
+      success: true,
+      entry: leaderboardStore.get(entryId),
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/leaderboard/:entryId/metadata
+ * Get social sharing metadata for entry
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/leaderboard/:entryId/metadata', async (c) => {
+  const entryId = c.req.param('entryId');
+
+  const entry = leaderboardStore.get(entryId);
+  if (!entry || !entry.isPublic) {
+    return c.json({ error: 'Entry not found' }, 404);
+  }
+
+  const baseUrl = 'https://watchllm.com'; // In production, use env var
+  const metadata = generateSocialMetadata(entry, baseUrl);
+
+  return c.json({
+    success: true,
+    metadata,
+  });
+});
+
+/**
+ * GET /v1/leaderboard/categories
+ * Get available categories and their counts
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/leaderboard/categories', async (c) => {
+  const stats = leaderboardStore.getStats();
+
+  return c.json({
+    success: true,
+    categories: stats.categories,
+  });
+});
+
+/**
+ * GET /v1/projects/:projectId/leaderboard/entries
+ * Get user's own leaderboard entries
+ * 
+ * @feature PUBLIC_LEADERBOARD
+ */
+observabilityApp.get('/v1/projects/:projectId/leaderboard/entries', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  const entries = leaderboardStore.getByProject(projectId);
+
+  return c.json({
+    success: true,
+    entries: entries.map(e => ({
+      id: e.id,
+      agentName: e.agentName,
+      displayName: e.displayName,
+      isPublic: e.isPublic,
+      isFeatured: e.isFeatured,
+      successRate: e.successRate,
+      avgCostPerTask: e.avgCostPerTask,
+      totalRuns: e.totalRuns,
+      views: e.views,
+      upvotes: e.upvotes,
+      sharedAt: e.sharedAt,
+    })),
   });
 });
 
