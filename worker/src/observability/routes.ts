@@ -21,6 +21,10 @@ import {
   type LeaderboardFilter,
   type LeaderboardEntry,
 } from '../lib/leaderboard';
+import {
+  AgentTemplateStore,
+  type TemplateFilter,
+} from '../lib/agentTemplates';
 
 // Create the observability sub-app with proper typing
 const observabilityApp = new Hono<{ 
@@ -1763,6 +1767,9 @@ const evaluationQueue = new EvaluationQueue();
 // In-memory store for leaderboard
 const leaderboardStore = new LeaderboardStore();
 
+// In-memory store for agent template marketplace
+const templateStore = new AgentTemplateStore();
+
 // ============================================================================
 // Rule Set Endpoints
 // ============================================================================
@@ -2897,6 +2904,180 @@ observabilityApp.get('/v1/projects/:projectId/leaderboard/entries', async (c) =>
       upvotes: e.upvotes,
       sharedAt: e.sharedAt,
     })),
+  });
+});
+
+// ============================================================================
+// Agent Template Marketplace Endpoints
+// ============================================================================
+
+/**
+ * GET /v1/agent-templates
+ * List agent templates
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/agent-templates', async (c) => {
+  const category = c.req.query('category');
+  const tags = c.req.query('tags')?.split(',').filter(Boolean);
+  const featuredOnly = c.req.query('featured') === 'true';
+  const sortBy = (c.req.query('sortBy') || 'popular') as TemplateFilter['sortBy'];
+  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
+  const offset = c.req.query('offset') ? parseInt(c.req.query('offset')!) : 0;
+
+  const filter: TemplateFilter = {
+    category,
+    tags,
+    featuredOnly,
+    sortBy,
+    limit,
+    offset,
+  };
+
+  const templates = templateStore.filter(filter);
+  const stats = templateStore.getStats();
+
+  return c.json({
+    success: true,
+    templates,
+    stats,
+    pagination: {
+      offset,
+      limit,
+      total: templateStore.getAll().length,
+    },
+  });
+});
+
+/**
+ * GET /v1/agent-templates/featured
+ * List featured agent templates
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/agent-templates/featured', async (c) => {
+  const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 6;
+
+  return c.json({
+    success: true,
+    templates: templateStore.getFeatured().slice(0, limit),
+  });
+});
+
+/**
+ * GET /v1/agent-templates/:templateId
+ * Get template details
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/agent-templates/:templateId', async (c) => {
+  const templateId = c.req.param('templateId');
+
+  const template = templateStore.get(templateId);
+  if (!template) {
+    return c.json({ error: 'Template not found' }, 404);
+  }
+
+  return c.json({
+    success: true,
+    template,
+  });
+});
+
+/**
+ * POST /v1/agent-templates/:templateId/view
+ * Track template view
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.post('/v1/agent-templates/:templateId/view', async (c) => {
+  const templateId = c.req.param('templateId');
+
+  const template = templateStore.get(templateId);
+  if (!template) {
+    return c.json({ error: 'Template not found' }, 404);
+  }
+
+  templateStore.incrementView(templateId);
+
+  return c.json({
+    success: true,
+    views: template.views + 1,
+  });
+});
+
+/**
+ * POST /v1/agent-templates/:templateId/deploy
+ * One-click deploy a template with monitoring
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.post('/v1/agent-templates/:templateId/deploy', async (c) => {
+  const templateId = c.req.param('templateId');
+  const apiKey = c.get('apiKey');
+
+  try {
+    const body = await c.req.json();
+
+    if (!body.projectId || typeof body.projectId !== 'string') {
+      return c.json({ error: 'projectId is required' }, 400);
+    }
+
+    const deployment = templateStore.recordDeployment(templateId, body.projectId);
+    if (!deployment) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      deployment,
+    });
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON payload' }, 400);
+  }
+});
+
+/**
+ * GET /v1/projects/:projectId/agent-templates/deployments
+ * List deployments for a project
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/projects/:projectId/agent-templates/deployments', async (c) => {
+  const projectId = c.req.param('projectId');
+  const apiKey = c.get('apiKey');
+
+  return c.json({
+    success: true,
+    deployments: templateStore.getDeploymentsByProject(projectId),
+  });
+});
+
+/**
+ * GET /v1/agent-templates/stats
+ * Aggregate template marketplace stats
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/agent-templates/stats', async (c) => {
+  return c.json({
+    success: true,
+    stats: templateStore.getStats(),
+  });
+});
+
+/**
+ * GET /v1/agent-templates/top
+ * Top converting templates
+ * 
+ * @feature AGENT_TEMPLATE_MARKETPLACE
+ */
+observabilityApp.get('/v1/agent-templates/top', async (c) => {
+  const stats = templateStore.getStats();
+
+  return c.json({
+    success: true,
+    topConverting: stats.topConverting,
   });
 });
 
