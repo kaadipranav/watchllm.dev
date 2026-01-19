@@ -234,7 +234,10 @@ function APIKeysContent() {
                   <div key={project.id} className="space-y-3 card-premium border border-premium-border-subtle bg-premium-bg-primary p-5">
                     <div className="flex items-center gap-2 text-sm font-medium text-premium-text-secondary">
                       <FolderOpen className="h-4 w-4 text-premium-text-muted" />
-                      <span>{project.name}</span>
+                      <span className="font-semibold text-premium-text-primary">{project.name}</span>
+                      <span className="text-xs text-premium-text-muted ml-2 font-mono bg-premium-bg-elevated px-2 py-0.5 rounded border border-premium-border-subtle">
+                        {project.id}
+                      </span>
                     </div>
                     <APIKeyList projectId={project.id} keys={projectKeys} onRefresh={fetchData} />
                   </div>

@@ -253,13 +253,13 @@ export class WatchLLMClient {
     }
 
     const eventStr = JSON.stringify(event);
-    
+
     // Redact emails
     let redacted = eventStr.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[REDACTED_EMAIL]');
-    
+
     // Redact credit card numbers
     redacted = redacted.replace(/\b(?:\d{4}[-\s]?){3}\d{4}\b/g, '[REDACTED_CC]');
-    
+
     return JSON.parse(redacted);
   }
 
@@ -546,5 +546,7 @@ export class WatchLLMClient {
 export function init(config: WatchLLMConfig): WatchLLMClient {
   return new WatchLLMClient(config);
 }
+
+export * from './langchain';
 
 export default WatchLLMClient;

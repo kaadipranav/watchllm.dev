@@ -210,7 +210,7 @@ export class AnalyticsAPIClient {
    */
   private buildQueryString(params: Record<string, any>): string {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         searchParams.append(key, String(value));
@@ -263,7 +263,7 @@ export class AnalyticsAPIClient {
   async getStatsLast24h(projectId: string): Promise<AnalyticsStats> {
     const dateTo = new Date().toISOString();
     const dateFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
+
     return this.getStats({
       project_id: projectId,
       date_from: dateFrom,
@@ -277,7 +277,7 @@ export class AnalyticsAPIClient {
   async getStatsLast7d(projectId: string): Promise<AnalyticsStats> {
     const dateTo = new Date().toISOString();
     const dateFrom = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    
+
     return this.getStats({
       project_id: projectId,
       date_from: dateFrom,
@@ -291,7 +291,7 @@ export class AnalyticsAPIClient {
   async getStatsLast30d(projectId: string): Promise<AnalyticsStats> {
     const dateTo = new Date().toISOString();
     const dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    
+
     return this.getStats({
       project_id: projectId,
       date_from: dateFrom,
@@ -348,6 +348,53 @@ export class AnalyticsAPIClient {
       limit: 1000, // Get all events in a run
       offset: 0,
     });
+  }
+
+  // ============================================================================
+  // Agent Templates
+  // ============================================================================
+
+  /**
+   * GET /v1/agent-templates
+   * Fetch list of agent templates
+   */
+  async getAgentTemplates(params: {
+    category?: string;
+    tags?: string[];
+    featured?: boolean;
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<any> {
+    const query = this.buildQueryString(params);
+    return this.fetchAPI<any>(`/v1/agent-templates${query}`);
+  }
+
+  /**
+   * POST /v1/agent-templates/:templateId/deploy
+   * Deploy a template
+   */
+  async deployTemplate(templateId: string, projectId: string): Promise<any> {
+    return this.fetchAPI<any>(`/v1/agent-templates/${templateId}/deploy`, {
+      method: 'POST',
+      body: JSON.stringify({ projectId }),
+    });
+  }
+
+  // ============================================================================
+  // Agent Cost Attribution
+  // ============================================================================
+
+  /**
+   * GET /v1/analytics/agents
+   * Fetch agent cost summaries
+   */
+  async getAgentCostSummaries(params: {
+    project_id: string;
+    date_from?: string;
+    date_to?: string;
+  }): Promise<any> {
+    const query = this.buildQueryString(params);
+    return this.fetchAPI<any>(`/v1/analytics/agents${query}`);
   }
 }
 

@@ -35,6 +35,7 @@ const costSavingsNavigation = [
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
   { name: "API Keys", href: "/dashboard/api-keys", icon: Key },
   { name: "Usage", href: "/dashboard/usage", icon: BarChart3 },
+  { name: "ROI Attribution", href: "/dashboard/roi", icon: Activity },
   { name: "A/B Testing", href: "/dashboard/ab-testing", icon: Zap },
 ];
 
@@ -44,6 +45,11 @@ const observabilityNavigation = [
   { name: "Analytics", href: "/dashboard/observability/analytics", icon: BarChart3 },
   { name: "Traces", href: "/dashboard/observability/traces", icon: Zap },
   { name: "Agent Debugger", href: "/dashboard/observability/agent-runs", icon: Bug },
+];
+
+// Marketplace section
+const marketplaceNavigation = [
+  { name: "Templates", href: "/dashboard/templates", icon: LayoutDashboard },
 ];
 
 function NavSection({ title, icon: Icon, items, isOpen, onToggle }: { title: string; icon: any; items: any[]; isOpen: boolean; onToggle: () => void }) {
@@ -191,6 +197,15 @@ export function Sidebar() {
           items={observabilityNavigation}
           isOpen={observabilityOpen}
           onToggle={() => setObservabilityOpen(!observabilityOpen)}
+        />
+
+        {/* Marketplace Section */}
+        <NavSection
+          title="Marketplace"
+          icon={LayoutDashboard}
+          items={marketplaceNavigation}
+          isOpen={true}
+          onToggle={() => { }}
         />
       </nav>
 
