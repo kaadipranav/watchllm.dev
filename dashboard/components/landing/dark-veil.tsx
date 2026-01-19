@@ -1,75 +1,5 @@
-IMPLEMENT: Automatic agent trace extraction in the proxy
-- Parse OpenAI function calls → extract tool usage
-- Detect LangChain trace IDs from headers
-- Auto-tag agentic workflows (multi-step, loops, branching)
-- Store hierarchical traces (parent requests → child tool calls)
+'use client';
 
-IMPLEMENT: Agent-level cost attribution & ROI dashboard
-- Group requests by agent_name/run_id
-- Calculate per-agent: cost, task count, latency, errors
-- Add "business value" field (user-configurable)
-- Generate ROI reports: "This agent saved X hours costing Y dollars"
-
-IMPLEMENT: Agent trace replay & modification UI
-- Store full request/response for each step
-- Add "Replay from here" button on each step
-- Allow editing: prompts, tools, parameters
-- Show diff between original & modified runs
-- Track which modifications improved success rate
-
-IMPLEMENT: Team workspace features
-- Add user roles (admin/dev/viewer)
-- Share trace links with teammates
-- Add comment system on traces
-- Slack webhook integration for alerts
-
-IMPLEMENT: Custom evaluation pipeline
-- Let users define evaluation criteria
-- Run evaluations async (don't block responses)
-- Store results in ClickHouse
-- Show pass/fail rates in dashboard
-- Alert when eval metrics drop below threshold
-
-IMPLEMENT: Public leaderboard feature
-- Opt-in agent sharing
-- Anonymize customer data
-- Show: cost/task, success rate, latency
-- Add "Featured Agents" section on homepage
-- Generate OG images for social sharing
-
-IMPLEMENT: Agent template marketplace
-- Build 5-10 common agent patterns
-- One-click deploy with monitoring
-- Show expected costs/performance
-- Track which templates convert best
-
-
------- THE UI FROM REACTBITS.DEV ------
-
-'''
-pnpm dlx shadcn@latest add @react-bits/DarkVeil-JS-CSS
-'''
-
----
-
-'''
-import DarkVeil from './DarkVeil';
-
-<div style={{ width: '100%', height: '600px', position: 'relative' }}>
-  <DarkVeil
-  hueShift={0}
-  noiseIntensity={0}
-  scanlineIntensity={0}
-  speed={0.5}
-  scanlineFrequency={0}
-  warpAmount={0}
-/>
-</div>
-'''
-
----
-
-'''
 import { useRef, useEffect } from 'react';
 import { Renderer, Program, Mesh, Triangle, Vec2 } from 'ogl';
 
@@ -226,9 +156,3 @@ export default function DarkVeil({
   }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale]);
   return <canvas ref={ref} className="w-full h-full block" />;
 }
-'''
-
----
-
-
-

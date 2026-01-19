@@ -14,6 +14,7 @@ import { Footer } from "@/components/landing/footer";
 import { LiveFlow } from "@/components/landing/live-flow";
 import { AuthCallbackHandler } from "@/components/auth/auth-callback-handler";
 import { Suspense } from "react";
+import DarkVeil from "@/components/landing/dark-veil";
 
 export const metadata: Metadata = {
   title: "WatchLLM - Cut Your OpenAI Bill by 40-70%",
@@ -89,17 +90,16 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Minimal dark grid + subtle top glow (Vercel/Linear-inspired) */}
-      <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
-        <div
-          className="absolute inset-0 grid-pattern opacity-[0.09]"
-          style={{
-            maskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(circle at 50% 10%, black 60%, transparent 100%)'
-          }}
+      {/* Dark Veil animated background - hero section only */}
+      <div className="absolute inset-x-0 top-0 h-[100vh] pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
+        <DarkVeil
+          hueShift={25}
+          noiseIntensity={0.15}
+          scanlineIntensity={0}
+          speed={3}
+          scanlineFrequency={0}
+          warpAmount={5}
         />
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_70%_50%_at_50%_-20%,hsl(var(--accent-primary)_/_0.13),transparent)]" />
-        <div className="absolute inset-x-0 bottom-0 h-[320px] bg-gradient-to-t from-bg-primary via-bg-primary/90 to-transparent" />
       </div>
 
       <Navbar />
