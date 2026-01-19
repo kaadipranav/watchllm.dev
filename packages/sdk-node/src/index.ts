@@ -547,6 +547,4 @@ export function init(config: WatchLLMConfig): WatchLLMClient {
   return new WatchLLMClient(config);
 }
 
-export * from './langchain';
-
 export default WatchLLMClient;

@@ -17,12 +17,10 @@ from .client import (
     PerformanceAlertEvent,
     ToolCallEvent
 )
-from .instrumentation import instrument_openai
 
 __all__ = [
     "WatchLLMClient",
     "init",
-    "instrument_openai",
     "Status",
     "EventType",
     "StepType",
