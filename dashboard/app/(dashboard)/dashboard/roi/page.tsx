@@ -61,15 +61,26 @@ export default function ROIPage() {
         async function fetchData() {
             setIsLoading(true);
             try {
-                // Get API Key for project
-                // In a real app, we might handle this differently, but here we check local storage or auth context
-                // For now we rely on the analytics client being configured or the backend handling the auth via session if possible
-                // But analytics-api uses Bearer token. 
-                // We'll try to fetch with the client as-is, assuming maybe the user has a key or we mock it for the demo if needed.
-                // Wait, the client usually needs an API key. 
-                // In `dashboard/page.tsx` it did: localStorage.getItem(`project_${id}_api_key`)
-                const apiKey = localStorage.getItem(`project_${selectedProject}_api_key`) || "";
-                if (apiKey) analyticsClient.setApiKey(apiKey);
+                // Get an active API key for this project from the database
+                const { data: apiKeys } = await supabase
+                    .from("api_keys")
+                    .select("key")
+                    .eq("project_id", selectedProject)
+                    .eq("is_active", true)
+                    .limit(1)
+                    .single();
+
+                if (!apiKeys?.key) {
+                    toast({
+                        title: "No API Key",
+                        description: "Please create an API key for this project first",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+
+                analyticsClient.setApiKey(apiKeys.key);
 
                 const response = await analyticsClient.getAgentCostSummaries({
                     project_id: selectedProject,

@@ -152,6 +152,12 @@ function APIKeysContent() {
         <p className="text-lg text-premium-text-secondary">
           Manage WatchLLM keys and connect your own AI provider keys (BYOK).
         </p>
+        <div className="mt-3 rounded-lg border border-premium-accent/20 bg-premium-accent/5 p-4">
+          <p className="text-sm text-premium-text-secondary">
+            <strong className="text-premium-accent">💡 Setup Tip:</strong> To integrate WatchLLM, you&apos;ll need both an <strong>API Key</strong> and the <strong>Project ID</strong>. 
+            The Project ID is displayed prominently below each key for easy copying.
+          </p>
+        </div>
       </header>
 
       <section className="space-y-5">

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Eye, EyeOff, Trash2, Plus } from "lucide-react";
+import { Copy, Eye, EyeOff, Trash2, Plus, Fingerprint } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { maskAPIKey, formatRelativeTime, generateAPIKey } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -108,11 +108,11 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, label: string = "API key") => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copied",
-      description: "API key copied to clipboard",
+      description: `${label} copied to clipboard`,
     });
   };
 
@@ -152,12 +152,37 @@ export function APIKeyList({ projectId, keys, onRefresh }: APIKeyListProps) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>API Keys</CardTitle>
-          <Button onClick={() => setShowDialog(true)} size="sm" data-sa-event="api-key-new">
-            <Plus className="h-4 w-4 mr-2" />
-            New Key
-          </Button>
+        <CardHeader className="space-y-3">
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>API Keys</CardTitle>
+            <Button onClick={() => setShowDialog(true)} size="sm" data-sa-event="api-key-new">
+              <Plus className="h-4 w-4 mr-2" />
+              New Key
+            </Button>
+          </div>
+          {/* Project ID Display - Prominent */}
+          <div className="flex items-center gap-3 rounded-lg border border-premium-border-subtle bg-premium-bg-elevated p-3 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-premium-accent/10">
+              <Fingerprint className="h-5 w-5 text-premium-accent" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-premium-text-muted">
+                Project ID
+              </p>
+              <code className="block text-sm font-mono text-premium-text-primary">
+                {projectId}
+              </code>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(projectId, "Project ID")}
+              className="flex items-center gap-2 border-premium-border-subtle hover:bg-premium-accent/10 hover:text-premium-accent"
+            >
+              <Copy className="h-4 w-4" />
+              Copy
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {keys.length === 0 ? (

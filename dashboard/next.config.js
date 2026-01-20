@@ -41,7 +41,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://*.stripe.com https://simpleanalyticscdn.com wss://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co https://*.stripe.com https://simpleanalyticscdn.com https://proxy.watchllm.dev wss://*.supabase.co",
               "frame-src 'self' https://*.stripe.com",
               "frame-ancestors 'none'",
             ].join('; '),
