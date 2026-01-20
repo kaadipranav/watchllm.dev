@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Activity, Search, Filter, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { createAnalyticsClient, type EventLog } from '@/lib/analytics-api';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 
 export default function RequestsPage() {
-  const searchParams = useSearchParams();
-  const projectId = searchParams.get('project_id') || '';
-
+  const supabase = createClient();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
   const [logs, setLogs] = useState<EventLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,21 +28,55 @@ export default function RequestsPage() {
 
   const pageSize = 50;
 
+  // Load projects
+  useEffect(() => {
+    async function loadProjects() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('projects')
+        .select('id, name')
+        .order('created_at', { ascending: false });
+
+      setProjects(data || []);
+      if (data && data.length > 0) {
+        setSelectedProject(data[0].id);
+      } else {
+        setLoading(false);
+      }
+    }
+    loadProjects();
+  }, []);
+
   const fetchLogs = useCallback(async () => {
+    if (!selectedProject) return;
+    
     try {
       setLoading(true);
       setError(null);
 
       const analyticsClient = createAnalyticsClient();
 
-      // Get API key from localStorage or session (you'll need to implement this)
-      const apiKey = localStorage.getItem(`project_${projectId}_api_key`);
-      if (apiKey) {
-        analyticsClient.setApiKey(apiKey);
+      // Get API key from database
+      const { data: apiKeys } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('project_id', selectedProject)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (!apiKeys?.key) {
+        setError('No API key found for this project');
+        setLoading(false);
+        return;
       }
 
+      analyticsClient.setApiKey(apiKeys.key);
+
       const params: any = {
-        project_id: projectId,
+        project_id: selectedProject,
         limit: pageSize,
         offset: page * pageSize,
       };
@@ -62,22 +96,20 @@ export default function RequestsPage() {
       setHasMore(response.has_more);
     } catch (err) {
       console.error('Failed to fetch logs:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load logs');
+      if (err instanceof Error && err.message.includes('404')) {
+        setError('Analytics endpoint not available. Worker may not be running.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load logs');
+      }
+      setLogs([]);
     } finally {
       setLoading(false);
     }
-  }, [projectId, page, statusFilter, modelFilter]);
+  }, [selectedProject, page, statusFilter, modelFilter]);
 
   useEffect(() => {
-    if (!projectId) {
-      setError('No project selected. Please select a project from the Projects page.');
-      setLoading(false);
-      return;
-    }
-
-
     fetchLogs();
-  }, [projectId, statusFilter, modelFilter, page, fetchLogs]);
+  }, [fetchLogs]);
 
 
 
@@ -133,17 +165,30 @@ export default function RequestsPage() {
 
       <section className="space-y-5">
 
-        {!projectId && (
+        {/* Project Selector */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {error && (
           <Alert className="border-yellow-500/20 bg-yellow-500/5">
             <AlertCircle className="h-4 w-4 text-yellow-500" />
-            <AlertTitle>No Project Selected</AlertTitle>
-            <AlertDescription>
-              Please select a project from the{' '}
-              <Link href="/dashboard/projects" className="underline">
-                Projects page
-              </Link>{' '}
-              to view logs.
-            </AlertDescription>
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
@@ -244,7 +289,7 @@ export default function RequestsPage() {
                 {filteredLogs.map((log) => (
                   <Link
                     key={log.event_id}
-                    href={`/dashboard/observability/logs/${log.event_id}?project_id=${projectId}`}
+                    href={`/dashboard/observability/logs/${log.event_id}?project_id=${selectedProject}`}
                     className="block group"
                   >
                     <div className="border border-white/[0.08] rounded-lg p-4 hover:bg-white/[0.02] transition-colors">

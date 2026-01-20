@@ -106,11 +106,22 @@ export default function ROIPage() {
 
             } catch (error) {
                 console.error("Failed to fetch ROI data:", error);
-                toast({
-                    title: "Error",
-                    description: "Failed to load ROI data",
-                    variant: "destructive",
-                });
+                
+                // Check if it's a 404 - endpoint not available
+                if (error instanceof Error && error.message.includes('404')) {
+                    toast({
+                        title: "Feature Coming Soon",
+                        description: "ROI analytics are being deployed. Check back soon!",
+                    });
+                    // Set empty data so UI doesn't show loading spinner forever
+                    setAgentSummaries([]);
+                } else {
+                    toast({
+                        title: "Error",
+                        description: "Failed to load ROI data",
+                        variant: "destructive",
+                    });
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -123,6 +134,55 @@ export default function ROIPage() {
         return (
             <div className="flex h-[50vh] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+            </div>
+        );
+    }
+
+    if (projects.length === 0) {
+        return (
+            <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
+                <Activity className="h-12 w-12 text-white/20" />
+                <div className="text-center">
+                    <h2 className="text-lg font-medium text-white/90">No Projects Yet</h2>
+                    <p className="text-sm text-white/50">Create a project to track ROI metrics</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (agentSummaries.length === 0 && !isLoading) {
+        return (
+            <div className="space-y-6 p-6">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                        <h1 className="text-xl font-medium tracking-tight text-white/90">ROI & Cost Attribution</h1>
+                        <p className="text-sm text-white/50">
+                            Track business value and ROI per agent.
+                        </p>
+                    </div>
+                    <div className="w-[200px]">
+                        <Select value={selectedProject} onValueChange={setSelectedProject}>
+                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                <SelectValue placeholder="Select project" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                                {projects.map((p) => (
+                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <Card className="border-white/10">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                        <Activity className="h-12 w-12 text-white/20 mb-4" />
+                        <h3 className="text-lg font-medium text-white/90 mb-2">No Agent Data Available</h3>
+                        <p className="text-sm text-white/50 text-center max-w-md">
+                            Agent cost attribution analytics will appear here once you have agent activity logged.
+                            Make sure your agents are instrumented with WatchLLM tracking.
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
         );
     }
