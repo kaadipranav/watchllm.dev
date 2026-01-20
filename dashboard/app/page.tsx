@@ -94,11 +94,11 @@ export default function HomePage() {
       <div className="absolute inset-x-0 top-0 h-[100vh] pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
         <DarkVeil
           hueShift={25}
-          noiseIntensity={0.15}
+          noiseIntensity={0}
           scanlineIntensity={0}
           speed={3}
           scanlineFrequency={0}
-          warpAmount={5}
+          warpAmount={6}
         />
       </div>
 

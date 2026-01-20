@@ -21,6 +21,12 @@ dependencies = [
     "urllib3>=1.26.0",
 ]
 
+[project.optional-dependencies]
+langchain = [
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+]
+
 [project.urls]
 "Homepage" = "https://watchllm.dev"
 "Bug Tracker" = "https://github.com/watchllm/watchllm/issues"

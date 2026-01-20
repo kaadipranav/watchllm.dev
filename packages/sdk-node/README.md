@@ -59,6 +59,81 @@ await watchllm.flush();
 await watchllm.close();
 ```
 
+## 🔗 LangChain.js Integration
+
+Integrate WatchLLM with your LangChain.js agents, chains, and LLMs with **one line of code**:
+
+```typescript
+import { init } from 'watchllm-sdk-node';
+import { WatchLLMCallbackHandler } from 'watchllm-sdk-node/langchain';
+import { ChatOpenAI } from '@langchain/openai';
+import { initializeAgentExecutorWithOptions } from 'langchain/agents';
+import { Calculator } from 'langchain/tools/calculator';
+import { SerpAPI } from '@langchain/community/tools/serpapi';
+
+// Initialize WatchLLM
+const client = init({
+  apiKey: 'your-watchllm-api-key',
+  projectId: 'your-project-id',
+});
+
+// Create the callback handler - this is the one-line integration!
+const handler = new WatchLLMCallbackHandler({ client });
+
+// Use with any LangChain component
+const llm = new ChatOpenAI({ 
+  modelName: 'gpt-4',
+  callbacks: [handler] 
+});
+
+// Or with agents
+const tools = [new Calculator(), new SerpAPI()];
+const agent = await initializeAgentExecutorWithOptions(tools, llm, {
+  agentType: 'openai-functions',
+  callbacks: [handler],  // All agent actions automatically logged!
+});
+
+// All LLM calls, tool uses, and agent decisions are now automatically captured
+const result = await agent.invoke({
+  input: 'What is the square root of the year Python was created?',
+});
+```
+
+### What Gets Captured
+
+The `WatchLLMCallbackHandler` automatically captures:
+
+- **LLM Calls**: Prompts, responses, tokens, latency, costs
+- **Agent Actions**: Tool selection, reasoning, decisions
+- **Tool Executions**: Inputs, outputs, timing
+- **Chain Runs**: Full chain execution with inputs/outputs
+- **Retriever Calls**: RAG queries and retrieved documents
+- **Errors**: Full stack traces and context
+
+### Privacy Options
+
+For sensitive applications, you can disable logging of prompts and responses:
+
+```typescript
+const handler = new WatchLLMCallbackHandler({
+  client,
+  logPrompts: false,    // Prompts logged as "[REDACTED]"
+  logResponses: false,  // Responses logged as "[REDACTED]"
+});
+```
+
+### Advanced Configuration
+
+```typescript
+const handler = new WatchLLMCallbackHandler({
+  client,
+  runId: 'my-custom-run-id',     // Group all events under a custom run ID
+  userId: 'user-123',             // Associate with a specific user
+  tags: ['production', 'v2'],     // Add tags to all events
+  metadata: { version: '2.0' },   // Add custom metadata
+});
+```
+
 ## Configuration
 
 ```typescript

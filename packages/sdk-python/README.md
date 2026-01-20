@@ -6,6 +6,9 @@ Python SDK for the WatchLLM AI Observability platform.
 
 ```bash
 pip install watchllm
+
+# For LangChain integration (optional)
+pip install watchllm[langchain]
 ```
 
 ## Quick Start
@@ -57,6 +60,76 @@ client.flush()
 
 # Close the client (flushes remaining events)
 client.close()
+```
+
+## 🔗 LangChain Integration
+
+Integrate WatchLLM with your LangChain agents, chains, and LLMs with **one line of code**:
+
+```python
+from watchllm import WatchLLMClient
+from watchllm.langchain import WatchLLMCallbackHandler
+from langchain_openai import ChatOpenAI
+from langchain.agents import initialize_agent, AgentType, load_tools
+
+# Initialize WatchLLM
+client = WatchLLMClient(
+    api_key="your-watchllm-api-key",
+    project_id="your-project-id"
+)
+
+# Create the callback handler - this is the one-line integration!
+handler = WatchLLMCallbackHandler(client)
+
+# Use with any LangChain component
+llm = ChatOpenAI(model="gpt-4", callbacks=[handler])
+
+# Or with agents
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+agent = initialize_agent(
+    tools,
+    llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    callbacks=[handler]  # All agent actions automatically logged!
+)
+
+# All LLM calls, tool uses, and agent decisions are now automatically captured
+result = agent.run("What is the square root of the year Python was created?")
+```
+
+### What Gets Captured
+
+The `WatchLLMCallbackHandler` automatically captures:
+
+- **LLM Calls**: Prompts, responses, tokens, latency, costs
+- **Agent Actions**: Tool selection, reasoning, decisions
+- **Tool Executions**: Inputs, outputs, timing
+- **Chain Runs**: Full chain execution with inputs/outputs
+- **Retriever Calls**: RAG queries and retrieved documents
+- **Errors**: Full stack traces and context
+
+### Privacy Options
+
+For sensitive applications, you can disable logging of prompts and responses:
+
+```python
+handler = WatchLLMCallbackHandler(
+    client,
+    log_prompts=False,    # Prompts logged as "[REDACTED]"
+    log_responses=False,  # Responses logged as "[REDACTED]"
+)
+```
+
+### Advanced Configuration
+
+```python
+handler = WatchLLMCallbackHandler(
+    client,
+    run_id="my-custom-run-id",  # Group all events under a custom run ID
+    user_id="user-123",          # Associate with a specific user
+    tags=["production", "v2"],   # Add tags to all events
+    metadata={"version": "2.0"}, # Add custom metadata
+)
 ```
 
 ## Configuration

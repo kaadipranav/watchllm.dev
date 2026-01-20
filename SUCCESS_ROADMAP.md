@@ -4,11 +4,17 @@ This document outlines the 4 critical gaps identified in the current codebase th
 
 ---
 
-## 1. LangChain Integration (Unified Callbacks)
+## 1. LangChain Integration (Unified Callbacks) ✅ COMPLETED
 **Priority: Critical**
 *   **Gap**: 90% of AI agent developers use LangChain. Currently, they have to manually instrument every step using `watchllm.logAgentStep()`, which is a high friction barrier to adoption.
 *   **Task**: Implement `WatchLLMCallbackHandler` for both Node.js and Python SDKs.
 *   **Outcome**: Users can integrate WatchLLM into their existing agents with one line of code: `agent = initialize_agent(..., callbacks=[WatchLLMCallbackHandler()])`.
+*   **Implementation Details**:
+    - ✅ Python SDK: `packages/sdk-python/src/watchllm/langchain.py` - Full LangChain `BaseCallbackHandler` implementation
+    - ✅ Node.js SDK: `packages/sdk-node/src/langchain.ts` - LangChain.js compatible callback handler
+    - ✅ Both handlers automatically capture: LLM calls, agent actions, tool calls, chain executions, retrievers, and errors
+    - ✅ Privacy options: `log_prompts=False` and `log_responses=False` for sensitive data
+    - ✅ Full test coverage: 16 tests for Node.js, comprehensive Python test suite
 
 ## 2. Python SDK Auto-Instrumentation
 **Priority: High**
@@ -34,6 +40,6 @@ This document outlines the 4 critical gaps identified in the current codebase th
 | Feature | Backend Status | Frontend Status | SDK Status | Commercial Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **Semantic Caching** | ✅ Implemented | ✅ Implemented | ✅ Implemented | **Ready** |
-| **Agent Debugger** | ✅ Implemented | ✅ Implemented | ⚠️ Manual Only | **Late Alpha** |
-| **ROI Attribution** | ✅ Implemented | ✅ Implemented | ⚠️ Manual Only | **Needs Integration** |
+| **Agent Debugger** | ✅ Implemented | ✅ Implemented | ✅ LangChain Integration | **Production Ready** |
+| **ROI Attribution** | ✅ Implemented | ✅ Implemented | ✅ LangChain Integration | **Production Ready** |
 | **Marketplace** | ✅ Implemented | ✅ Implemented | N/A | **Ready** |
