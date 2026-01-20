@@ -62,6 +62,153 @@ client.flush()
 client.close()
 ```
 
+## 🚀 Auto-Instrumentation (Zero Code)
+
+The easiest way to get observability! Automatically instrument your OpenAI and Anthropic calls with **just 2 lines of code**:
+
+```python
+import watchllm
+
+# Enable auto-instrumentation - that's it!
+watchllm.auto_instrument(
+    api_key="your-watchllm-api-key",
+    project_id="your-project-id"
+)
+
+# Now all OpenAI/Anthropic calls are automatically logged
+from openai import OpenAI
+client = OpenAI()
+
+# This call is automatically captured - no changes needed!
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Environment Variables
+
+Skip the parameters by setting environment variables:
+
+```bash
+export WATCHLLM_API_KEY="your-api-key"
+export WATCHLLM_PROJECT_ID="your-project-id"
+```
+
+```python
+import watchllm
+watchllm.auto_instrument()  # Uses env vars automatically
+```
+
+### What Gets Automatically Captured
+
+| Provider | Method | Captured Data |
+|----------|--------|---------------|
+| OpenAI | `chat.completions.create` | Prompts, responses, tokens, latency, cost |
+| OpenAI | `completions.create` | Prompts, responses, tokens, latency, cost |
+| OpenAI | `embeddings.create` | Input text, dimensions, latency, cost |
+| Anthropic | `messages.create` | Prompts, responses, tokens, latency, cost |
+
+Both **sync and async** methods are automatically instrumented.
+
+### Grouping Calls with `trace()`
+
+Use the `trace()` context manager to group related calls under a single run:
+
+```python
+import watchllm
+from openai import OpenAI
+
+watchllm.auto_instrument(api_key="...", project_id="...")
+client = OpenAI()
+
+# Group multiple calls under one run
+with watchllm.trace(run_id="user-session-123", user_id="user-456", tags=["production"]):
+    # First call
+    response1 = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Analyze this text..."}]
+    )
+    
+    # Follow-up call - both are grouped under the same run_id
+    response2 = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "user", "content": "Analyze this text..."},
+            {"role": "assistant", "content": response1.choices[0].message.content},
+            {"role": "user", "content": "Now summarize it..."}
+        ]
+    )
+```
+
+### Working with Anthropic
+
+Auto-instrumentation works with Anthropic too:
+
+```python
+import watchllm
+from anthropic import Anthropic
+
+watchllm.auto_instrument(api_key="...", project_id="...")
+client = Anthropic()
+
+# Automatically captured!
+message = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello, Claude!"}]
+)
+```
+
+### Async Support
+
+Works seamlessly with async code:
+
+```python
+import asyncio
+import watchllm
+from openai import AsyncOpenAI
+
+watchllm.auto_instrument(api_key="...", project_id="...")
+
+async def main():
+    client = AsyncOpenAI()
+    
+    # Async calls are automatically captured too
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hello async!"}]
+    )
+    return response
+
+asyncio.run(main())
+```
+
+### Disabling Instrumentation
+
+```python
+import watchllm
+
+# Disable and restore original functions
+watchllm.disable_instrumentation()
+
+# Check if currently instrumented
+if watchllm.is_instrumented():
+    print("Auto-instrumentation is active")
+
+# Get the internal WatchLLM client
+client = watchllm.get_client()
+```
+
+### Cost Tracking
+
+Auto-instrumentation automatically calculates costs for all major models:
+
+- **OpenAI**: GPT-4o, GPT-4o-mini, GPT-4 Turbo, GPT-4, GPT-3.5 Turbo, o1, o3, embeddings
+- **Anthropic**: Claude 3.5 Opus, Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude 3 models
+
+
+
 ## 🔗 LangChain Integration
 
 Integrate WatchLLM with your LangChain agents, chains, and LLMs with **one line of code**:

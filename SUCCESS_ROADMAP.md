@@ -16,11 +16,20 @@ This document outlines the 4 critical gaps identified in the current codebase th
     - ✅ Privacy options: `log_prompts=False` and `log_responses=False` for sensitive data
     - ✅ Full test coverage: 16 tests for Node.js, comprehensive Python test suite
 
-## 2. Python SDK Auto-Instrumentation
+## 2. Python SDK Auto-Instrumentation ✅ COMPLETED
 **Priority: High**
 *   **Gap**: The Python SDK requires manual logging calls. Competitors like Helicone and LangSmith allow "one-click" interception of OpenAI/Anthropic calls.
 *   **Task**: Implement monkey-patching logic (similar to OpenTelemetry) in the Python SDK to automatically intercept `openai` and `anthropic` library calls.
 *   **Outcome**: Developers can capture all prompts, responses, and costs by simply adding `watchllm.init()` at the top of their script, without touching their existing LLM code.
+*   **Implementation Details**:
+    - ✅ `packages/sdk-python/src/watchllm/instrumentation.py` - Full auto-instrumentation module (818 lines)
+    - ✅ Monkey-patches OpenAI: `chat.completions.create`, `completions.create`, `embeddings.create` (sync + async)
+    - ✅ Monkey-patches Anthropic: `messages.create` (sync + async)
+    - ✅ Automatic cost calculation for all major models (GPT-4o, Claude 3.5, embeddings, etc.)
+    - ✅ `trace()` context manager for grouping related calls under a single run_id
+    - ✅ Thread-safe with thread-local context storage
+    - ✅ 33 comprehensive tests in `tests/test_instrumentation.py`
+    - ✅ Full documentation in README.md
 
 ## 3. Enterprise Self-Hosting Guide
 **Priority: High**
@@ -40,6 +49,7 @@ This document outlines the 4 critical gaps identified in the current codebase th
 | Feature | Backend Status | Frontend Status | SDK Status | Commercial Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **Semantic Caching** | ✅ Implemented | ✅ Implemented | ✅ Implemented | **Ready** |
-| **Agent Debugger** | ✅ Implemented | ✅ Implemented | ✅ LangChain Integration | **Production Ready** |
-| **ROI Attribution** | ✅ Implemented | ✅ Implemented | ✅ LangChain Integration | **Production Ready** |
+| **Agent Debugger** | ✅ Implemented | ✅ Implemented | ✅ LangChain + Auto-Instrumentation | **Production Ready** |
+| **ROI Attribution** | ✅ Implemented | ✅ Implemented | ✅ LangChain + Auto-Instrumentation | **Production Ready** |
 | **Marketplace** | ✅ Implemented | ✅ Implemented | N/A | **Ready** |
+| **Auto-Instrumentation** | N/A | N/A | ✅ Python SDK Complete | **Production Ready** |

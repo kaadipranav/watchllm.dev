@@ -18,6 +18,15 @@ from .client import (
     ToolCallEvent
 )
 
+# Auto-instrumentation - import directly for ease of use
+from .instrumentation import (
+    auto_instrument,
+    disable_instrumentation,
+    get_client,
+    is_instrumented,
+    trace,
+)
+
 # LangChain integration - lazily imported to avoid requiring langchain as dependency
 def get_callback_handler():
     """
@@ -46,8 +55,18 @@ def get_callback_handler():
 
 
 __all__ = [
+    # Client
     "WatchLLMClient",
     "init",
+    # Auto-instrumentation
+    "auto_instrument",
+    "disable_instrumentation",
+    "get_client",
+    "is_instrumented",
+    "trace",
+    # LangChain
+    "get_callback_handler",
+    # Enums
     "Status",
     "EventType",
     "StepType",
@@ -55,6 +74,7 @@ __all__ = [
     "DetectionMethod",
     "AlertType",
     "Severity",
+    # Events
     "BaseEvent",
     "PromptCallEvent",
     "AgentStepEvent",
@@ -63,5 +83,4 @@ __all__ = [
     "HallucinationDetectedEvent",
     "PerformanceAlertEvent",
     "ToolCallEvent",
-    "get_callback_handler",
 ]
