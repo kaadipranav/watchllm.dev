@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { createAnalyticsClient, type EventDetail } from '@/lib/analytics-api';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 
@@ -24,6 +25,7 @@ export default function EventDetailPage() {
   const searchParams = useSearchParams();
   const eventId = params.eventId as string;
   const projectId = searchParams.get('project_id') || '';
+  const supabase = createClient();
 
   const [eventDetail, setEventDetail] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,17 +33,34 @@ export default function EventDetailPage() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const fetchEventDetail = useCallback(async () => {
+    if (!projectId) {
+      setError('No project ID provided');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const analyticsClient = createAnalyticsClient();
 
-      // Get API key from localStorage
-      const apiKey = localStorage.getItem(`project_${projectId}_api_key`);
-      if (apiKey) {
-        analyticsClient.setApiKey(apiKey);
+      // Get API key from database
+      const { data: apiKeys } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('project_id', projectId)
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (!apiKeys?.key) {
+        setError('No API key found for this project');
+        setLoading(false);
+        return;
       }
+
+      analyticsClient.setApiKey(apiKeys.key);
 
       const response = await analyticsClient.getEvent(eventId, {
         project_id: projectId,
@@ -50,7 +69,11 @@ export default function EventDetailPage() {
       setEventDetail(response);
     } catch (err) {
       console.error('Failed to fetch event detail:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load event');
+      if (err instanceof Error && err.message.includes('404')) {
+        setError('Event not found or analytics endpoint not available');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load event');
+      }
     } finally {
       setLoading(false);
     }
