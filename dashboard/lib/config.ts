@@ -30,8 +30,8 @@ export const APP_CONFIG = {
         : (process.env.NEXT_PUBLIC_WORKER_URL || "https://api.watchllm.com"),
 
     // Contact & Support
-    supportEmail: "kiwi092020@gmail.com",
-    salesEmail: "kiwi092020@gmail.com",
+    supportEmail: "support@watchllm.dev",
+    salesEmail: "support@watchllm.dev",
     developerName: "Pranav",
 
     // Social Links (hidden in self-hosted mode)

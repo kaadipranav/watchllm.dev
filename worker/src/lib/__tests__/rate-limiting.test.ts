@@ -10,14 +10,14 @@ import { PLAN_LIMITS } from '../rate-limiting';
 
 describe('Plan Limits Configuration', () => {
   it('should have correct plan configuration', () => {
-    expect(PLAN_LIMITS.free.requestsPerMonth).toBe(50_000);
+    expect(PLAN_LIMITS.free.requestsPerMonth).toBe(10_000);
     expect(PLAN_LIMITS.free.requestsPerMinute).toBe(10);
 
-    expect(PLAN_LIMITS.starter.requestsPerMonth).toBe(250_000);
+    expect(PLAN_LIMITS.starter.requestsPerMonth).toBe(100_000);
     expect(PLAN_LIMITS.starter.requestsPerMinute).toBe(50);
 
-    expect(PLAN_LIMITS.pro.requestsPerMonth).toBe(1_000_000);
-    expect(PLAN_LIMITS.pro.requestsPerMinute).toBe(200);
+    expect(PLAN_LIMITS.pro.requestsPerMonth).toBe(250_000);
+    expect(PLAN_LIMITS.pro.requestsPerMinute).toBe(10_000); // Effectively unlimited
   });
 
   it('should have higher limits for paid plans', () => {
@@ -32,19 +32,19 @@ describe('Plan Limits Configuration', () => {
     // Free plan should allow at least 10 requests per minute
     expect(PLAN_LIMITS.free.requestsPerMinute).toBeGreaterThanOrEqual(10);
     
-    // Pro plan should allow significantly more
-    expect(PLAN_LIMITS.pro.requestsPerMinute).toBeGreaterThanOrEqual(100);
+    // Pro plan should allow significantly more (effectively unlimited)
+    expect(PLAN_LIMITS.pro.requestsPerMinute).toBeGreaterThanOrEqual(1000);
     
     // Monthly quotas should be reasonable
     expect(PLAN_LIMITS.free.requestsPerMonth).toBeGreaterThanOrEqual(10_000);
-    expect(PLAN_LIMITS.pro.requestsPerMonth).toBeGreaterThanOrEqual(500_000);
+    expect(PLAN_LIMITS.pro.requestsPerMonth).toBeGreaterThanOrEqual(250_000);
   });
 
   it('should maintain consistent ratios between plans', () => {
-    // Starter should be roughly 5x free
+    // Starter should be roughly 10x free
     const starterToFreeRatio = PLAN_LIMITS.starter.requestsPerMonth / PLAN_LIMITS.free.requestsPerMonth;
-    expect(starterToFreeRatio).toBeGreaterThan(3);
-    expect(starterToFreeRatio).toBeLessThan(10);
+    expect(starterToFreeRatio).toBeGreaterThan(5);
+    expect(starterToFreeRatio).toBeLessThan(15);
 
     // Pro should be at least 2x starter
     const proToStarterRatio = PLAN_LIMITS.pro.requestsPerMonth / PLAN_LIMITS.starter.requestsPerMonth;

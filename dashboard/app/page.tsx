@@ -91,8 +91,13 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Dot Grid interactive background - hero section only */}
-      <div className="absolute inset-x-0 top-0 h-[100vh] pointer-events-auto z-[-1] overflow-hidden">
+      {/* Dot Grid interactive background - hero section with fade */}
+      <div className="absolute inset-x-0 top-0 h-[120vh] pointer-events-auto z-[-1] overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0) 100%)'
+        }}
+      >
         <DotGrid
           dotSize={4}
           gap={20}

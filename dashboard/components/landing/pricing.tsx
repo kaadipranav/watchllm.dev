@@ -14,7 +14,7 @@ const plans = [
     price: "$0",
     period: "forever",
     features: [
-      { text: "50,000 requests/month", included: true },
+      { text: "10,000 requests/month", included: true },
       { text: "10 requests/minute", included: true },
       { text: "Basic semantic caching", included: true },
       { text: "7-day usage history", included: true },
@@ -27,10 +27,10 @@ const plans = [
   {
     name: "Starter",
     description: "For growing applications",
-    price: "$29",
+    price: "$49",
     period: "/month",
     features: [
-      { text: "250,000 requests/month", included: true },
+      { text: "100,000 requests/month", included: true },
       { text: "50 requests/minute", included: true },
       { text: "Advanced semantic caching", included: true },
       { text: "30-day usage history", included: true },
@@ -43,11 +43,11 @@ const plans = [
   {
     name: "Pro",
     description: "For production workloads",
-    price: "$49",
+    price: "$99",
     period: "/month",
     features: [
-      { text: "1,000,000 requests/month", included: true },
-      { text: "200 requests/minute", included: true },
+      { text: "250,000 requests/month", included: true },
+      { text: "Unlimited requests/minute", included: true },
       { text: "Priority semantic caching", included: true },
       { text: "90-day usage history", included: true },
       { text: "Priority support", included: true },

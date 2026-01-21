@@ -13,16 +13,16 @@ import { createRedisClient } from './redis';
  */
 export const PLAN_LIMITS = {
   free: {
-    requestsPerMonth: 50_000,
+    requestsPerMonth: 10_000,
     requestsPerMinute: 10,
   },
   starter: {
-    requestsPerMonth: 250_000,
+    requestsPerMonth: 100_000,
     requestsPerMinute: 50,
   },
   pro: {
-    requestsPerMonth: 1_000_000,
-    requestsPerMinute: 200,
+    requestsPerMonth: 250_000,
+    requestsPerMinute: 10_000, // Effectively unlimited
   },
 } as const;
 
