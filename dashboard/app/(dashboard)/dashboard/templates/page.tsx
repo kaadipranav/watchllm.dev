@@ -71,15 +71,16 @@ export default function TemplatesPage() {
                 }
 
                 // Fetch Templates
-                const { templates } = await analyticsClient.getAgentTemplates();
-                setTemplates(templates || []);
+                try {
+                    const { templates } = await analyticsClient.getAgentTemplates();
+                    setTemplates(templates || []);
+                } catch (templateError) {
+                    // Templates endpoint not available - use empty array
+                    console.warn("Templates endpoint not available:", templateError);
+                    setTemplates([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch data:", error);
-                toast({
-                    title: "Error",
-                    description: "Failed to load templates",
-                    variant: "destructive",
-                });
             } finally {
                 setIsLoading(false);
             }

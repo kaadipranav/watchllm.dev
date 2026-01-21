@@ -45,6 +45,27 @@ export default function DocsIndexPage() {
       description: "Deep dive into how WatchLLM handles semantic caching and analytics.",
       items: [
         {
+          title: "Python SDK",
+          description: "Complete reference for the WatchLLM Python SDK with auto-instrumentation.",
+          href: "https://github.com/kaadipranav/WATCHLLM/tree/main/packages/sdk-python",
+          icon: Code,
+          color: "bg-blue-500/10 text-blue-500",
+        },
+        {
+          title: "Node.js SDK",
+          description: "Complete reference for the WatchLLM Node.js/TypeScript SDK.",
+          href: "https://github.com/kaadipranav/WATCHLLM/tree/main/packages/sdk-node",
+          icon: Code,
+          color: "bg-green-500/10 text-green-500",
+        },
+        {
+          title: "Self-Hosting Guide",
+          description: "Enterprise deployment guide for self-hosted WatchLLM infrastructure.",
+          href: "https://github.com/kaadipranav/WATCHLLM/blob/main/SELF_HOSTING.md",
+          icon: Server,
+          color: "bg-purple-500/10 text-purple-500",
+        },
+        {
           title: "Architecture",
           description: "Understanding the edge proxy system design.",
           href: "/docs/ARCHITECTURE",

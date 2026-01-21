@@ -12,6 +12,7 @@ import { Enterprise } from "@/components/landing/enterprise";
 import { FAQ } from "@/components/landing/faq";
 import { Footer } from "@/components/landing/footer";
 import { LiveFlow } from "@/components/landing/live-flow";
+import { DataFlow } from "@/components/landing/data-flow";
 import { AuthCallbackHandler } from "@/components/auth/auth-callback-handler";
 import { Suspense } from "react";
 import DarkVeil from "@/components/landing/dark-veil";
@@ -117,6 +118,7 @@ export default function HomePage() {
         <Hero />
         <Providers />
         <PowerFeatures />
+        <DataFlow />
         <HowItWorks />
         <PlatformShowcase />
         <Features />

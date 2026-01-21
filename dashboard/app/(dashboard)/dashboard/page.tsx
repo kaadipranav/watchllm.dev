@@ -502,9 +502,9 @@ export default function DashboardPage() {
 
         {projects.length === 0 ? (
           <div className="text-center py-10 border border-green-500/20 rounded-xl bg-green-500/5">
-            <div className="text-green-400 text-3xl mb-2">$0.00</div>
-            <p className="text-white/60 text-sm mb-1">saved so far</p>
-            <p className="text-white/40 text-xs mb-4">Create a project to start tracking your savings</p>
+            <div className="text-white/90 text-2xl mb-3">Ready to Save Money?</div>
+            <p className="text-white/60 text-sm mb-1">Route your AI requests through WatchLLM</p>
+            <p className="text-white/40 text-xs mb-4">Start seeing 40-70% cost savings from semantic caching</p>
             <Link href="/dashboard/projects" className="inline-block text-green-400 text-sm hover:underline">
               Create your first project &rarr;
             </Link>
