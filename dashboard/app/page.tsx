@@ -15,7 +15,7 @@ import { LiveFlow } from "@/components/landing/live-flow";
 import { DataFlow } from "@/components/landing/data-flow";
 import { AuthCallbackHandler } from "@/components/auth/auth-callback-handler";
 import { Suspense } from "react";
-import DarkVeil from "@/components/landing/dark-veil";
+import DotGrid from "@/components/landing/dot-grid";
 
 export const metadata: Metadata = {
   title: "WatchLLM - Cut Your OpenAI Bill by 40-70%",
@@ -91,15 +91,18 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Dark Veil animated background - hero section only */}
-      <div className="absolute inset-x-0 top-0 h-[100vh] pointer-events-none z-[-1] overflow-hidden bg-bg-primary">
-        <DarkVeil
-          hueShift={25}
-          noiseIntensity={0}
-          scanlineIntensity={0}
-          speed={3}
-          scanlineFrequency={0}
-          warpAmount={6}
+      {/* Dot Grid interactive background - hero section only */}
+      <div className="absolute inset-x-0 top-0 h-[100vh] pointer-events-auto z-[-1] overflow-hidden">
+        <DotGrid
+          dotSize={4}
+          gap={20}
+          baseColor="#271E37"
+          activeColor="#5227FF"
+          proximity={200}
+          shockRadius={250}
+          shockStrength={5}
+          resistance={800}
+          returnDuration={1.5}
         />
       </div>
 

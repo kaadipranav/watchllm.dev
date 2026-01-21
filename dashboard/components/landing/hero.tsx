@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Animated counter for live stats
@@ -72,91 +72,6 @@ function SavingsStatTicker() {
 }
 
 /**
- * Spotlight effect that follows the mouse
- */
-function Spotlight() {
-  const [opacity, setOpacity] = useState(0);
-
-  const spotlightRef = useRef<HTMLDivElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const targetRef = useRef({ x: 0, y: 0 });
-  const currentRef = useRef({ x: 0, y: 0 });
-  const reduceMotionRef = useRef(false);
-
-  useEffect(() => {
-    reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // Ensure the effect is visible immediately on load (some browsers won't fire
-    // mouseenter if the pointer is already inside the viewport).
-    const initialX = window.innerWidth / 2;
-    const initialY = window.innerHeight / 3;
-    targetRef.current = { x: initialX, y: initialY };
-    currentRef.current = { x: initialX, y: initialY };
-    setOpacity(1);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      targetRef.current = { x: e.clientX, y: e.clientY };
-
-      // If the user starts moving without triggering mouseenter, show it.
-      setOpacity(1);
-
-      // In reduced motion mode, follow instantly.
-      if (reduceMotionRef.current) {
-        currentRef.current = { x: e.clientX, y: e.clientY };
-      }
-    };
-
-    const handleMouseEnter = () => setOpacity(1);
-    const handleMouseLeave = () => setOpacity(0);
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    document.body.addEventListener("mouseenter", handleMouseEnter);
-    document.body.addEventListener("mouseleave", handleMouseLeave);
-
-    const tick = () => {
-      const el = spotlightRef.current;
-      if (el) {
-        const ease = reduceMotionRef.current ? 1 : 0.085; // lower = more lag
-        const { x: tx, y: ty } = targetRef.current;
-        const cx = currentRef.current.x + (tx - currentRef.current.x) * ease;
-        const cy = currentRef.current.y + (ty - currentRef.current.y) * ease;
-        currentRef.current = { x: cx, y: cy };
-
-        // Neutral grey glow (brighter/more noticeable), with a soft outer halo.
-        el.style.background = `radial-gradient(520px circle at ${cx}px ${cy}px, rgba(245, 245, 245, 0.10), transparent 60%), radial-gradient(820px circle at ${cx}px ${cy}px, rgba(180, 180, 180, 0.06), transparent 72%)`;
-      }
-
-      rafRef.current = window.requestAnimationFrame(tick);
-    };
-
-    rafRef.current = window.requestAnimationFrame(tick);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.body.removeEventListener("mouseenter", handleMouseEnter);
-      document.body.removeEventListener("mouseleave", handleMouseLeave);
-
-      if (rafRef.current != null) {
-        window.cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={spotlightRef}
-      className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-500 mix-blend-screen"
-      style={{
-        opacity,
-        // Background is driven by rAF for smooth lag.
-        background:
-          "radial-gradient(520px circle at 0px 0px, rgba(245, 245, 245, 0.10), transparent 60%), radial-gradient(820px circle at 0px 0px, rgba(180, 180, 180, 0.06), transparent 72%)",
-      }}
-    />
-  );
-}
-
-/**
  * Typewriter effect for hero headline
  */
 function Typewriter({ words }: { words: string[] }) {
@@ -197,12 +112,6 @@ function Typewriter({ words }: { words: string[] }) {
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center py-20 overflow-hidden">
-      <Spotlight />
-      {/* Spotlight effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-white/5 blur-[120px] rounded-full" />
-      </div>
-
       <div className="relative w-full z-10 flex justify-center">
         {/* Main content */}
         <div className="text-center max-w-6xl w-full px-4 sm:px-8 lg:px-16">
