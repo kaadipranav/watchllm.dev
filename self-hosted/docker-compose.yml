@@ -27,6 +27,7 @@ services:
       - "${PORT:-3000}:3000"
     environment:
       - WATCHLLM_MODE=self_hosted
+      - WATCHLLM_ROLE=dashboard
       - DATABASE_URL=postgresql://watchllm:${POSTGRES_PASSWORD:-watchllm}@postgres:5432/watchllm
       - REDIS_URL=redis://redis:6379
       - CLICKHOUSE_HOST=clickhouse
@@ -49,6 +50,44 @@ services:
       - watchllm-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===========================================================================
+  # WatchLLM Standalone Worker
+  # ===========================================================================
+  watchllm-worker:
+    build:
+      context: ..
+      dockerfile: self-hosted/Dockerfile
+    image: watchllm:latest
+    container_name: watchllm-worker
+    restart: unless-stopped
+    ports:
+      - "${WORKER_PORT:-8080}:8080"
+    environment:
+      - WATCHLLM_MODE=self_hosted
+      - WATCHLLM_ROLE=worker
+      - DATABASE_URL=postgresql://watchllm:${POSTGRES_PASSWORD:-watchllm}@postgres:5432/watchllm
+      - REDIS_URL=redis://redis:6379
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-watchllm}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-watchllm}
+      - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE:-watchllm}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - watchllm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -57,6 +57,9 @@ RUN pnpm --filter @watchllm/shared build || echo "No build script"
 # Build dashboard (Next.js)
 RUN pnpm --filter dashboard build
 
+# Build worker artifacts (wrangler dry-run output)
+RUN pnpm --filter @watchllm/worker build
+
 # Build worker (if applicable for self-hosted)
 # Note: Worker is typically Cloudflare-specific, but we include API routes
 
@@ -85,9 +88,14 @@ COPY --from=builder /app/dashboard/public ./dashboard/public
 COPY --from=builder /app/dashboard/.next/standalone ./
 COPY --from=builder /app/dashboard/.next/static ./dashboard/.next/static
 
+# Copy worker sources and dependencies for standalone runtime
+COPY --from=builder /app/worker ./worker
+COPY --from=builder /app/node_modules ./node_modules
+
 # Copy self-hosted specific files
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/self-hosted/.env.example /app/.env.example
+COPY --from=builder /app/self-hosted/start.sh /app/start.sh
 
 # Create directories for data persistence
 RUN mkdir -p /var/lib/watchllm/data /var/lib/watchllm/logs /etc/watchllm && \
@@ -99,12 +107,13 @@ VOLUME ["/var/lib/watchllm/data", "/var/lib/watchllm/logs", "/etc/watchllm"]
 # Switch to non-root user
 USER watchllm
 
-# Expose port
+# Expose ports
 EXPOSE 3000
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["node", "dashboard/server.js"]
+# Start the application (dashboard or worker)
+CMD ["sh", "/app/start.sh"]

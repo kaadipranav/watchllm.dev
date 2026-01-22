@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async rewrites() {
+    return [
+      {
+        source: '/v1/:path*',
+        destination: 'http://watchllm-worker:8080/v1/:path*',
+      },
+      {
+        source: '/health',
+        destination: 'http://watchllm-worker:8080/health',
+      },
+    ];
+  },
   images: {
     domains: [
       'avatars.githubusercontent.com', 
@@ -41,7 +53,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://*.stripe.com https://simpleanalyticscdn.com https://proxy.watchllm.dev wss://*.supabase.co",
+              "connect-src 'self' https://*.supabase.co https://*.stripe.com https://simpleanalyticscdn.com https://proxy.watchllm.dev http://watchllm-worker:8080 wss://*.supabase.co",
               "frame-src 'self' https://*.stripe.com",
               "frame-ancestors 'none'",
             ].join('; '),

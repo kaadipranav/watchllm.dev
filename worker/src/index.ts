@@ -27,7 +27,9 @@ import analyticsApp from './handlers/analytics';
 import { checkRateLimit, checkQuota, incrementUsage, type Plan } from './lib/rate-limiting';
 
 // Create Hono app with environment bindings
-const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
+export const app = new Hono<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>();
+
+export const isNodeRuntime = () => typeof process !== 'undefined' && typeof (globalThis as any).Deno === 'undefined';
 
 // Mount observability routes
 app.route('/', observabilityApp);
