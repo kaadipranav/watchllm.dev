@@ -16,6 +16,7 @@
     "clean": "rm -rf dist .wrangler"
   },
   "dependencies": {
+    "@clickhouse/client": "^1.16.0",
     "@clickhouse/client-web": "^1.15.0",
     "@sentry/cloudflare": "^10.30.0",
     "configcat-node": "^11.4.1",

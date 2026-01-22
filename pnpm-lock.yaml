@@ -272,6 +272,9 @@ importers:
 
   worker:
     dependencies:
+      '@clickhouse/client':
+        specifier: ^1.16.0
+        version: 1.16.0
       '@clickhouse/client-web':
         specifier: ^1.15.0
         version: 1.15.0
@@ -506,10 +509,21 @@ packages:
     resolution: {integrity: sha512-/1BXaNNsBzH2w5ALWiH6M9zS+cJwlM9uMnMj9e8ETwvDjJzO+nIYlyxzp8Prc+9pEDZ5iAilZ4F8c0YVCzzNaA==}
     dev: false
 
+  /@clickhouse/client-common@1.16.0:
+    resolution: {integrity: sha512-qMzkI1NmV29ZjFkNpVSvGNfA0c7sCExlufAQMv+V+5xtNeYXnRfdqzmBLIQoq6Pf1ij0kw/wGLD3HQrl7pTFLA==}
+    dev: false
+
   /@clickhouse/client-web@1.15.0:
     resolution: {integrity: sha512-sPTYF9Dn72fWdjLnJqwL5XCjPiLZdmlXZX4gjh8nyGz7q2MHE0wWTGQp8IJwZ6hq/Zlua3jzO38r8geGoP748g==}
     dependencies:
       '@clickhouse/client-common': 1.15.0
+    dev: false
+
+  /@clickhouse/client@1.16.0:
+    resolution: {integrity: sha512-ThPhoRMsKsf/hmBEgWlUsGxFecsr3i+k3JI8JV0Od7UpH2BSmk9VKMGJoyPCrTL0vPUs5rJH+7o4iCqBF09Xvg==}
+    engines: {node: '>=16'}
+    dependencies:
+      '@clickhouse/client-common': 1.16.0
     dev: false
 
   /@cloudflare/kv-asset-handler@0.4.1:
