@@ -7,20 +7,23 @@ const steps = [
   {
     title: "Change one line",
     step: 1,
-    description: "Update your baseURL to WatchLLM. We intercept requests at the edge with zero latency overhead.",
+    description: "Use your existing OpenAI/Anthropic API keys. WatchLLM never marks up API costs—you pay provider rates directly. We only charge our platform fee.",
     code: `const client = new OpenAI({
   baseURL: "https://proxy.watchllm.dev/v1",
-  apiKey: process.env.WATCHLLM_KEY
+  apiKey: process.env.OPENAI_API_KEY, // Your OpenAI key
+  defaultHeaders: {
+    "X-WatchLLM-Key": process.env.WATCHLLM_API_KEY // Auth only
+  }
 });`,
   },
   {
     title: "Semantic matching",
     step: 2,
-    description: "We vectorize your prompt and search our distributed cache for semantically similar queries using cosine similarity.",
+    description: "We vectorize your prompt and search our distributed cache for semantically similar queries using cosine similarity. Our matching algorithm achieves >95% accuracy in identifying similar prompts.",
     code: `// We automatically:
 // 1. Vectorize your prompt
 // 2. Search Redis vector DB
-// 3. Find similar queries (>95% match)`,
+// 3. Find similar queries (>95% match accuracy)`,
   },
   {
     title: "Instant response",

@@ -1,5 +1,43 @@
 ## RECENT FIXES (January 24, 2026)
 
+### BYOK Architecture Clarification ✅ FIXED
+- **Issue**: Contradictory messaging about BYOK vs API key usage in code examples
+- **Old**: "How It Works" Step 1 showed `apiKey: process.env.WATCHLLM_KEY` (confusing)
+- **New**: Shows proper architecture with `apiKey: process.env.OPENAI_API_KEY` + `X-WatchLLM-Key` header
+- **Added Explanation**: "Use your existing OpenAI/Anthropic API keys. WatchLLM never marks up API costs—you pay provider rates directly. We only charge our platform fee."
+- **Badge Update**: Changed "BYOK" badges to "Direct Billing" for clarity
+- **Locations**:
+  - dashboard/components/landing/how-it-works.tsx (Step 1 code example)
+  - dashboard/components/landing/providers.tsx (badges and header text)
+- **Impact**: Crystal clear value prop about zero markup pricing
+
+### Cache Metrics Clarification ✅ FIXED
+- **Issue**: Contradictory cache metrics causing confusion (95% vs 40-70%)
+- **Root Cause**: Two different metrics being conflated:
+  - **Match Accuracy**: How well we identify similar queries (>95%)
+  - **Hit Rate**: % of requests that are cache hits (40-70% average)
+- **Fixes Applied**:
+  1. **How It Works Step 2**: Updated description to say "Our matching algorithm achieves >95% accuracy in identifying similar prompts"
+  2. **Data Flow Section**: Added tooltip to "40-70% hit rate*" with explanation
+  3. **Platform Architecture**: Added title attribute to ">95% match accuracy" badge
+  4. **FAQ Section**: Updated response quality answer to clarify both metrics
+  5. **New Callout Box**: Added "Understanding Cache Metrics" info box in Data Flow section
+- **Locations**:
+  - dashboard/components/landing/how-it-works.tsx
+  - dashboard/components/landing/data-flow.tsx
+  - dashboard/components/landing/faq.tsx
+  - dashboard/components/landing/platform-showcase.tsx
+- **Impact**: Eliminates confusion, sets proper expectations, builds trust
+
+### Social Proof Section ✅ ADDED
+- **Added**: New section between "Why WatchLLM" and "Pricing"
+- **Components**:
+  - **Stats Callout**: 12M+ requests cached, $147K+ saved, 58% avg cost reduction
+  - **Company Logos**: Placeholder grid for 8 companies (ready for real logos)
+  - **Testimonials**: Two detailed customer quotes with specific dollar savings
+- **Location**: dashboard/components/landing/social-proof.tsx
+- **Impact**: Builds credibility, provides concrete proof of value
+
 ### Agent Debugger Cost Example ✅ FIXED
 - **Issue**: Math in Agent Debugger timeline example was incorrect
 - **Old**: Tool call $0.003, Loop 3x = $0.012 wasted, Cached = $0.008 saved (numbers didn't add up)

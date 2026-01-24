@@ -87,8 +87,8 @@ export function PlatformShowcase() {
                   <p className="text-xs text-text-secondary mb-2">
                     Vector matching + cosine similarity = 70% savings
                   </p>
-                  <div className="text-[10px] text-white font-mono bg-white/5 px-2 py-0.5 rounded border border-white/20 inline-block">
-                    95%+ match accuracy
+                  <div className="text-[10px] text-white font-mono bg-white/5 px-2 py-0.5 rounded border border-white/20 inline-block" title="Match accuracy: how well we identify similar queries">
+                    >95% match accuracy
                   </div>
                 </div>
               </motion.div>
@@ -134,7 +134,7 @@ export function PlatformShowcase() {
                     Real-time insights and anomaly detection
                   </p>
                   <ul className="space-y-0.5 text-[10px] text-text-muted">
-                    <li>✓ Cache hit rate</li>
+                    <li title="% of requests that are cache hits - varies by use case (40-70% typical)">✓ Cache hit rate</li>
                     <li>✓ Cost forecasting</li>
                     <li>✓ Anomaly alerts</li>
                   </ul>

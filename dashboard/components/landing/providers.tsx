@@ -34,7 +34,7 @@ export function Providers() {
           className="text-center"
         >
           <p className="text-sm font-medium text-text-muted">
-            Bring Your Own Key (BYOK) support for direct API access
+            Direct billing with your provider keys—no markup on API costs
           </p>
         </motion.div>
         
@@ -61,7 +61,7 @@ export function Providers() {
                 </span>
                 {provider.byok && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-text-secondary border border-white/20 font-medium">
-                    BYOK
+                    Direct Billing
                   </span>
                 )}
               </div>

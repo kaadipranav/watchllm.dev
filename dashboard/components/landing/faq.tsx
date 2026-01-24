@@ -14,7 +14,7 @@ const faqs = [
   {
     question: "Will this affect my response quality?",
     answer:
-      "No! Cached responses are exact matches from previous API calls. We only return cached responses when the semantic similarity is above 95%, ensuring you get high-quality responses. You can also adjust this threshold in your settings.",
+      "No! Cached responses are exact matches from previous API calls. We only return cached responses when the semantic similarity is above 95% (this is match accuracy - how well we identify similar queries). Your actual cache hit rate (% of requests that are cache hits) will be 40-70% on average, varying by use case. You can also adjust the similarity threshold in your settings.",
   },
   {
     question: "How do I integrate WatchLLM?",

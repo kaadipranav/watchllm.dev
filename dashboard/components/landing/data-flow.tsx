@@ -1,9 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Database, Zap, BarChart3, Bug, GitBranch } from "lucide-react";
+import { Activity, Database, Zap, BarChart3, Bug, GitBranch, Info } from "lucide-react";
 
-const dataFlowSteps = [
+type DataFlowStep = {
+  icon: any;
+  title: string;
+  description: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  metrics?: string[];
+  tooltip?: string;
+};
+
+const dataFlowSteps: DataFlowStep[] = [
   {
     icon: Zap,
     title: "Your Request",
@@ -19,7 +30,8 @@ const dataFlowSteps = [
     color: "from-purple-500 to-pink-500",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/20",
-    metrics: ["40-70% hit rate", "~50ms response time"],
+    metrics: ["40-70% hit rate*", "~50ms response time"],
+    tooltip: "*Hit rate varies by use case - typical range for production apps. This measures % of requests that are cache hits, not matching accuracy.",
   },
   {
     icon: Activity,
@@ -107,10 +119,20 @@ export function DataFlow() {
                       {step.metrics && (
                         <div className="space-y-1">
                           {step.metrics.map((metric, i) => (
-                            <div key={i} className="inline-block px-2 py-0.5 rounded-full bg-bg-primary border border-border-subtle text-[10px] text-text-muted mx-1">
+                            <div 
+                              key={i} 
+                              className="inline-block px-2 py-0.5 rounded-full bg-bg-primary border border-border-subtle text-[10px] text-text-muted mx-1"
+                              title={step.tooltip || undefined}
+                            >
                               {metric}
                             </div>
                           ))}
+                          {step.tooltip && (
+                            <div className="mt-2 text-[9px] text-text-muted/70 italic max-w-[200px] mx-auto">
+                              <Info className="w-3 h-3 inline mr-1" />
+                              {step.tooltip}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -152,10 +174,20 @@ export function DataFlow() {
                       {step.metrics && (
                         <div className="flex flex-wrap gap-2">
                           {step.metrics.map((metric, i) => (
-                            <div key={i} className="px-2 py-1 rounded-full bg-bg-primary border border-border-subtle text-xs text-text-muted">
+                            <div 
+                              key={i} 
+                              className="px-2 py-1 rounded-full bg-bg-primary border border-border-subtle text-xs text-text-muted"
+                              title={step.tooltip || undefined}
+                            >
                               {metric}
                             </div>
                           ))}
+                          {step.tooltip && (
+                            <div className="w-full mt-1 text-[10px] text-text-muted/70 italic">
+                              <Info className="w-3 h-3 inline mr-1" />
+                              {step.tooltip}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -174,6 +206,28 @@ export function DataFlow() {
             ))}
           </div>
         </div>
+
+        {/* Metrics Clarification */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mt-12 max-w-3xl mx-auto"
+        >
+          <div className="bg-bg-elevated/50 border border-border-subtle rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-accent-primary flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-text-secondary">
+                <p className="font-medium text-text-primary mb-2">Understanding Cache Metrics</p>
+                <ul className="space-y-1 text-xs">
+                  <li><strong className="text-text-primary">Match Accuracy (&gt;95%):</strong> How well we identify semantically similar queries</li>
+                  <li><strong className="text-text-primary">Hit Rate (40-70%):</strong> Percentage of requests that are cache hits (varies by use case)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Call to action */}
         <motion.div
