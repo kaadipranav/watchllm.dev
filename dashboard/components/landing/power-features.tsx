@@ -107,22 +107,22 @@ export function PowerFeatures() {
                                     />
                                     <TimelineStep
                                         icon={<Zap className="w-3.5 h-3.5" />}
-                                        label="Tool Call"
+                                        label="First Tool Call"
                                         detail="search_restaurants({query: 'pizza'})"
                                         color="orange"
                                         cost="$0.003"
                                     />
                                     <TimelineStep
                                         icon={<AlertTriangle className="w-3.5 h-3.5" />}
-                                        label="Loop Detected"
-                                        detail="Same tool called 3x — $0.012 wasted"
+                                        label="Loop Detected ⚠️"
+                                        detail="Same tool called 3 times — Total cost: $0.009"
                                         color="red"
                                         badge="⚠️"
                                     />
                                     <TimelineStep
                                         icon={<CheckCircle className="w-3.5 h-3.5" />}
-                                        label="Cached Response"
-                                        detail="$0.008 saved"
+                                        label="After WatchLLM Optimization ✓"
+                                        detail="Calls 2-3 cached: $0.000 — Total saved: $0.006 (67% reduction)"
                                         color="green"
                                         badge="✓"
                                     />

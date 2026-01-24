@@ -1,3 +1,28 @@
+## RECENT FIXES (January 24, 2026)
+
+### Agent Debugger Cost Example ✅ FIXED
+- **Issue**: Math in Agent Debugger timeline example was incorrect
+- **Old**: Tool call $0.003, Loop 3x = $0.012 wasted, Cached = $0.008 saved (numbers didn't add up)
+- **New**: First call $0.003, 3 calls total = $0.009, Calls 2-3 cached = $0.000, Total saved $0.006 (67% reduction)
+- **Location**: dashboard/components/landing/power-features.tsx
+- **Impact**: Clear, mathematically accurate value proposition
+
+### Pricing Section Enhancements ✅ ADDED
+- **Added Overage Pricing Details**:
+  - FREE: Cache-only mode after 10k (no additional charges)
+  - STARTER: $0.50 per 1,000 additional requests (up to 200k total)
+  - PRO: $0.40 per 1,000 additional requests (up to 750k total)
+  - AGENCY: Custom overage rates
+- **Added Annual Pricing Option**:
+  - STARTER: $470/year (save $118 - 20% off)
+  - PRO: $950/year (save $238 - 20% off)
+  - Toggle switch on each card
+  - "💰 Save 20% with annual billing" badge
+- **Location**: dashboard/components/landing/pricing.tsx
+- **Impact**: Transparent pricing reduces support questions, encourages annual commitments
+
+---
+
 # WatchLLM Issues & Action Items
 Generated: January 24, 2026
 

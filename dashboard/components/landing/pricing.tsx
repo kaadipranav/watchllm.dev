@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,16 @@ function PricingCard({
   index: number;
 }) {
   const isPopular = plan.popular;
+  const [showAnnual, setShowAnnual] = React.useState(false);
+
+  // Calculate annual pricing (20% discount)
+  const getAnnualPrice = () => {
+    if (plan.name === "Starter") return "$470";
+    if (plan.name === "Pro") return "$950";
+    return null;
+  };
+
+  const annualPrice = getAnnualPrice();
 
   return (
     <motion.div
@@ -125,12 +136,27 @@ function PricingCard({
 
           {/* Price */}
           <div>
+            {annualPrice && (
+              <div className="flex items-center gap-2 mb-3">
+                <button
+                  onClick={() => setShowAnnual(!showAnnual)}
+                  className="text-xs text-text-muted hover:text-text-secondary transition-colors underline"
+                >
+                  {showAnnual ? "Show monthly" : "Show annual"}
+                </button>
+                {!showAnnual && (
+                  <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20">
+                    💰 Save 20% annual
+                  </Badge>
+                )}
+              </div>
+            )}
             <div className="flex items-baseline">
               <span className="text-5xl font-semibold font-mono text-text-primary">
-                {plan.price}
+                {showAnnual && annualPrice ? annualPrice : plan.price}
               </span>
               <span className="ml-2 text-sm text-text-muted">
-                {plan.period}
+                {showAnnual && annualPrice ? "/year" : plan.period}
               </span>
             </div>
           </div>
@@ -164,6 +190,17 @@ function PricingCard({
             >
               <Link href={plan.href}>{plan.cta}</Link>
             </Button>
+          </div>
+
+          {/* Overage Pricing */}
+          <div className="pt-4 border-t border-border-subtle">
+            <p className="text-xs font-medium text-text-muted mb-2">Exceeded your limit? No problem:</p>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {plan.name === "Free" && "Cache-only mode after 10k requests (no additional charges)"}
+              {plan.name === "Starter" && "$0.50 per 1,000 additional requests (up to 200k total)"}
+              {plan.name === "Pro" && "$0.40 per 1,000 additional requests (up to 750k total)"}
+              {plan.name === "Agency" && "Custom overage rates negotiated"}
+            </p>
           </div>
         </div>
       </div>
