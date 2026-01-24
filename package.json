@@ -11,7 +11,10 @@
     "openai"
   ],
   "scripts": {
-    "dev": "pnpm --parallel --stream dev",
+    "dev": "pnpm --filter @watchllm/dashboard dev",
+    "dev:all": "pnpm --parallel --stream --filter @watchllm/dashboard --filter packages/sdk-node dev",
+    "dev:worker": "pnpm --filter @watchllm/worker dev:node",
+    "dev:worker:cf": "pnpm --filter @watchllm/worker dev",
     "build": "pnpm --filter \"./packages/*\" build && pnpm --filter worker build && pnpm --filter dashboard build",
     "test": "pnpm --recursive test",
     "test:coverage": "pnpm --filter @watchllm/worker test:coverage && pnpm --filter @watchllm/dashboard test:coverage",
@@ -22,6 +25,7 @@
     "test:standalone:load": "node scripts/test-standalone-load.js",
     "test:standalone:adapters": "pnpm --filter @watchllm/worker test src/__tests__/standalone/adapters.test.ts",
     "test:standalone:e2e": "pnpm --filter @watchllm/worker test src/__tests__/standalone/e2e.test.ts",
+    "seed:mock": "node scripts/seed-mock-data.js",
     "lint": "pnpm --recursive lint",
     "type-check": "pnpm --recursive type-check",
     "clean": "pnpm --recursive clean && rm -rf node_modules",

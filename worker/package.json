@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "dev:remote": "wrangler dev --remote",
-    "dev:node": "tsx watch scripts/node-dev.ts",
+    "dev:node": "tsx watch standalone.ts",
+    "start": "tsx standalone.ts",
     "build": "wrangler deploy --dry-run --outdir=dist",
     "deploy": "wrangler deploy",
     "deploy:prod": "wrangler deploy --env production",
