@@ -189,7 +189,10 @@ export function Enterprise() {
                 All prompts, responses, logs, and analytics remain entirely within your infrastructure.
               </p>
               <p className="text-xs text-text-muted mt-2">
-                WatchLLM does not claim compliance certifications; self-hosting enables customers to meet their own regulatory requirements.
+                Self-hosted deployment gives you complete control over data residency and compliance. Deploy WatchLLM in your SOC2, HIPAA, or ISO-certified infrastructure to meet your specific regulatory requirements.
+              </p>
+              <p className="text-xs text-green-400/70 mt-1 font-medium">
+                Your infrastructure, your compliance posture. WatchLLM inherits whatever certifications your environment has.
               </p>
             </div>
           </div>

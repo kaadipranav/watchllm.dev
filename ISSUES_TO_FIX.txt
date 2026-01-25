@@ -1,5 +1,12 @@
 ## RECENT FIXES (Jan 24-25, 2026)
 
+### Compliance Language Reframing ✅ ADDED
+- **Old**: "WatchLLM does not claim compliance certifications" (defensive, undermines trust)
+- **New**: "Self-hosted deployment gives you complete control over data residency and compliance. Deploy WatchLLM in your SOC2, HIPAA, or ISO-certified infrastructure..."
+- **Added**: "Your infrastructure, your compliance posture. WatchLLM inherits whatever certifications your environment has."
+- **Files**: enterprise.tsx (data isolation callout), power-features.tsx (self-hosted card)
+- **Impact**: Reframes self-hosting from limitation to empowerment
+
 ### Enterprise Pricing Transparency ✅ ADDED
 - **Base Price**: $12,000/year for up to 10 developers
 - **Includes**: 12-month updates, email support, offline license, Docker deployment

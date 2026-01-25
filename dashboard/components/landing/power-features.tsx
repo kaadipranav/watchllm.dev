@@ -242,10 +242,13 @@ export function PowerFeatures() {
                                     <Highlight icon={<Cloud className="w-4 h-4" />} text="Any cloud / on-prem" />
                                 </div>
 
-                                {/* Legal note */}
-                                <p className="text-[11px] text-text-muted mb-4 leading-relaxed">
+                                {/* Compliance note */}
+                                <p className="text-[11px] text-text-muted mb-2 leading-relaxed">
                                     <Shield className="w-3 h-3 inline mr-1 text-green-500/70" />
-                                    WatchLLM does not claim compliance certifications — self-hosting enables you to meet your own regulatory requirements (HIPAA, SOC2, etc).
+                                    Self-hosted deployment gives you complete control over data residency and compliance. Deploy WatchLLM in your SOC2, HIPAA, or ISO-certified infrastructure to meet your specific regulatory requirements.
+                                </p>
+                                <p className="text-[11px] text-green-400/70 mb-4 font-medium">
+                                    Your infrastructure, your compliance posture. WatchLLM inherits whatever certifications your environment has.
                                 </p>
 
                                 {/* CTA */}
