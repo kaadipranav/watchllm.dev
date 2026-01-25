@@ -1,4 +1,21 @@
 ## RECENT FIXES (Jan 24-25, 2026)
+### Legal Footer & Security Updates ✅ ADDED
+- **Footer Links**: Added /status and /contact, ensured /privacy, /terms, /security, /docs, /changelog
+- **Security Badges**: GDPR Ready, 256-bit Encryption, 99.9% Uptime SLA, SOC2 Type II (In Progress)
+- **SOC2 Note**: "Enterprise-grade security. SOC2 certification in progress."
+- **New Pages**: /changelog, /status, /contact
+- **Contact Form**: Added functional form with API endpoint
+- **Security Page**: Added data retention, incident response, responsible disclosure, third-party audits
+- **Files**: footer.tsx, security/page.tsx, contact/page.tsx, status/page.tsx, changelog/page.tsx, api/contact/route.ts
+
+### ROI Calculator Widget ✅ ADDED
+- **Location**: Pricing section (gradient card)
+- **Inputs**: Monthly spend + cache hit rate slider (30–70%, default 50%)
+- **Outputs**: Monthly savings, recommended plan, net savings after fee, break-even time, annual savings
+- **CTA**: "Start saving $X/month →" with live value
+- **Note**: Uses $0.002/request to estimate volume for plan recommendation
+- **File**: pricing.tsx
+
 ### Competitor Comparison Section ✅ ADDED
 - **Location**: After Features section ("Why WatchLLM")
 - **DIY vs WatchLLM**: Two-column comparison highlighting 5 min setup vs 3+ months engineering time

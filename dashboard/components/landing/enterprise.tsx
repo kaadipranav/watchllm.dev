@@ -104,7 +104,7 @@ export function Enterprise() {
           <div className="grid md:grid-cols-2 gap-8 mb-6">
             {/* Includes */}
             <div>
-              <h4 className="font-medium text-text-primary mb-3 text-sm">What's Included</h4>
+              <h4 className="font-medium text-text-primary mb-3 text-sm">What&apos;s Included</h4>
               <ul className="space-y-2 text-sm text-text-secondary">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>

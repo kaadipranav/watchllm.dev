@@ -29,8 +29,25 @@ export default function SecurityPage() {
                             Security
                         </h1>
                     </div>
-                    <p className="text-premium-text-muted text-sm mb-12">
+                    <p className="text-premium-text-muted text-sm mb-6">
                         Our commitment to protecting your AI infrastructure.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-8">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-premium-text-muted border border-white/[0.08]">
+                            GDPR Ready
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-premium-text-muted border border-white/[0.08]">
+                            256-bit Encryption
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-premium-text-muted border border-white/[0.08]">
+                            99.9% Uptime SLA
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-premium-text-muted border border-white/[0.08]">
+                            SOC2 Type II (In Progress)
+                        </span>
+                    </div>
+                    <p className="text-xs text-premium-text-muted mb-12">
+                        🔒 Enterprise-grade security. SOC2 certification in progress.
                     </p>
 
                     <div className="grid gap-8 mb-16">
@@ -57,10 +74,42 @@ export default function SecurityPage() {
                                 <p className="text-sm text-premium-text-secondary">Our edge workers run on Cloudflare&apos;s global network, benefiting from their industry-leading DDoS protection and isolated V8 isolates. We perform regular security audits and dependency updates.</p>
                             </div>
                         </div>
+
+                        <div className="flex gap-4 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                            <ShieldCheck className="h-6 w-6 text-violet-400 shrink-0" />
+                            <div>
+                                <h3 className="text-white font-semibold mb-2">Data Retention Controls</h3>
+                                <p className="text-sm text-premium-text-secondary">You control retention windows for cache entries and analytics. Default settings prioritize minimal retention with automatic expiration.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                            <ShieldCheck className="h-6 w-6 text-violet-400 shrink-0" />
+                            <div>
+                                <h3 className="text-white font-semibold mb-2">Incident Response</h3>
+                                <p className="text-sm text-premium-text-secondary">We maintain a documented incident response plan with rapid triage, customer notification, and post-incident review.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                            <ShieldCheck className="h-6 w-6 text-violet-400 shrink-0" />
+                            <div>
+                                <h3 className="text-white font-semibold mb-2">Responsible Disclosure</h3>
+                                <p className="text-sm text-premium-text-secondary">We welcome security research and coordinate fixes quickly with responsible disclosure practices.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                            <ShieldCheck className="h-6 w-6 text-violet-400 shrink-0" />
+                            <div>
+                                <h3 className="text-white font-semibold mb-2">Third-Party Audits</h3>
+                                <p className="text-sm text-premium-text-secondary">We regularly review infrastructure and dependencies with automated scans and external audits where applicable.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="prose prose-invert max-w-none text-premium-text-secondary leading-relaxed text-sm">
-                        <h2 className="text-white text-xl font-semibold mb-4">Vulnerability Disclosure</h2>
+                        <h2 className="text-white text-xl font-semibold mb-4">Responsible Disclosure Program</h2>
                         <p>
                             If you believe you have found a security vulnerability in WatchLLM, please report it to us at <a href="mailto:support@watchllm.dev" className="text-violet-400 hover:underline">support@watchllm.dev</a>. We will respond as quickly as possible.
                         </p>

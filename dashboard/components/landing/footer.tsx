@@ -14,7 +14,8 @@ export function Footer() {
     // { href: "/about", label: "About" },
     // { href: "/blog", label: "Blog" },
     // { href: "/careers", label: "Careers" },
-    { href: `mailto:${APP_CONFIG.supportEmail}`, label: "Contact" },
+    { href: "/contact", label: "Contact" },
+    { href: "/status", label: "Status" },
   ];
 
   const legalLinks = [
@@ -52,6 +53,26 @@ export function Footer() {
               <p className="text-xs text-text-muted mb-2 uppercase tracking-widest font-bold">Enterprise Support</p>
               <p className="text-sm text-text-secondary">
                 Need help with integration? Contact our engineering team at <a href={`mailto:${APP_CONFIG.supportEmail}`} className="text-text-primary hover:underline underline-offset-4">{APP_CONFIG.supportEmail}</a>.
+              </p>
+            </div>
+            <div className="pt-4">
+              <p className="text-xs text-text-muted mb-3 uppercase tracking-widest font-bold">Security & Trust</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-text-muted border border-white/[0.08]">
+                  GDPR Ready
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-text-muted border border-white/[0.08]">
+                  256-bit Encryption
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-text-muted border border-white/[0.08]">
+                  99.9% Uptime SLA
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-text-muted border border-white/[0.08]">
+                  SOC2 Type II (In Progress)
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-text-muted">
+                🔒 Enterprise-grade security. SOC2 certification in progress.
               </p>
             </div>
           </div>

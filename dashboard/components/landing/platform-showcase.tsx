@@ -88,7 +88,7 @@ export function PlatformShowcase() {
                     Vector matching + cosine similarity = 70% savings
                   </p>
                   <div className="text-[10px] text-white font-mono bg-white/5 px-2 py-0.5 rounded border border-white/20 inline-block" title="Match accuracy: how well we identify similar queries">
-                    >95% match accuracy
+                    &gt;95% match accuracy
                   </div>
                 </div>
               </motion.div>

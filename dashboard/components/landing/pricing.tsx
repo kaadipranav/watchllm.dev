@@ -209,6 +209,25 @@ function PricingCard({
 }
 
 export function Pricing() {
+  const [monthlySpend, setMonthlySpend] = React.useState(500);
+  const [cacheHitRate, setCacheHitRate] = React.useState(50);
+
+  const safeSpend = Number.isFinite(monthlySpend) ? Math.max(0, monthlySpend) : 0;
+  const safeHitRate = Number.isFinite(cacheHitRate) ? Math.min(70, Math.max(30, cacheHitRate)) : 50;
+
+  const savings = safeSpend * (safeHitRate / 100);
+  const avgCostPerRequest = 0.002;
+  const estimatedRequests = safeSpend > 0 ? Math.round(safeSpend / avgCostPerRequest) : 0;
+  const recommendedPlan = estimatedRequests > 100000 ? "Pro" : "Starter";
+  const planCost = recommendedPlan === "Pro" ? 99 : 49;
+  const netSavings = savings - planCost;
+  const dailySavings = savings / 30;
+  const breakEven = dailySavings > 0 ? Math.ceil(planCost / dailySavings) : null;
+  const annualSavings = netSavings * 12;
+
+  const formatCurrency = (value: number) =>
+    `$${Math.max(0, Math.round(value)).toLocaleString()}`;
+
   return (
     <section id="pricing" className="relative py-32 overflow-hidden">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -229,6 +248,100 @@ export function Pricing() {
           <p className="text-lg text-text-secondary leading-relaxed">
             If you&apos;re spending $200+/month on OpenAI, these plans save you money.
           </p>
+        </motion.div>
+
+        {/* ROI Calculator */}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-transparent border border-purple-500/20 rounded-xl p-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="space-y-3">
+                <h3 className="text-xl font-semibold text-text-primary">Calculate Your Savings</h3>
+                <p className="text-sm text-text-secondary">
+                  Estimate your savings from semantic caching in seconds.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text-secondary">
+                    Current monthly OpenAI spend
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">$</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={50}
+                      value={safeSpend}
+                      onChange={(event) => setMonthlySpend(Number(event.target.value))}
+                      className="w-full bg-bg-surface border border-border-subtle rounded-md pl-7 pr-3 py-2 text-sm text-text-primary focus:outline-none focus:border-purple-500/50"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text-secondary">
+                      Expected cache hit rate
+                    </label>
+                    <span className="text-sm text-text-primary font-medium">{safeHitRate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={30}
+                    max={70}
+                    step={1}
+                    value={safeHitRate}
+                    onChange={(event) => setCacheHitRate(Number(event.target.value))}
+                    className="w-full accent-purple-400"
+                  />
+                  <div className="flex items-center justify-between text-xs text-text-muted">
+                    <span>30%</span>
+                    <span>70%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-bg-surface/60 border border-border-subtle rounded-lg p-4">
+                <p className="text-xs text-text-muted mb-1">Monthly savings from caching</p>
+                <p className="text-lg font-semibold text-text-primary">{formatCurrency(savings)}</p>
+              </div>
+              <div className="bg-bg-surface/60 border border-border-subtle rounded-lg p-4">
+                <p className="text-xs text-text-muted mb-1">Recommended plan</p>
+                <p className="text-lg font-semibold text-text-primary">{recommendedPlan}</p>
+              </div>
+              <div className="bg-bg-surface/60 border border-border-subtle rounded-lg p-4">
+                <p className="text-xs text-text-muted mb-1">Net savings after fee</p>
+                <p className="text-lg font-semibold text-green-400">{formatCurrency(netSavings)}</p>
+              </div>
+              <div className="bg-bg-surface/60 border border-border-subtle rounded-lg p-4">
+                <p className="text-xs text-text-muted mb-1">Break-even time</p>
+                <p className="text-lg font-semibold text-text-primary">
+                  {breakEven ? `${breakEven} days` : "—"}
+                </p>
+              </div>
+              <div className="bg-bg-surface/60 border border-border-subtle rounded-lg p-4">
+                <p className="text-xs text-text-muted mb-1">Annual savings</p>
+                <p className="text-lg font-semibold text-text-primary">{formatCurrency(annualSavings)}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <p className="text-xs text-text-muted">
+                Assumes an average of $0.002 per request to estimate volume. Adjust after signup.
+              </p>
+              <Button asChild className="bg-white text-black hover:bg-white/90">
+                <Link href="/signup">Start saving {formatCurrency(netSavings)}/month →</Link>
+              </Button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Pricing cards */}
