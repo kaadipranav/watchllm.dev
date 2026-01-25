@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
 import { ProviderSettings } from "@/components/dashboard/provider-settings";
 import { CacheSettings } from "@/components/dashboard/cache-settings";
+import { CacheTTLSettings, CacheAgeAnalytics, CacheInvalidation } from "@/components/dashboard/cache-ttl-settings";
 import { getCacheSettings } from "@/app/actions/cache-settings";
 
 export default function SettingsPage() {
@@ -260,8 +261,7 @@ export default function SettingsPage() {
               <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Cache Settings</p>
               <h2 className="text-xl font-semibold text-premium-text-primary">Configure Semantic Cache</h2>
               <p className="text-premium-text-secondary">
-                Fine-tune the similarity threshold to balance between cost savings and response accuracy.
-                Higher thresholds require closer matches, reducing false positives.
+                Fine-tune cache behavior including similarity threshold, TTL expiration, and manual invalidation.
               </p>
             </div>
 
@@ -274,13 +274,15 @@ export default function SettingsPage() {
                 {projects.map((project) => {
                   const projectCacheSettings = cacheSettings[project.id];
                   return (
-                    <div key={project.id} className="space-y-4">
+                    <div key={project.id} className="space-y-6">
                       <div className="flex items-center gap-3">
                         <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
                         <Badge variant="secondary" className="text-[10px]">
                           {project.plan || 'free'}
                         </Badge>
                       </div>
+                      
+                      {/* Similarity Threshold Settings */}
                       <CacheSettings
                         projectId={project.id}
                         currentThreshold={projectCacheSettings?.threshold || project.semantic_cache_threshold || 0.85}
@@ -293,6 +295,37 @@ export default function SettingsPage() {
                               threshold: newThreshold,
                             }
                           }));
+                        }}
+                      />
+                      
+                      {/* TTL / Expiration Settings */}
+                      <CacheTTLSettings
+                        projectId={project.id}
+                        currentTTL={project.cache_ttl_seconds ?? 86400}
+                        endpointOverrides={project.cache_ttl_overrides ?? {}}
+                        onSettingsChange={() => {
+                          // Refresh project data
+                          supabase
+                            .from("projects")
+                            .select("*")
+                            .eq("id", project.id)
+                            .single()
+                            .then(({ data }) => {
+                              if (data) {
+                                setProjects(prev => prev.map(p => p.id === project.id ? data : p));
+                              }
+                            });
+                        }}
+                      />
+                      
+                      {/* Cache Age Analytics */}
+                      <CacheAgeAnalytics projectId={project.id} />
+                      
+                      {/* Cache Invalidation */}
+                      <CacheInvalidation 
+                        projectId={project.id}
+                        onInvalidated={() => {
+                          // Could refresh cache stats here
                         }}
                       />
                     </div>

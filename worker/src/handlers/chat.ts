@@ -114,7 +114,12 @@ export async function handleChatCompletions(
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
-  const semanticCache = new SemanticCache(d1, project.id);
+  
+  // Initialize semantic cache with TTL options from project settings
+  const semanticCache = new SemanticCache(d1, project.id, 50, {
+    ttlSeconds: project.cache_ttl_seconds ?? 86400, // Default 24 hours
+    endpointTTLOverrides: project.cache_ttl_overrides ?? {},
+  });
 
   // Use project-level semantic cache threshold (with env fallback)
   const semanticThreshold = project.semantic_cache_threshold ||
@@ -388,7 +393,7 @@ export async function handleChatCompletions(
         },
         text: textForEmbedding,
       };
-      await semanticCache.put('chat', entry);
+      await semanticCache.put('chat', entry, '/v1/chat/completions');
       console.log('Semantic cache entry saved to D1');
     }
 

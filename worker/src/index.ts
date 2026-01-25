@@ -24,6 +24,7 @@ import { handleEmbeddings } from './handlers/embeddings';
 import { log, maskApiKey } from './lib/logger';
 import observabilityApp from './observability/routes';
 import analyticsApp from './handlers/analytics';
+import cacheManagementApp from './handlers/cacheManagement';
 import { checkRateLimit, checkQuota, incrementUsage, type Plan } from './lib/rate-limiting';
 
 // Create Hono app with environment bindings
@@ -36,6 +37,9 @@ app.route('/', observabilityApp);
 
 // Mount analytics routes
 app.route('/', analyticsApp);
+
+// Mount cache management routes
+app.route('/', cacheManagementApp);
 
 // Response compression for text/JSON payloads
 // app.use('*', compress());

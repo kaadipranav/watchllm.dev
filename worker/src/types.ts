@@ -70,10 +70,17 @@ export interface ProjectRecord {
   name: string;
   plan: 'free' | 'starter' | 'pro';
   semantic_cache_threshold: number; // 0.50-0.99
+  cache_ttl_seconds: number | null; // TTL in seconds, null = never expire
+  cache_ttl_overrides: CacheTTLOverrides | null; // Per-endpoint TTL overrides
   ab_testing_enabled: boolean;
   ab_testing_config: ABTestingConfig | null;
   created_at: string;
   updated_at: string;
+}
+
+// Cache TTL overrides per endpoint
+export interface CacheTTLOverrides {
+  [endpoint: string]: number | null; // TTL in seconds, null = never expire
 }
 
 // A/B Testing configuration

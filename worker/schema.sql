@@ -11,9 +11,11 @@ CREATE TABLE IF NOT EXISTS semantic_cache (
   tokens_output INTEGER NOT NULL,
   tokens_total INTEGER NOT NULL,
   timestamp INTEGER NOT NULL,
+  expires_at INTEGER, -- Unix timestamp in ms, NULL = never expires
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_project_kind ON semantic_cache(project_id, kind);
 CREATE INDEX IF NOT EXISTS idx_timestamp ON semantic_cache(timestamp);
+CREATE INDEX IF NOT EXISTS idx_expires_at ON semantic_cache(expires_at) WHERE expires_at IS NOT NULL;

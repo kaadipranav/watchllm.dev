@@ -112,7 +112,12 @@ export async function handleCompletions(
   const supabase = createSupabaseClient(env);
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
-  const semanticCache = new SemanticCache(d1, project.id);
+  
+  // Initialize semantic cache with TTL options from project settings
+  const semanticCache = new SemanticCache(d1, project.id, 50, {
+    ttlSeconds: project.cache_ttl_seconds ?? 86400, // Default 24 hours
+    endpointTTLOverrides: project.cache_ttl_overrides ?? {},
+  });
   const semanticThreshold =
     typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
@@ -297,7 +302,7 @@ export async function handleCompletions(
         },
         text: textForEmbedding,
       };
-      await semanticCache.put('completion', entry);
+      await semanticCache.put('completion', entry, '/v1/completions');
     }
 
     // Log usage
