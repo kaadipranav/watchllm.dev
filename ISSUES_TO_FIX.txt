@@ -1,5 +1,22 @@
 ## RECENT FIXES (Jan 24-25, 2026)
+### Competitor Comparison Section ✅ ADDED
+- **Location**: After Features section ("Why WatchLLM")
+- **DIY vs WatchLLM**: Two-column comparison highlighting 5 min setup vs 3+ months engineering time
+- **Platform Table**: 6 features compared across WatchLLM, Helicone, LangSmith, Portkey
+- **Key Differentiators**: Semantic caching (40-70% savings), self-hosted option, $99/mo pricing, <50ms cache speed
+- **Styling**: Subtle, focus on differentiation not disparagement
+- **Mobile**: Responsive cards for small screens
+- **Footnote**: "Comparison accurate as of January 2026"
+- **File**: comparison.tsx
 
+### CTA Hierarchy Optimization ✓ ADDED
+- **Primary CTA**: "Start Free Trial" (1.5x larger: h-[84px] px-16 text-2xl)
+- **Secondary CTA**: "Watch 2-Min Demo" with play icon (outline button)
+- **Subtext**: "No credit card required • 10,000 requests free"
+- **Pricing CTAs**: Free "Get Started", Starter "Start 14-Day Trial", Pro "Get Started" (no trial), Agency "Contact Sales"
+- **Removed**: Competing "See How It Works" button, "No credit card" from trust indicators (moved to subtext)
+- **Impact**: Single clear path to action, reduced decision paralysis
+- **Files**: hero.tsx, pricing.tsx
 ### Compliance Language Reframing ✅ ADDED
 - **Old**: "WatchLLM does not claim compliance certifications" (defensive, undermines trust)
 - **New**: "Self-hosted deployment gives you complete control over data residency and compliance. Deploy WatchLLM in your SOC2, HIPAA, or ISO-certified infrastructure..."

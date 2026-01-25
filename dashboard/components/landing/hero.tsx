@@ -203,39 +203,53 @@ export function Hero() {
 
           {/* CTA buttons */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="flex flex-col items-center justify-center gap-6 mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Button
-              asChild
-              variant="ghost"
-              size="lg"
-              className="h-14 px-10 text-lg min-w-[220px] !bg-white !text-black hover:!bg-white/90 font-semibold shadow-lg shadow-white/10 border border-white/20"
-            >
-              <Link href="/signup">
-                <span className="relative z-10">Start Saving — Free</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-14 px-10 text-lg min-w-[220px] border-2 border-white/20 hover:border-white/40 hover:bg-white/5 text-text-primary transition-all"
-            >
-              <Link href="#how-it-works">See How It Works</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Primary CTA - 1.5x larger */}
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="lg"
+                  className="h-[84px] px-16 text-2xl min-w-[330px] !bg-white !text-black hover:!bg-white/90 font-semibold shadow-lg shadow-white/10 border border-white/20"
+                >
+                  <Link href="/signup">
+                    <span className="relative z-10">Start Free Trial</span>
+                  </Link>
+                </Button>
+                <p className="text-sm text-text-muted">
+                  No credit card required • 10,000 requests free
+                </p>
+              </div>
+              
+              {/* Secondary CTA */}
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-14 px-10 text-lg min-w-[220px] border-2 border-white/20 hover:border-white/40 hover:bg-white/5 text-text-primary transition-all"
+              >
+                <Link href="#how-it-works" className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                  </svg>
+                  Watch 2-Min Demo
+                </Link>
+              </Button>
+            </div>
           </motion.div>
 
           {/* Trust indicators */}
           <motion.div
-            className="flex flex-wrap items-center justify-center gap-6 text-sm text-text-muted"
+            className="flex flex-wrap items-center justify-center gap-6 text-sm text-text-muted mb-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.35 }}
           >
-            <span className="flex items-center gap-2">No credit card required</span>
             <span className="flex items-center gap-2">Works with OpenAI, Anthropic, Groq</span>
             <span className="flex items-center gap-2">Change 1 line of code</span>
           </motion.div>

@@ -7,6 +7,7 @@ import { Testimonials } from "@/components/landing/testimonials";
 import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { Features } from "@/components/landing/features";
+import { Comparison } from "@/components/landing/comparison";
 import { SocialProof } from "@/components/landing/social-proof";
 import { AnalyticsDashboard } from "@/components/landing/analytics-dashboard";
 import { Pricing } from "@/components/landing/pricing";
@@ -133,6 +134,7 @@ export default function HomePage() {
         <HowItWorks />
         <PlatformShowcase />
         <Features />
+        <Comparison />
         <SocialProof />
         <Pricing />
         <Enterprise />
