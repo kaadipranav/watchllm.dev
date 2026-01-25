@@ -228,23 +228,6 @@ export function DataFlow() {
             </div>
           </div>
         </motion.div>
-
-        {/* Call to action */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-16 text-center"
-        >
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-lg bg-bg-elevated border border-border-subtle">
-            <GitBranch className="w-5 h-5 text-accent-primary" />
-            <div className="text-left">
-              <div className="text-sm font-medium text-text-primary">See it in action</div>
-              <div className="text-xs text-text-secondary">View detailed analytics in your dashboard</div>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

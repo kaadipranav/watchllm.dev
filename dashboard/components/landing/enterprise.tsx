@@ -84,13 +84,97 @@ export function Enterprise() {
           ))}
         </motion.div>
 
+        {/* Pricing Card */}
+        <motion.div
+          className="max-w-3xl mx-auto mb-12 p-8 rounded-xl bg-bg-surface border border-border-subtle"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="text-center mb-6">
+            <div className="text-3xl font-bold text-text-primary mb-2">
+              Starting at $12,000/year
+            </div>
+            <p className="text-sm text-text-secondary">
+              For up to 10 developers
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-6">
+            {/* Includes */}
+            <div>
+              <h4 className="font-medium text-text-primary mb-3 text-sm">What's Included</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+                  <span>All updates for 12 months</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+                  <span>Email support (Standard tier)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+                  <span>Offline license key</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+                  <span>Docker Compose deployment</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Licensing */}
+            <div>
+              <h4 className="font-medium text-text-primary mb-3 text-sm">Licensing Options</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-primary flex-shrink-0 mt-0.5">•</span>
+                  <span>Per-developer (up to 10 included)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-primary flex-shrink-0 mt-0.5">•</span>
+                  <span>Per-server (unlimited developers)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-accent-primary flex-shrink-0 mt-0.5">•</span>
+                  <span>Custom volume discounts available</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Support Tiers */}
+          <div className="border-t border-border-subtle pt-6">
+            <h4 className="font-medium text-text-primary mb-4 text-sm">Support Tiers</h4>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg bg-bg-primary/50 border border-border-subtle">
+                <div className="font-medium text-text-primary mb-1 text-sm">Standard</div>
+                <div className="text-xs text-text-secondary mb-2">Included</div>
+                <p className="text-xs text-text-muted">Email support during business hours</p>
+              </div>
+              <div className="p-4 rounded-lg bg-bg-primary/50 border border-accent-primary/30">
+                <div className="font-medium text-text-primary mb-1 text-sm">Premium</div>
+                <div className="text-xs text-text-secondary mb-2">+$4,800/year</div>
+                <p className="text-xs text-text-muted">Priority support with SLA</p>
+              </div>
+              <div className="p-4 rounded-lg bg-bg-primary/50 border border-border-subtle">
+                <div className="font-medium text-text-primary mb-1 text-sm">Enterprise</div>
+                <div className="text-xs text-text-secondary mb-2">Custom quote</div>
+                <p className="text-xs text-text-muted">Dedicated support engineer</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Data isolation callout */}
         <motion.div
           className="max-w-2xl mx-auto mb-12 p-6 rounded-lg bg-bg-surface border border-border-subtle"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
@@ -117,20 +201,20 @@ export function Enterprise() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
           <Button
             asChild
             size="lg"
             variant="secondary"
-            className="min-w-[180px]"
+            className="min-w-[220px]"
           >
-            <a href={`mailto:${APP_CONFIG.salesEmail}?subject=WatchLLM Enterprise Inquiry`}>
-              Contact Us
+            <a href={`mailto:${APP_CONFIG.salesEmail}?subject=Schedule%20WatchLLM%20Enterprise%20Demo`}>
+              Schedule Enterprise Demo
             </a>
           </Button>
           <p className="mt-4 text-sm text-text-muted">
-            Annual enterprise license • No pricing listed
+            Get a personalized demo and custom quote for your team
           </p>
         </motion.div>
       </div>

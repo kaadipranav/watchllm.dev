@@ -1,63 +1,45 @@
-## RECENT FIXES (January 24, 2026)
+## RECENT FIXES (Jan 24-25, 2026)
 
-### BYOK Architecture Clarification ✅ FIXED
-- **Issue**: Contradictory messaging about BYOK vs API key usage in code examples
-- **Old**: "How It Works" Step 1 showed `apiKey: process.env.WATCHLLM_KEY` (confusing)
-- **New**: Shows proper architecture with `apiKey: process.env.OPENAI_API_KEY` + `X-WatchLLM-Key` header
-- **Added Explanation**: "Use your existing OpenAI/Anthropic API keys. WatchLLM never marks up API costs—you pay provider rates directly. We only charge our platform fee."
-- **Badge Update**: Changed "BYOK" badges to "Direct Billing" for clarity
-- **Locations**:
-  - dashboard/components/landing/how-it-works.tsx (Step 1 code example)
-  - dashboard/components/landing/providers.tsx (badges and header text)
-- **Impact**: Crystal clear value prop about zero markup pricing
+### Enterprise Pricing Transparency ✅ ADDED
+- **Base Price**: $12,000/year for up to 10 developers
+- **Includes**: 12-month updates, email support, offline license, Docker deployment
+- **Licensing**: Per-developer or per-server options with volume discounts
+- **Support Tiers**:
+  - Standard: Email support (included)
+  - Premium: Priority + SLA (+$4,800/year)
+  - Enterprise: Dedicated engineer (custom)
+- **CTA**: "Schedule Enterprise Demo" button with mailto link
+- **File**: enterprise.tsx
 
-### Cache Metrics Clarification ✅ FIXED
-- **Issue**: Contradictory cache metrics causing confusion (95% vs 40-70%)
-- **Root Cause**: Two different metrics being conflated:
-  - **Match Accuracy**: How well we identify similar queries (>95%)
-  - **Hit Rate**: % of requests that are cache hits (40-70% average)
-- **Fixes Applied**:
-  1. **How It Works Step 2**: Updated description to say "Our matching algorithm achieves >95% accuracy in identifying similar prompts"
-  2. **Data Flow Section**: Added tooltip to "40-70% hit rate*" with explanation
-  3. **Platform Architecture**: Added title attribute to ">95% match accuracy" badge
-  4. **FAQ Section**: Updated response quality answer to clarify both metrics
-  5. **New Callout Box**: Added "Understanding Cache Metrics" info box in Data Flow section
-- **Locations**:
-  - dashboard/components/landing/how-it-works.tsx
-  - dashboard/components/landing/data-flow.tsx
-  - dashboard/components/landing/faq.tsx
-  - dashboard/components/landing/platform-showcase.tsx
-- **Impact**: Eliminates confusion, sets proper expectations, builds trust
+### Analytics Dashboard Section ✅ ADDED
+- **Components**: AnalyticsDashboard component with 7 features (live monitoring, cost breakdown, cache trends, token analytics, alerts, export, team attribution)
+- **CTAs**: "Start Free Trial" + "Try Interactive Demo" buttons
+- **Location**: dashboard/components/landing/analytics-dashboard.tsx, added to page.tsx after DataFlow
+- **Replaced**: Vague "View detailed analytics" CTA in DataFlow section
 
-### Social Proof Section ✅ ADDED
-- **Added**: New section between "Why WatchLLM" and "Pricing"
-- **Components**:
-  - **Stats Callout**: 12M+ requests cached, $147K+ saved, 58% avg cost reduction
-  - **Company Logos**: Placeholder grid for 8 companies (ready for real logos)
-  - **Testimonials**: Two detailed customer quotes with specific dollar savings
-- **Location**: dashboard/components/landing/social-proof.tsx
-- **Impact**: Builds credibility, provides concrete proof of value
+### BYOK Architecture Clarification ✅
+- **Step 1 Code**: Shows `OPENAI_API_KEY` + `X-WatchLLM-Key` header pattern
+- **Explanation**: "WatchLLM never marks up API costs—you pay provider rates directly"
+- **Badges**: "BYOK" → "Direct Billing"
+- **Files**: how-it-works.tsx, providers.tsx
 
-### Agent Debugger Cost Example ✅ FIXED
-- **Issue**: Math in Agent Debugger timeline example was incorrect
-- **Old**: Tool call $0.003, Loop 3x = $0.012 wasted, Cached = $0.008 saved (numbers didn't add up)
-- **New**: First call $0.003, 3 calls total = $0.009, Calls 2-3 cached = $0.000, Total saved $0.006 (67% reduction)
-- **Location**: dashboard/components/landing/power-features.tsx
-- **Impact**: Clear, mathematically accurate value proposition
+### Cache Metrics Clarification ✅
+- **Match Accuracy (>95%)**: How well we identify similar queries
+- **Hit Rate (40-70%)**: % of requests that are cache hits
+- **Updates**: how-it-works.tsx (Step 2), data-flow.tsx (tooltip), faq.tsx, platform-showcase.tsx
+- **Added**: "Understanding Cache Metrics" callout in DataFlow
 
-### Pricing Section Enhancements ✅ ADDED
-- **Added Overage Pricing Details**:
-  - FREE: Cache-only mode after 10k (no additional charges)
-  - STARTER: $0.50 per 1,000 additional requests (up to 200k total)
-  - PRO: $0.40 per 1,000 additional requests (up to 750k total)
-  - AGENCY: Custom overage rates
-- **Added Annual Pricing Option**:
-  - STARTER: $470/year (save $118 - 20% off)
-  - PRO: $950/year (save $238 - 20% off)
-  - Toggle switch on each card
-  - "💰 Save 20% with annual billing" badge
-- **Location**: dashboard/components/landing/pricing.tsx
-- **Impact**: Transparent pricing reduces support questions, encourages annual commitments
+### Social Proof Section ✅
+- **Stats**: 12M+ cached, $147K+ saved, 58% avg reduction
+- **Testimonials**: 2 cards with specific savings ($2.4k/mo, $1.8k/mo)
+- **Logos**: Placeholder grid for 8 companies
+- **File**: social-proof.tsx
+
+### Other Fixes ✅
+- **Hero Stats**: IntersectionObserver, easeOutCubic easing, 2s animation, random 40-70% savings
+- **Agent Debugger**: Math corrected ($0.003 → $0.009 → $0.006 saved = 67%)
+- **Pricing**: Overage rates + annual billing (20% discount)
+- **Changelog**: Streamlined verbose descriptions to concise implementation lists
 
 ---
 
