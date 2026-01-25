@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
 import { ProviderSettings } from "@/components/dashboard/provider-settings";
+import { CacheSettings } from "@/components/dashboard/cache-settings";
+import { getCacheSettings } from "@/app/actions/cache-settings";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,6 +19,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
+  const [cacheSettings, setCacheSettings] = useState<Record<string, any>>({});
   const supabase = createClient();
   const { toast } = useToast();
 
@@ -36,6 +39,14 @@ export default function SettingsPage() {
 
         if (userProjects) {
           setProjects(userProjects);
+
+          // Fetch cache settings for each project
+          const cacheSettingsMap: Record<string, any> = {};
+          for (const project of userProjects) {
+            const settings = await getCacheSettings(project.id);
+            cacheSettingsMap[project.id] = settings;
+          }
+          setCacheSettings(cacheSettingsMap);
         }
       }
     };
@@ -175,11 +186,12 @@ export default function SettingsPage() {
 
       <div className="space-y-6 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-primary p-6 shadow-premium-xl">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-primary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-5 border border-premium-border-subtle">
+          <TabsList className="grid grid-cols-2 gap-2 rounded-premium-md bg-premium-bg-primary p-1 text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-premium-text-muted md:grid-cols-6 border border-premium-border-subtle">
             {[
               { value: "profile", label: "Profile" },
               { value: "security", label: "Security" },
               { value: "providers", label: "AI Providers" },
+              { value: "cache", label: "Cache" },
               { value: "notifications", label: "Notifications" },
               { value: "danger", label: "Danger" },
             ].map((tab) => (
@@ -241,6 +253,80 @@ export default function SettingsPage() {
               </p>
             </div>
             <ProviderSettings />
+          </TabsContent>
+
+          <TabsContent value="cache" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Cache Settings</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Configure Semantic Cache</h2>
+              <p className="text-premium-text-secondary">
+                Fine-tune the similarity threshold to balance between cost savings and response accuracy.
+                Higher thresholds require closer matches, reducing false positives.
+              </p>
+            </div>
+
+            {projects.length === 0 ? (
+              <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center shadow-premium-sm">
+                <p className="text-premium-text-secondary">You don&apos;t have any projects yet.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {projects.map((project) => {
+                  const projectCacheSettings = cacheSettings[project.id];
+                  return (
+                    <div key={project.id} className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {project.plan || 'free'}
+                        </Badge>
+                      </div>
+                      <CacheSettings
+                        projectId={project.id}
+                        currentThreshold={projectCacheSettings?.threshold || project.semantic_cache_threshold || 0.85}
+                        cacheStats={projectCacheSettings?.stats}
+                        onThresholdChange={(newThreshold) => {
+                          setCacheSettings(prev => ({
+                            ...prev,
+                            [project.id]: {
+                              ...prev[project.id],
+                              threshold: newThreshold,
+                            }
+                          }));
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-8 pt-8 border-t border-premium-border-subtle space-y-4">
+              <h3 className="text-lg font-medium text-premium-text-primary">How Semantic Caching Works</h3>
+              <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm space-y-4">
+                <p className="text-sm text-premium-text-secondary">
+                  When a request comes in, WatchLLM uses AI embeddings to find semantically similar previous requests.
+                  If the similarity score exceeds your threshold, the cached response is returned instantly &mdash; saving you API costs and latency.
+                </p>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="p-4 bg-premium-bg-primary rounded-lg">
+                    <div className="text-lg font-semibold text-yellow-500">85-89%</div>
+                    <div className="text-xs text-premium-text-muted">Permissive</div>
+                    <p className="text-xs text-premium-text-secondary mt-1">Higher savings, more risk of wrong responses</p>
+                  </div>
+                  <div className="p-4 bg-premium-bg-primary rounded-lg">
+                    <div className="text-lg font-semibold text-blue-500">90-94%</div>
+                    <div className="text-xs text-premium-text-muted">Balanced</div>
+                    <p className="text-xs text-premium-text-secondary mt-1">Good tradeoff for most use cases</p>
+                  </div>
+                  <div className="p-4 bg-premium-bg-primary rounded-lg">
+                    <div className="text-lg font-semibold text-green-500">95-99%</div>
+                    <div className="text-xs text-premium-text-muted">Strict</div>
+                    <p className="text-xs text-premium-text-secondary mt-1">Maximum accuracy, lower cache hit rate</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">

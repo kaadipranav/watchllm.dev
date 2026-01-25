@@ -1606,7 +1606,10 @@ observabilityApp.post('/v1/projects/:projectId/integrations/slack/test', async (
           elements: [
             {
               type: 'mrkdwn',
-              text: `Sent at ${new Date().toISOString()}`,
+              text: {
+                type: 'mrkdwn',
+                text: `Sent at ${new Date().toISOString()}`,
+              },
             },
           ],
         },

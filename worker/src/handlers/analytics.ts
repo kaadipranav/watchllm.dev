@@ -760,7 +760,8 @@ function getMockAgentRuns(projectId: string, agentName?: string): AgentRun[] {
   for (let i = 0; i < 15; i++) {
     const agent = agents[i % agents.length];
     const startedAt = new Date(now - i * 3600000);
-    const status = Math.random() > 0.1 ? 'completed' : (Math.random() > 0.5 ? 'failed' : 'cancelled');
+    const statusRand = Math.random();
+    const status = statusRand > 0.8 ? 'running' : (statusRand > 0.4 ? 'completed' : (statusRand > 0.2 ? 'failed' : 'cancelled'));
     
     runs.push({
       runId: `run_${agent}_${i + 1}`,

@@ -796,7 +796,10 @@ export function createNewCommentSlackMessage(
         elements: [
           {
             type: 'mrkdwn',
-            text: `<${dashboardUrl}/dashboard/observability/agent-runs/${comment.runId}/debug|View Run>`,
+            text: {
+              type: 'mrkdwn',
+              text: `<${dashboardUrl}/dashboard/observability/agent-runs/${comment.runId}/debug|View Run>`,
+            },
           },
         ],
       },
