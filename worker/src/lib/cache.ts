@@ -11,11 +11,12 @@ import type {
   EmbeddingsRequest,
   EmbeddingsResponse,
   CacheEntry,
+  CacheTTLEndpointOverrides,
 } from '../types';
 import { normalizePrompt } from './semanticCache';
 
-// Default TTL: 1 hour in seconds
-const DEFAULT_TTL = 3600;
+// Default TTL: 24 hours in seconds
+const DEFAULT_TTL = 86400;
 
 // Cache key prefix
 const CACHE_PREFIX = 'watchllm:cache:';
@@ -107,15 +108,37 @@ export function generateEmbeddingsCacheKey(request: EmbeddingsRequest): string {
 }
 
 /**
- * Cache manager for handling all caching operations
+ * Cache manager for handling all caching operations with TTL support
  */
 export class CacheManager {
   private redis: RedisClient;
   private ttl: number;
+  private endpointOverrides: CacheTTLEndpointOverrides;
 
-  constructor(redis: RedisClient, ttlSeconds: number = DEFAULT_TTL) {
+  constructor(
+    redis: RedisClient,
+    ttlSeconds: number = DEFAULT_TTL,
+    endpointOverrides: CacheTTLEndpointOverrides = {}
+  ) {
     this.redis = redis;
     this.ttl = ttlSeconds;
+    this.endpointOverrides = endpointOverrides;
+  }
+
+  /**
+   * Get effective TTL for an endpoint
+   */
+  private getEffectiveTTL(endpoint: string): number {
+    return this.endpointOverrides[endpoint] ?? this.ttl;
+  }
+
+  /**
+   * Check if a cache entry has expired
+   */
+  private isExpired(entry: any, ttlSeconds: number): boolean {
+    if (ttlSeconds === -1) return false; // Never expire
+    const ageSeconds = (Date.now() - entry.timestamp) / 1000;
+    return ageSeconds > ttlSeconds;
   }
 
   /**
@@ -131,6 +154,16 @@ export class CacheManager {
 
     const key = generateChatCacheKey(request);
     const result = await this.redis.get<CacheEntry<ChatCompletionResponse>>(key);
+    
+    if (!result) return null;
+
+    // Check if expired
+    const ttl = this.getEffectiveTTL('/v1/chat/completions');
+    if (this.isExpired(result, ttl)) {
+      await this.redis.del(key);
+      return null;
+    }
+
     return result;
   }
 
@@ -147,6 +180,8 @@ export class CacheManager {
     }
 
     const key = generateChatCacheKey(request);
+    const ttl = this.getEffectiveTTL('/v1/chat/completions');
+    
     const entry: CacheEntry<ChatCompletionResponse> = {
       data: response,
       timestamp: Date.now(),
@@ -158,8 +193,7 @@ export class CacheManager {
       },
     };
 
-    const result = await this.redis.set(key, entry, this.ttl);
-    return result;
+    return this.redis.set(key, entry, ttl === -1 ? 0 : ttl); // 0 = no expiry for Redis
   }
 
   /**
@@ -173,7 +207,17 @@ export class CacheManager {
     }
 
     const key = generateCompletionCacheKey(request);
-    return this.redis.get<CacheEntry<CompletionResponse>>(key);
+    const result = await this.redis.get<CacheEntry<CompletionResponse>>(key);
+    
+    if (!result) return null;
+
+    const ttl = this.getEffectiveTTL('/v1/completions');
+    if (this.isExpired(result, ttl)) {
+      await this.redis.del(key);
+      return null;
+    }
+
+    return result;
   }
 
   /**
@@ -188,6 +232,8 @@ export class CacheManager {
     }
 
     const key = generateCompletionCacheKey(request);
+    const ttl = this.getEffectiveTTL('/v1/completions');
+    
     const entry: CacheEntry<CompletionResponse> = {
       data: response,
       timestamp: Date.now(),
@@ -199,7 +245,7 @@ export class CacheManager {
       },
     };
 
-    return this.redis.set(key, entry, this.ttl);
+    return this.redis.set(key, entry, ttl === -1 ? 0 : ttl);
   }
 
   /**
@@ -209,7 +255,17 @@ export class CacheManager {
     request: EmbeddingsRequest
   ): Promise<CacheEntry<EmbeddingsResponse> | null> {
     const key = generateEmbeddingsCacheKey(request);
-    return this.redis.get<CacheEntry<EmbeddingsResponse>>(key);
+    const result = await this.redis.get<CacheEntry<EmbeddingsResponse>>(key);
+    
+    if (!result) return null;
+
+    const ttl = this.getEffectiveTTL('/v1/embeddings');
+    if (this.isExpired(result, ttl)) {
+      await this.redis.del(key);
+      return null;
+    }
+
+    return result;
   }
 
   /**
@@ -220,6 +276,8 @@ export class CacheManager {
     response: EmbeddingsResponse
   ): Promise<boolean> {
     const key = generateEmbeddingsCacheKey(request);
+    const ttl = this.getEffectiveTTL('/v1/embeddings');
+    
     const entry: CacheEntry<EmbeddingsResponse> = {
       data: response,
       timestamp: Date.now(),
@@ -231,8 +289,7 @@ export class CacheManager {
       },
     };
 
-    // Embeddings can be cached longer since they're deterministic
-    return this.redis.set(key, entry, this.ttl * 24); // 24 hours for embeddings
+    return this.redis.set(key, entry, ttl === -1 ? 0 : ttl);
   }
 
   /**
@@ -248,7 +305,8 @@ export class CacheManager {
  */
 export function createCacheManager(
   redis: RedisClient,
-  ttlSeconds?: number
+  ttlSeconds?: number,
+  endpointOverrides?: CacheTTLEndpointOverrides
 ): CacheManager {
-  return new CacheManager(redis, ttlSeconds);
+  return new CacheManager(redis, ttlSeconds, endpointOverrides);
 }

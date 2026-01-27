@@ -112,7 +112,7 @@ export async function handleChatCompletions(
   const redis = createRedisClient(env);
   const d1 = createD1Client(env.DB);
   const supabase = createSupabaseClient(env);
-  const cache = createCacheManager(redis);
+  const cache = createCacheManager(redis, project.cache_ttl_seconds ?? 86400, project.cache_ttl_endpoint_overrides ?? {});
   const provider = getSharedProviderClient(env);
   const semanticCache = new SemanticCache(d1, project.id);
 

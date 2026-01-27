@@ -46,6 +46,8 @@ export default function UsagePage() {
     totalSavings: 0,
     cacheAccuracy: 100,
     avgCacheSimilarity: 0,
+    avgCacheAge: 0,
+    percentCacheOlderthan7d: 0,
   });
   const [flaggingId, setFlaggingId] = useState<string | null>(null);
 
@@ -85,6 +87,17 @@ export default function UsagePage() {
       const avgCacheSimilarity = semanticCachedLogs.length > 0
         ? (semanticCachedLogs.reduce((sum: number, l: any) => sum + (Number(l.cache_similarity) || 0), 0) / semanticCachedLogs.length) * 100
         : 0;
+      
+      // Cache age analytics
+      const logsWithAge = cachedLogs.filter((l: any) => l.cache_age_hours != null);
+      const avgCacheAge = logsWithAge.length > 0
+        ? logsWithAge.reduce((sum: number, l: any) => sum + Number(l.cache_age_hours || 0), 0) / logsWithAge.length
+        : 0;
+      const oldCacheCount = logsWithAge.filter((l: any) => Number(l.cache_age_hours || 0) > 168).length; // >7 days
+      const percentCacheOlderthan7d = logsWithAge.length > 0
+        ? (oldCacheCount / logsWithAge.length) * 100
+        : 0;
+      
       const totalCost = validLogs.reduce((sum: number, l: any) => sum + (Number(l.cost_usd) || 0), 0);
       const totalSavings = validLogs.reduce((sum: number, l: any) => {
         const savings = (Number(l.potential_cost_usd) || 0) - (Number(l.cost_usd) || 0);
@@ -98,6 +111,8 @@ export default function UsagePage() {
         totalSavings,
         cacheAccuracy,
         avgCacheSimilarity,
+        avgCacheAge,
+        percentCacheOlderthan7d,
       });
 
       setRecentLogs(validLogs.slice(0, 5));
@@ -222,6 +237,12 @@ export default function UsagePage() {
       accent: stats.cacheAccuracy < 90 ? "text-yellow-300" : "text-white/90",
     },
     {
+      label: "Avg Cache Age",
+      value: `${stats.avgCacheAge.toFixed(1)}h`,
+      meta: stats.percentCacheOlderthan7d > 20 ? `${stats.percentCacheOlderthan7d.toFixed(0)}% older than 7d` : "Good freshness",
+      accent: stats.percentCacheOlderthan7d > 20 ? "text-yellow-300" : "text-white/90",
+    },
+    {
       label: "Cache Miss Rate",
       value: `${(100 - stats.cacheHitRate).toFixed(1)}%`,
       meta: "requests costing you money",
@@ -273,7 +294,7 @@ export default function UsagePage() {
         </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         {overviewStats.map((stat) => (
           <div
             key={stat.label}

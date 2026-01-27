@@ -102,7 +102,7 @@ export async function handleEmbeddings(
   // Initialize clients
   const redis = createRedisClient(env);
   const supabase = createSupabaseClient(env);
-  const cache = createCacheManager(redis);
+  const cache = createCacheManager(redis, project.cache_ttl_seconds ?? 86400, project.cache_ttl_endpoint_overrides ?? {});
   const provider = getSharedProviderClient(env);
 
   try {

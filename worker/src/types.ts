@@ -72,6 +72,8 @@ export interface ProjectRecord {
   semantic_cache_threshold: number; // 0.50-0.99
   ab_testing_enabled: boolean;
   ab_testing_config: ABTestingConfig | null;
+  cache_ttl_seconds: number; // -1 for never, or seconds (3600-2592000)
+  cache_ttl_endpoint_overrides: CacheTTLEndpointOverrides | null;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +87,29 @@ export interface ABTestVariant {
   name: string;
   model: string;
   weight: number; // Percentage (0-100)
+}
+
+// Cache TTL configuration
+export const CACHE_TTL_PRESETS: Record<string, number> = {
+  '1h': 3600,
+  '6h': 21600,
+  '24h': 86400, // Default
+  '7d': 604800,
+  '30d': 2592000,
+  'never': -1, // Never expire
+};
+
+export const CACHE_TTL_LABELS: Record<number, string> = {
+  3600: '1 hour',
+  21600: '6 hours',
+  86400: '24 hours',
+  604800: '7 days',
+  2592000: '30 days',
+  '-1': 'Never expire',
+};
+
+export interface CacheTTLEndpointOverrides {
+  [endpoint: string]: number; // endpoint path -> TTL in seconds
 }
 
 // Provider key record from Supabase (BYOK)

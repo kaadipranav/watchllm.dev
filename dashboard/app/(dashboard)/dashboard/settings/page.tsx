@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
 import { ProviderSettings } from "@/components/dashboard/provider-settings";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -184,6 +185,7 @@ export default function SettingsPage() {
               { value: "profile", label: "Profile" },
               { value: "security", label: "Security" },
               { value: "providers", label: "AI Providers" },
+              { value: "cache", label: "Cache Settings" },
               { value: "notifications", label: "Notifications" },
               { value: "danger", label: "Danger" },
             ].map((tab) => (
@@ -245,6 +247,88 @@ export default function SettingsPage() {
               </p>
             </div>
             <ProviderSettings />
+          </TabsContent>
+
+          <TabsContent value="cache" className="space-y-6">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.4em] text-premium-text-muted">Cache Settings</p>
+              <h2 className="text-xl font-semibold text-premium-text-primary">Configure cache expiration</h2>
+              <p className="text-premium-text-secondary">
+                Control how long cached responses are stored before expiring. Shorter TTL = fresher data, longer TTL = more cache hits.
+              </p>
+            </div>
+
+            {projects.length === 0 ? (
+              <div className="rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-8 text-center shadow-premium-sm">
+                <p className="text-premium-text-secondary">You don&apos;t have any projects yet.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {projects.map((project) => {
+                  const ttlSeconds = project.cache_ttl_seconds ?? 86400;
+                  const ttlLabel = {
+                    3600: '1 hour',
+                    21600: '6 hours',
+                    86400: '24 hours',
+                    604800: '7 days',
+                    2592000: '30 days',
+                    '-1': 'Never expire',
+                  }[ttlSeconds] || `${Math.round(ttlSeconds / 3600)} hours`;
+
+                  return (
+                    <div
+                      key={project.id}
+                      className="flex flex-col gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
+                    >
+                      <div>
+                        <div className="flex items-center gap-3 mb-3">
+                          <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
+                          <Badge className="rounded-premium-md bg-premium-bg-secondary px-2 py-1 text-xs font-medium text-premium-text-muted">
+                            {ttlLabel}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-premium-text-secondary">
+                          Default cache expiration time for all responses in this project.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3 pt-3 border-t border-premium-border-subtle">
+                        <Label htmlFor={`ttl-${project.id}`} className="text-sm">Cache TTL Preset</Label>
+                        <Select value={ttlSeconds.toString()} onValueChange={(value) => handleUpdateProjectSettings(project.id, { cache_ttl_seconds: parseInt(value) })}>
+                          <SelectTrigger className="rounded-premium-md border-premium-border-subtle bg-premium-bg-secondary">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3600">1 hour</SelectItem>
+                            <SelectItem value="21600">6 hours</SelectItem>
+                            <SelectItem value="86400">24 hours (default)</SelectItem>
+                            <SelectItem value="604800">7 days</SelectItem>
+                            <SelectItem value="2592000">30 days</SelectItem>
+                            <SelectItem value="-1">Never expire</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        {ttlSeconds < 21600 && ttlSeconds > 0 && (
+                          <div className="p-3 rounded-premium-md bg-yellow-500/10 border border-yellow-500/30">
+                            <p className="text-xs text-yellow-100">
+                              <strong>Short TTL:</strong> Very fresh data but lower cache hit rate and higher costs.
+                            </p>
+                          </div>
+                        )}
+                        
+                        {ttlSeconds >= 604800 && (
+                          <div className="p-3 rounded-premium-md bg-blue-500/10 border border-blue-500/30">
+                            <p className="text-xs text-blue-100">
+                              <strong>Long TTL:</strong> High cache hit rate but responses may become stale. Consider invalidating cache for time-sensitive queries.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
