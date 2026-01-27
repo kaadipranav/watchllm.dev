@@ -35,7 +35,11 @@ export default function SettingsPage() {
           .order("created_at", { ascending: false });
 
         if (userProjects) {
-          setProjects(userProjects);
+          const normalizedProjects = userProjects.map((p: any) => ({
+            ...p,
+            semantic_cache_threshold: p.semantic_cache_threshold != null ? Number(p.semantic_cache_threshold) : 0.95,
+          }));
+          setProjects(normalizedProjects);
         }
       }
     };
@@ -121,7 +125,7 @@ export default function SettingsPage() {
 
   const handleUpdateProjectSettings = async (projectId: string, updates: any) => {
     // Optimistic update
-    setProjects(projects.map(p =>
+    setProjects((prev) => prev.map(p =>
       p.id === projectId ? { ...p, ...updates } : p
     ));
 
@@ -141,7 +145,7 @@ export default function SettingsPage() {
       // Revert on error
       const { data: originalProject } = await supabase.from("projects").select("*").eq("id", projectId).single();
       if (originalProject) {
-        setProjects(projects.map(p =>
+        setProjects((prev) => prev.map(p =>
           p.id === projectId ? originalProject : p
         ));
       }
@@ -320,56 +324,110 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="flex flex-col gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
-                          <Badge variant={project.cost_alerts_enabled !== false ? "default" : "secondary"} className="text-[10px]">
-                            {project.cost_alerts_enabled !== false ? "Alerts Active" : "Alerts Paused"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-premium-text-secondary mt-1">
-                          Receive an email when usage hits <span className="text-premium-accent font-medium">{project.cost_alert_threshold || 80}%</span> of your plan limit.
-                        </p>
-                      </div>
-                      <Button
-                        variant={project.cost_alerts_enabled !== false ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleUpdateProjectSettings(project.id, { cost_alerts_enabled: !(project.cost_alerts_enabled !== false) })}
-                        className={project.cost_alerts_enabled !== false
-                          ? "bg-premium-accent text-white hover:bg-premium-accent/90"
-                          : "border-premium-border-subtle text-premium-text-muted"}
-                      >
-                        {project.cost_alerts_enabled !== false ? "Enabled" : "Disabled"}
-                      </Button>
-                    </div>
+                {projects.map((project) => {
+                  const thresholdPercent = Math.round(Number((project.semantic_cache_threshold ?? 0.95) * 100));
+                  const warningLowThreshold = thresholdPercent < 90;
+                  const updateThreshold = (value: number) => handleUpdateProjectSettings(project.id, { semantic_cache_threshold: Math.min(99, Math.max(85, value)) / 100 });
 
-                    {project.cost_alerts_enabled !== false && (
-                      <div className="pt-4 border-t border-premium-border-subtle">
-                        <div className="grid gap-2">
-                          <Label htmlFor={`threshold-${project.id}`}>Alert Threshold</Label>
-                          <div className="flex items-center gap-4">
-                            <Input
-                              id={`threshold-${project.id}`}
-                              type="number"
-                              min="10"
-                              max="100"
-                              value={project.cost_alert_threshold || 80}
-                              onChange={(e) => handleUpdateProjectSettings(project.id, { cost_alert_threshold: parseInt(e.target.value) })}
-                              className="w-24 bg-white/5 border-premium-border-subtle"
-                            />
-                            <span className="text-sm text-premium-text-muted">% of monthly limit</span>
+                  return (
+                    <div
+                      key={project.id}
+                      className="flex flex-col gap-4 rounded-premium-xl border border-premium-border-subtle bg-premium-bg-elevated p-5 shadow-premium-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <p className="text-base font-semibold text-premium-text-primary">{project.name}</p>
+                            <Badge variant={project.cost_alerts_enabled !== false ? "default" : "secondary"} className="text-[10px]">
+                              {project.cost_alerts_enabled !== false ? "Alerts Active" : "Alerts Paused"}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-premium-text-secondary mt-1">
+                            Receive an email when usage hits <span className="text-premium-accent font-medium">{project.cost_alert_threshold || 80}%</span> of your plan limit.
+                          </p>
+                        </div>
+                        <Button
+                          variant={project.cost_alerts_enabled !== false ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleUpdateProjectSettings(project.id, { cost_alerts_enabled: !(project.cost_alerts_enabled !== false) })}
+                          className={project.cost_alerts_enabled !== false
+                            ? "bg-premium-accent text-white hover:bg-premium-accent/90"
+                            : "border-premium-border-subtle text-premium-text-muted"}
+                        >
+                          {project.cost_alerts_enabled !== false ? "Enabled" : "Disabled"}
+                        </Button>
+                      </div>
+
+                      {project.cost_alerts_enabled !== false && (
+                        <div className="pt-4 border-t border-premium-border-subtle">
+                          <div className="grid gap-2">
+                            <Label htmlFor={`threshold-${project.id}`}>Alert Threshold</Label>
+                            <div className="flex items-center gap-4">
+                              <Input
+                                id={`threshold-${project.id}`}
+                                type="number"
+                                min="10"
+                                max="100"
+                                value={project.cost_alert_threshold || 80}
+                                onChange={(e) => handleUpdateProjectSettings(project.id, { cost_alert_threshold: parseInt(e.target.value) })}
+                                className="w-24 bg-white/5 border-premium-border-subtle"
+                              />
+                              <span className="text-sm text-premium-text-muted">% of monthly limit</span>
+                            </div>
                           </div>
                         </div>
+                      )}
+
+                      <div className="pt-4 border-t border-premium-border-subtle space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-premium-text-primary">Cache Settings</p>
+                            <p className="text-sm text-premium-text-secondary">Higher = more strict matching, fewer false positives.</p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] border-premium-border-subtle">Semantic Cache</Badge>
+                        </div>
+                        <input
+                          type="range"
+                          min={85}
+                          max={99}
+                          step={1}
+                          value={thresholdPercent}
+                          onChange={(e) => updateThreshold(parseInt(e.target.value))}
+                          className="w-full accent-premium-accent"
+                        />
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-premium-text-primary">{thresholdPercent}% similarity</span>
+                          <span className="text-premium-text-muted">Higher = more strict matching, fewer false positives</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            type="number"
+                            min={85}
+                            max={99}
+                            value={thresholdPercent}
+                            onChange={(e) => {
+                              const nextValue = Number(e.target.value);
+                              if (Number.isNaN(nextValue)) return;
+                              updateThreshold(Math.min(99, Math.max(85, nextValue)));
+                            }}
+                            className="w-24 bg-white/5 border-premium-border-subtle"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateThreshold(95)}
+                            className="text-premium-text-muted"
+                          >
+                            Reset to 95%
+                          </Button>
+                        </div>
+                        {warningLowThreshold && (
+                          <p className="text-xs text-destructive">Low thresholds may return incorrect cached responses.</p>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
 

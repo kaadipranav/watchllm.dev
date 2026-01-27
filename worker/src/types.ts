@@ -268,6 +268,11 @@ export interface UsageLogEntry {
   potential_cost_usd: number; // What it would have cost without caching
   cached: boolean;
   latency_ms: number;
+  cache_decision?: 'none' | 'deterministic' | 'semantic';
+  cache_similarity?: number | null;
+  cache_flagged_incorrect?: boolean;
+  cache_review_note?: string | null;
+  cache_reviewed_at?: string | null;
 }
 
 // API Error response

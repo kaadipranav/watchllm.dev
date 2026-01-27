@@ -215,7 +215,7 @@ app.use('/v1/*', async (c, next) => {
         user_id: 'test-user',
         name: 'Test Project',
         plan: 'free',
-        semantic_cache_threshold: 0.8,
+        semantic_cache_threshold: 0.95,
         ab_testing_enabled: false,
         ab_testing_config: null,
         created_at: new Date().toISOString(),

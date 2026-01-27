@@ -163,6 +163,8 @@ export async function handleEmbeddings(
         ),
         cached: true,
         latency_ms: latency,
+        cache_decision: 'deterministic',
+        cache_similarity: null,
       });
 
       return new Response(JSON.stringify(cachedResponse.data), {
@@ -205,6 +207,8 @@ export async function handleEmbeddings(
       potential_cost_usd: cost,
       cached: false,
       latency_ms: latency,
+      cache_decision: 'none',
+      cache_similarity: null,
     });
 
     await maybeSendUsageAlert(env, supabase, redis, project);

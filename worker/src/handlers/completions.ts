@@ -113,10 +113,15 @@ export async function handleCompletions(
   const cache = createCacheManager(redis);
   const provider = getSharedProviderClient(env);
   const semanticCache = new SemanticCache(d1, project.id);
-  const semanticThreshold =
+  const envSemanticThreshold =
     typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
       : 0.95;
+
+  const semanticThreshold = Math.min(
+    Math.max(project.semantic_cache_threshold ?? envSemanticThreshold, 0.5),
+    0.99
+  );
 
   try {
     // Parse and validate request body
@@ -209,6 +214,8 @@ export async function handleCompletions(
         ),
         cached: true,
         latency_ms: latency,
+        cache_decision: 'deterministic',
+        cache_similarity: null,
       });
 
       return new Response(JSON.stringify(cachedResponse.data), {
@@ -252,6 +259,8 @@ export async function handleCompletions(
           ),
           cached: true,
           latency_ms: latency,
+          cache_decision: 'semantic',
+          cache_similarity: semanticHit.similarity,
         });
 
         return new Response(JSON.stringify(semanticHit.entry.data), {
@@ -313,6 +322,8 @@ export async function handleCompletions(
       potential_cost_usd: cost,
       cached: false,
       latency_ms: latency,
+      cache_decision: 'none',
+      cache_similarity: null,
     });
 
     await maybeSendUsageAlert(env, supabase, redis, project);

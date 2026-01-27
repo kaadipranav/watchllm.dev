@@ -116,11 +116,16 @@ export async function handleChatCompletions(
   const provider = getSharedProviderClient(env);
   const semanticCache = new SemanticCache(d1, project.id);
 
-  // Use project-level semantic cache threshold (with env fallback)
-  const semanticThreshold = project.semantic_cache_threshold ||
-    (typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
+  const envSemanticThreshold =
+    typeof env.SEMANTIC_CACHE_THRESHOLD === 'string'
       ? Math.min(Math.max(Number(env.SEMANTIC_CACHE_THRESHOLD), 0.5), 0.99)
-      : 0.85);
+      : 0.95;
+
+  // Use project-level semantic cache threshold (with env fallback)
+  const semanticThreshold = Math.min(
+    Math.max(project.semantic_cache_threshold ?? envSemanticThreshold, 0.5),
+    0.99
+  );
 
   try {
     // Parse and validate request body
@@ -215,6 +220,8 @@ export async function handleChatCompletions(
         potential_cost_usd: 0,
         cached: false,
         latency_ms: latency,
+        cache_decision: 'none',
+        cache_similarity: null,
       });
 
       const headers: Record<string, string> = {
@@ -257,6 +264,8 @@ export async function handleChatCompletions(
         ),
         cached: true,
         latency_ms: latency,
+        cache_decision: 'deterministic',
+        cache_similarity: null,
       });
 
       return new Response(JSON.stringify(cachedResponse.data), {
@@ -311,6 +320,8 @@ export async function handleChatCompletions(
           ),
           cached: true,
           latency_ms: latency,
+          cache_decision: 'semantic',
+          cache_similarity: semanticHit.similarity,
         });
 
         return new Response(JSON.stringify(semanticHit.entry.data), {
@@ -406,6 +417,8 @@ export async function handleChatCompletions(
       potential_cost_usd: cost, // Same as actual cost for non-cached
       cached: false,
       latency_ms: latency,
+      cache_decision: 'none',
+      cache_similarity: null,
     });
 
     await maybeSendUsageAlert(env, supabase, redis, project);
