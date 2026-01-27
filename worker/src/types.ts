@@ -298,6 +298,9 @@ export interface UsageLogEntry {
   cache_flagged_incorrect?: boolean;
   cache_review_note?: string | null;
   cache_reviewed_at?: string | null;
+  coalesced?: boolean; // True if served via coalescing follower
+  coalesced_group_size?: number; // Followers satisfied by leader response
+  is_streaming?: boolean; // True if the request was streamed
 }
 
 // API Error response

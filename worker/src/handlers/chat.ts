@@ -29,6 +29,7 @@ import {
   normalizePrompt,
   calculateContextHash
 } from '../lib/semanticCache';
+import { bufferChatStream, replayChatCompletionAsStream } from '../lib/chatStreamingCache';
 
 /**
  * Validate request body
@@ -201,41 +202,126 @@ export async function handleChatCompletions(
       );
     }
 
-    // Handle streaming requests
+    // Handle streaming requests (with cache + replay support)
     if (request.stream) {
+      const cachedStream = await cache.getChatCompletion(request);
+      if (cachedStream) {
+        const latency = Date.now() - startTime;
+        const replayStream = replayChatCompletionAsStream(cachedStream.data);
+
+        const logProvider = getProviderForModel(request.model);
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: cachedStream.model,
+          provider: logProvider,
+          tokens_input: cachedStream.tokens.input,
+          tokens_output: cachedStream.tokens.output,
+          tokens_total: cachedStream.tokens.total,
+          cost_usd: 0,
+          potential_cost_usd: calculateCost(
+            cachedStream.model,
+            cachedStream.tokens.input,
+            cachedStream.tokens.output
+          ),
+          cached: true,
+          latency_ms: latency,
+          cache_decision: 'deterministic',
+          cache_similarity: null,
+          is_streaming: true,
+        });
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          'X-WatchLLM-Cache': 'HIT',
+          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedStream.timestamp) / 1000).toString(),
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Provider': getProviderForModel(request.model),
+          'X-WatchLLM-Stream-Replay': 'true',
+        };
+
+        return new Response(replayStream, {
+          status: 200,
+          headers,
+        });
+      }
+
       const { stream, isFreeModel } = await provider.streamChatCompletion(request, project.id);
-      const latency = Date.now() - startTime;
-
-      // Log usage (estimated for streaming)
-      const logProvider = getProviderForModel(request.model);
-      await supabase.logUsage({
-        project_id: project.id,
-        api_key_id: keyRecord.id,
-        model: request.model,
-        provider: logProvider,
-        tokens_input: 0,
-        tokens_output: 0,
-        tokens_total: 0,
-        cost_usd: 0,
-        potential_cost_usd: 0,
-        cached: false,
-        latency_ms: latency,
-        cache_decision: 'none',
-        cache_similarity: null,
-      });
-
+      const [clientStream, cacheStream] = stream.tee();
       const headers: Record<string, string> = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
-        'X-WatchLLM-Latency-Ms': latency.toString(),
+        'X-WatchLLM-Cache': 'MISS',
+        'X-WatchLLM-Latency-Ms': (Date.now() - startTime).toString(),
+        'X-WatchLLM-Provider': getProviderForModel(request.model),
       };
 
       if (isFreeModel) {
         headers['X-WatchLLM-Fallback-Notice'] = 'Using shared Free model infrastructure. Bring your own key for paid models.';
       }
 
-      return new Response(stream, {
+      // Buffer the stream in the background and cache the full response on completion
+      (async () => {
+        try {
+          const aggregated = await bufferChatStream(cacheStream, request.model);
+          const logProvider = getProviderForModel(request.model);
+
+          if (aggregated) {
+            await cache.setChatCompletion(request, aggregated);
+
+            const cost = calculateCost(
+              aggregated.model,
+              aggregated.usage.prompt_tokens,
+              aggregated.usage.completion_tokens
+            );
+
+            await supabase.logUsage({
+              project_id: project.id,
+              api_key_id: keyRecord.id,
+              model: aggregated.model,
+              provider: logProvider,
+              tokens_input: aggregated.usage.prompt_tokens,
+              tokens_output: aggregated.usage.completion_tokens,
+              tokens_total: aggregated.usage.total_tokens,
+              cost_usd: cost,
+              potential_cost_usd: cost,
+              cached: false,
+              latency_ms: Date.now() - startTime,
+              cache_decision: 'none',
+              cache_similarity: null,
+              is_streaming: true,
+            });
+
+            await maybeSendUsageAlert(env, supabase, redis, project);
+          } else {
+            await supabase.logUsage({
+              project_id: project.id,
+              api_key_id: keyRecord.id,
+              model: request.model,
+              provider: logProvider,
+              tokens_input: 0,
+              tokens_output: 0,
+              tokens_total: 0,
+              cost_usd: 0,
+              potential_cost_usd: 0,
+              cached: false,
+              latency_ms: Date.now() - startTime,
+              cache_decision: 'none',
+              cache_similarity: null,
+              is_streaming: true,
+            });
+
+            await maybeSendUsageAlert(env, supabase, redis, project);
+          }
+        } catch (err) {
+          console.error('Streaming cache/log pipeline failed:', err);
+        }
+      })();
+
+      return new Response(clientStream, {
         status: 200,
         headers,
       });

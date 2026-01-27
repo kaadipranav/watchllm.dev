@@ -147,11 +147,6 @@ export class CacheManager {
   async getChatCompletion(
     request: ChatCompletionRequest
   ): Promise<CacheEntry<ChatCompletionResponse> | null> {
-    // Don't cache streaming requests
-    if (request.stream) {
-      return null;
-    }
-
     const key = generateChatCacheKey(request);
     const result = await this.redis.get<CacheEntry<ChatCompletionResponse>>(key);
     
@@ -174,11 +169,6 @@ export class CacheManager {
     request: ChatCompletionRequest,
     response: ChatCompletionResponse
   ): Promise<boolean> {
-    // Don't cache streaming requests
-    if (request.stream) {
-      return false;
-    }
-
     const key = generateChatCacheKey(request);
     const ttl = this.getEffectiveTTL('/v1/chat/completions');
     

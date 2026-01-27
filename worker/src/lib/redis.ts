@@ -80,6 +80,19 @@ export class RedisClient {
   }
 
   /**
+   * Set a value only if the key does not exist (SETNX)
+   */
+  async setnx(key: string, value: unknown, ttlSeconds?: number): Promise<boolean> {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    const command: string[] = ['SET', key, stringValue, 'NX'];
+    if (ttlSeconds) {
+      command.push('EX', ttlSeconds.toString());
+    }
+    const result = await this.execute<string>(command);
+    return result === 'OK';
+  }
+
+  /**
    * Delete a key from cache
    */
   async del(key: string): Promise<boolean> {
