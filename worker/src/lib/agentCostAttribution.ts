@@ -352,8 +352,8 @@ export function calculateROI(
     cachingSavings,
     netSavings,
     roiPercentage,
-    summary: '', // Will be filled below
-  }, config, taskMetrics);
+    summary: '',
+  } as ROIMetrics, config, taskMetrics);
 
   return {
     totalAgentCostUsd,

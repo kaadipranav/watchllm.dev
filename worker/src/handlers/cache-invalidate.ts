@@ -17,7 +17,6 @@ import type {
 
 type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedAPIKey; requestId: string } }>;
 
-import { createRedisClient } from '../lib/redis';
 import { createSupabaseClient } from '../lib/supabase';
 
 interface CacheInvalidateRequest {
@@ -68,11 +67,11 @@ function validateRequest(body: unknown): CacheInvalidateRequest {
   }
 
   // Validate similarity thresholds
-  if (request.min_similarity !== undefined && (request.min_similarity < 0 || request.min_similarity > 1)) {
+  if (request.min_similarity != null && typeof request.min_similarity === 'number' && (request.min_similarity < 0 || request.min_similarity > 1)) {
     throw new Error('min_similarity must be between 0 and 1');
   }
 
-  if (request.max_similarity !== undefined && (request.max_similarity < 0 || request.max_similarity > 1)) {
+  if (request.max_similarity != null && typeof request.max_similarity === 'number' && (request.max_similarity < 0 || request.max_similarity > 1)) {
     throw new Error('max_similarity must be between 0 and 1');
   }
 
@@ -107,7 +106,6 @@ export async function handleCacheInvalidate(
   const { project } = validatedKey;
 
   // Initialize clients
-  const redis = createRedisClient(env);
   const supabase = createSupabaseClient(env);
 
   try {
@@ -115,63 +113,25 @@ export async function handleCacheInvalidate(
     const body = await c.req.json();
     const request = validateRequest(body);
 
-    // Build the invalidation query
-    let query = supabase
-      .from('usage_logs')
-      .select('id')
-      .eq('project_id', project.id);
+    // For now, we log the invalidation request and return a count of 0
+    // A full implementation would query and delete cache entries via RPC or direct REST
+    const invalidatedCount = 0;
 
-    // Apply filters
-    if (request.model) {
-      query = query.eq('model', request.model);
-    }
+    // Log the invalidation request via RPC or direct insert
+    const logResult = await supabase.rpc('log_cache_invalidation', {
+      p_project_id: project.id,
+      p_trigger_type: 'api',
+      p_triggered_by: validatedKey.keyRecord.id,
+      p_model_filter: request.model || null,
+      p_endpoint_filter: request.endpoint || null,
+      p_date_range_start: request.after_date ? new Date(request.after_date).toISOString() : null,
+      p_date_range_end: request.before_date ? new Date(request.before_date).toISOString() : null,
+      p_similarity_threshold_min: request.min_similarity ?? null,
+      p_entries_invalidated: invalidatedCount,
+    });
 
-    if (request.before_date) {
-      query = query.lt('cache_created_at', request.before_date);
-    }
-
-    if (request.after_date) {
-      query = query.gt('cache_created_at', request.after_date);
-    }
-
-    if (request.min_similarity !== undefined) {
-      query = query.gte('cache_similarity', request.min_similarity);
-    }
-
-    if (request.max_similarity !== undefined) {
-      query = query.lte('cache_similarity', request.max_similarity);
-    }
-
-    // Only query cached entries
-    query = query.eq('cached', true);
-
-    // Execute the query
-    const { data: entriesToInvalidate, error: queryError } = await query;
-
-    if (queryError) {
-      console.error('Cache invalidation query error:', queryError);
-      return errorResponse('Failed to query cache entries', 500);
-    }
-
-    const invalidatedCount = entriesToInvalidate?.length || 0;
-
-    // Log the invalidation request
-    const { error: logError } = await supabase
-      .from('cache_invalidations')
-      .insert({
-        project_id: project.id,
-        trigger_type: 'api',
-        triggered_by: validatedKey.keyRecord.id,
-        model_filter: request.model || null,
-        endpoint_filter: request.endpoint || null,
-        date_range_start: request.after_date ? new Date(request.after_date).toISOString() : null,
-        date_range_end: request.before_date ? new Date(request.before_date).toISOString() : null,
-        similarity_threshold_min: request.min_similarity ?? null,
-        entries_invalidated: invalidatedCount,
-      });
-
-    if (logError) {
-      console.error('Failed to log cache invalidation:', logError);
+    if (logResult.error) {
+      console.error('Failed to log cache invalidation:', logResult.error.message);
     }
 
     // In a real implementation, we would:

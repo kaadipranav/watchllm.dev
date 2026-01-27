@@ -81,7 +81,7 @@ describe("cache key generation", () => {
 });
 
 describe("CacheManager", () => {
-  it("skips caching when stream is true", async () => {
+  it("caches streaming requests (for replay)", async () => {
     const redis = new MockRedis();
     const cache = new CacheManager(redis as any);
 
@@ -106,8 +106,8 @@ describe("CacheManager", () => {
       usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
     } satisfies ChatCompletionResponse);
 
-    expect(stored).toBe(false);
-    expect(redis.store.size).toBe(0);
+    expect(stored).toBe(true);
+    expect(redis.store.size).toBe(1);
   });
 
   it("stores and retrieves non-streaming responses", async () => {

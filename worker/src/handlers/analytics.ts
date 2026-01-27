@@ -760,14 +760,15 @@ function getMockAgentRuns(projectId: string, agentName?: string): AgentRun[] {
   for (let i = 0; i < 15; i++) {
     const agent = agents[i % agents.length];
     const startedAt = new Date(now - i * 3600000);
-    const status = Math.random() > 0.1 ? 'completed' : (Math.random() > 0.5 ? 'failed' : 'cancelled');
+    const statusOptions = ['completed', 'failed', 'cancelled'] as const;
+    const status: AgentRun['status'] = Math.random() > 0.1 ? 'completed' : (Math.random() > 0.5 ? 'failed' : 'cancelled');
     
     runs.push({
       runId: `run_${agent}_${i + 1}`,
       agentName: agent,
       startedAt: startedAt.toISOString(),
-      endedAt: status !== 'running' ? new Date(startedAt.getTime() + Math.random() * 300000 + 60000).toISOString() : undefined,
-      status: status as AgentRun['status'],
+      endedAt: new Date(startedAt.getTime() + Math.random() * 300000 + 60000).toISOString(),
+      status,
       totalCostUsd: Math.random() * 0.3 + 0.05,
       stepCount: Math.floor(Math.random() * 10) + 3,
     });

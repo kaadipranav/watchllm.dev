@@ -3,7 +3,9 @@ import { app } from '../../index';
 import { createSelfHostedEnv } from '../../adapters/env-adapter';
 import type { Env } from '../../types';
 
-describe('Standalone E2E Tests', () => {
+const hasEnv = !!process.env.DATABASE_URL && !!process.env.REDIS_URL;
+
+describe.skipIf(!hasEnv)('Standalone E2E Tests', () => {
   let env: Env;
   let testApiKey: string;
 
@@ -20,7 +22,7 @@ describe('Standalone E2E Tests', () => {
 
   afterAll(async () => {
     // Cleanup
-    if (env.REDIS) {
+    if ((env as any).REDIS) {
       // Clear test keys
       // await env.REDIS.del('test:*');
     }

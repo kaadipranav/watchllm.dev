@@ -1605,15 +1605,15 @@ observabilityApp.post('/v1/projects/:projectId/integrations/slack/test', async (
           type: 'context' as const,
           elements: [
             {
-              type: 'mrkdwn',
-              text: `Sent at ${new Date().toISOString()}`,
+              type: 'mrkdwn' as const,
+              text: { type: 'mrkdwn', text: `Sent at ${new Date().toISOString()}` },
             },
           ],
         },
       ],
-    };
+    } as const;
 
-    const result = await sendSlackMessage(body.webhookUrl, testMessage);
+    const result = await sendSlackMessage(body.webhookUrl, testMessage as any);
 
     if (result.success) {
       return c.json({

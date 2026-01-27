@@ -19,7 +19,7 @@ What to do next
    - Second identical request: should replay from cache with X-WatchLLM-Cache: HIT and X-WatchLLM-Stream-Replay: true; pacing ~50ms per chunk.
    - Confirm cached replay content and finish_reason match original.
 3) If needed, tune replay pacing in chatStreamingCache.ts (delayMs parameter).
-4) Add automated tests/Playwright checks for streaming replay and headers.
+4) Add automated tests/Playwright checks for streaming replay and headers. (Vitest added: worker/tests/chatStreamingCache.test.ts)
 
 Rate limiting + abuse notes
 - All requests (hits + misses) now count toward per-minute limits; forwarded (upstream) calls have separate per-minute caps per plan.

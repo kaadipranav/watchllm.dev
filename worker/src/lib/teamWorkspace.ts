@@ -307,7 +307,7 @@ export interface SlackBlock {
   };
   elements?: Array<{
     type: string;
-    text?: { type: string; text: string };
+    text?: string | { type: string; text: string };
     url?: string;
   }>;
 }

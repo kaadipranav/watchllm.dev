@@ -18,7 +18,7 @@ import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
 import { createD1Client } from '../lib/d1';
 import { createSupabaseClient } from '../lib/supabase';
-import { createCacheManager } from '../lib/cache';
+import { createCacheManager, generateChatCacheKey } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
 import {
