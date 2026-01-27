@@ -130,21 +130,25 @@ export interface ProviderKeyRecord {
 // Plan limits configuration
 export interface PlanLimits {
   requestsPerMonth: number;
-  requestsPerMinute: number;
+  requestsPerMinute: number; // Total requests (cache hits + misses)
+  forwardedRequestsPerMinute: number; // Upstream-forwarded requests only
 }
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: {
     requestsPerMonth: 10_000,
     requestsPerMinute: 10,
+    forwardedRequestsPerMinute: 10,
   },
   starter: {
     requestsPerMonth: 100_000,
     requestsPerMinute: 50,
+    forwardedRequestsPerMinute: 50,
   },
   pro: {
     requestsPerMonth: 250_000,
-    requestsPerMinute: 10_000, // Effectively unlimited
+    requestsPerMinute: 10_000, // Effectively unlimited overall
+    forwardedRequestsPerMinute: 10_000,
   },
 };
 

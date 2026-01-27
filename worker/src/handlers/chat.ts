@@ -30,6 +30,7 @@ import {
   calculateContextHash
 } from '../lib/semanticCache';
 import { bufferChatStream, replayChatCompletionAsStream } from '../lib/chatStreamingCache';
+import { isAbusivePattern } from '../lib/abuseDetection';
 
 /**
  * Validate request body
@@ -146,13 +147,13 @@ export async function handleChatCompletions(
     // Check rate limiting
     const rateLimitKey = `ratelimit:${keyRecord.id}:minute`;
     const planLimits = PLAN_LIMITS[project.plan] || PLAN_LIMITS.free;
-    const rateLimit = await redis.checkRateLimit(
+    const requestRateLimit = await redis.checkRateLimit(
       rateLimitKey,
       planLimits.requestsPerMinute,
       60
     );
 
-    if (!rateLimit.allowed) {
+    if (!requestRateLimit.allowed) {
       return new Response(
         JSON.stringify({
           error: {
@@ -166,8 +167,8 @@ export async function handleChatCompletions(
           headers: {
             'Content-Type': 'application/json',
             'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
-            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-            'X-RateLimit-Reset': rateLimit.resetAt.toString(),
+            'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
             'Retry-After': '60',
           },
         }
@@ -200,6 +201,13 @@ export async function handleChatCompletions(
           },
         }
       );
+    }
+
+    // Abuse detection: throttle excessive identical requests
+    const abuseKey = generateChatCacheKey(request);
+    const abusive = await isAbusivePattern(redis, project.id, abuseKey, 1000);
+    if (abusive) {
+      return errorResponse('Too many identical requests. Please slow down.', 429);
     }
 
     // Handle streaming requests (with cache + replay support)
@@ -246,6 +254,37 @@ export async function handleChatCompletions(
           status: 200,
           headers,
         });
+      }
+
+      const forwardRateKey = `ratelimit:fwd:${keyRecord.id}:minute`;
+      const forwardLimit = await redis.checkRateLimit(
+        forwardRateKey,
+        planLimits.forwardedRequestsPerMinute,
+        60
+      );
+
+      if (!forwardLimit.allowed) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: `Forwarded request limit exceeded. Limit: ${planLimits.forwardedRequestsPerMinute}/minute`,
+              type: 'rate_limit_error',
+              code: 'rate_limit_exceeded',
+            },
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
+              'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+              'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
+              'X-ForwardRate-Limit': planLimits.forwardedRequestsPerMinute.toString(),
+              'X-ForwardRate-Remaining': forwardLimit.remaining.toString(),
+              'X-ForwardRate-Reset': forwardLimit.resetAt.toString(),
+            },
+          }
+        );
       }
 
       const { stream, isFreeModel } = await provider.streamChatCompletion(request, project.id);
@@ -454,6 +493,37 @@ export async function handleChatCompletions(
          _isFreeModel: true,
        };
     } else {
+       const forwardRateKey = `ratelimit:fwd:${keyRecord.id}:minute`;
+       const forwardLimit = await redis.checkRateLimit(
+         forwardRateKey,
+         planLimits.forwardedRequestsPerMinute,
+         60
+       );
+
+       if (!forwardLimit.allowed) {
+         return new Response(
+           JSON.stringify({
+             error: {
+               message: `Forwarded request limit exceeded. Limit: ${planLimits.forwardedRequestsPerMinute}/minute`,
+               type: 'rate_limit_error',
+               code: 'rate_limit_exceeded',
+             },
+           }),
+           {
+             status: 429,
+             headers: {
+               'Content-Type': 'application/json',
+               'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
+               'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+               'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
+               'X-ForwardRate-Limit': planLimits.forwardedRequestsPerMinute.toString(),
+               'X-ForwardRate-Remaining': forwardLimit.remaining.toString(),
+               'X-ForwardRate-Reset': forwardLimit.resetAt.toString(),
+             },
+           }
+         );
+       }
+
        response = await provider.chatCompletion(request, project.id);
     }
 

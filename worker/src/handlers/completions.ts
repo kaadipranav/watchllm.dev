@@ -18,7 +18,7 @@ import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
 import { createD1Client } from '../lib/d1';
 import { createSupabaseClient } from '../lib/supabase';
-import { createCacheManager } from '../lib/cache';
+import { createCacheManager, generateCompletionCacheKey } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
 import {
@@ -28,6 +28,7 @@ import {
   flattenCompletionText,
   normalizePrompt,
 } from '../lib/semanticCache';
+import { isAbusivePattern } from '../lib/abuseDetection';
 
 /**
  * Validate request body
@@ -128,16 +129,16 @@ export async function handleCompletions(
     const body = await c.req.json();
     const request = validateRequest(body);
 
-    // Check rate limiting
+    // Check rate limiting (counts all requests, including cache hits)
     const rateLimitKey = `ratelimit:${keyRecord.id}:minute`;
     const planLimits = PLAN_LIMITS[project.plan] || PLAN_LIMITS.free;
-    const rateLimit = await redis.checkRateLimit(
+    const requestRateLimit = await redis.checkRateLimit(
       rateLimitKey,
       planLimits.requestsPerMinute,
       60
     );
 
-    if (!rateLimit.allowed) {
+    if (!requestRateLimit.allowed) {
       return new Response(
         JSON.stringify({
           error: {
@@ -151,8 +152,8 @@ export async function handleCompletions(
           headers: {
             'Content-Type': 'application/json',
             'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
-            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-            'X-RateLimit-Reset': rateLimit.resetAt.toString(),
+            'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
             'Retry-After': '60',
           },
         }
@@ -185,6 +186,13 @@ export async function handleCompletions(
           },
         }
       );
+    }
+
+    // Abuse detection: block excessive identical requests
+    const abuseKey = generateCompletionCacheKey(request);
+    const abusive = await isAbusivePattern(redis, project.id, abuseKey, 1000);
+    if (abusive) {
+      return errorResponse('Too many identical requests. Please slow down.', 429);
     }
 
     // Streaming not supported for legacy completions in this implementation
@@ -279,6 +287,37 @@ export async function handleCompletions(
     }
 
     // Make request to provider
+    const forwardRateKey = `ratelimit:fwd:${keyRecord.id}:minute`;
+    const forwardLimit = await redis.checkRateLimit(
+      forwardRateKey,
+      planLimits.forwardedRequestsPerMinute,
+      60
+    );
+
+    if (!forwardLimit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: `Forwarded request limit exceeded. Limit: ${planLimits.forwardedRequestsPerMinute}/minute`,
+            type: 'rate_limit_error',
+            code: 'rate_limit_exceeded',
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
+            'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
+            'X-ForwardRate-Limit': planLimits.forwardedRequestsPerMinute.toString(),
+            'X-ForwardRate-Remaining': forwardLimit.remaining.toString(),
+            'X-ForwardRate-Reset': forwardLimit.resetAt.toString(),
+          },
+        }
+      );
+    }
+
     const response = await provider.completion(request, project.id);
     const latency = Date.now() - startTime;
 

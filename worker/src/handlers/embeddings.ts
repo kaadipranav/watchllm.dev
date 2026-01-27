@@ -16,9 +16,10 @@ type AppContext = Context<{ Bindings: Env; Variables: { validatedKey: ValidatedA
 import { calculateCost, PLAN_LIMITS } from '../types';
 import { createRedisClient } from '../lib/redis';
 import { createSupabaseClient } from '../lib/supabase';
-import { createCacheManager } from '../lib/cache';
+import { createCacheManager, generateEmbeddingsCacheKey } from '../lib/cache';
 import { getSharedProviderClient, getProviderForModel } from '../lib/providers';
 import { maybeSendUsageAlert } from '../lib/notifications';
+import { isAbusivePattern } from '../lib/abuseDetection';
 
 /**
  * Validate request body
@@ -113,13 +114,13 @@ export async function handleEmbeddings(
     // Check rate limiting
     const rateLimitKey = `ratelimit:${keyRecord.id}:minute`;
     const planLimits = PLAN_LIMITS[project.plan] || PLAN_LIMITS.free;
-    const rateLimit = await redis.checkRateLimit(
-      rateLimitKey,
-      planLimits.requestsPerMinute,
-      60
-    );
+      const requestRateLimit = await redis.checkRateLimit(
+        rateLimitKey,
+        planLimits.requestsPerMinute,
+        60
+      );
 
-    if (!rateLimit.allowed) {
+      if (!requestRateLimit.allowed) {
       return new Response(
         JSON.stringify({
           error: {
@@ -133,12 +134,19 @@ export async function handleEmbeddings(
           headers: {
             'Content-Type': 'application/json',
             'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
-            'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-            'X-RateLimit-Reset': rateLimit.resetAt.toString(),
+               'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+               'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
             'Retry-After': '60',
           },
         }
       );
+    }
+
+    // Abuse detection: block excessive identical requests
+    const abuseKey = generateEmbeddingsCacheKey(request);
+    const abusive = await isAbusivePattern(redis, project.id, abuseKey, 1000);
+    if (abusive) {
+      return errorResponse('Too many identical requests. Please slow down.', 429);
     }
 
     // Check cache first (embeddings are deterministic, great for caching)
@@ -180,7 +188,38 @@ export async function handleEmbeddings(
       });
     }
 
-    // Make request to provider
+    // Make request to provider (forwarded requests limit)
+    const forwardRateKey = `ratelimit:fwd:${keyRecord.id}:minute`;
+    const forwardLimit = await redis.checkRateLimit(
+      forwardRateKey,
+      planLimits.forwardedRequestsPerMinute,
+      60
+    );
+
+    if (!forwardLimit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: `Forwarded request limit exceeded. Limit: ${planLimits.forwardedRequestsPerMinute}/minute`,
+            type: 'rate_limit_error',
+            code: 'rate_limit_exceeded',
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': planLimits.requestsPerMinute.toString(),
+            'X-RateLimit-Remaining': requestRateLimit.remaining.toString(),
+            'X-RateLimit-Reset': requestRateLimit.resetAt.toString(),
+            'X-ForwardRate-Limit': planLimits.forwardedRequestsPerMinute.toString(),
+            'X-ForwardRate-Remaining': forwardLimit.remaining.toString(),
+            'X-ForwardRate-Reset': forwardLimit.resetAt.toString(),
+          },
+        }
+      );
+    }
+
     const response = await provider.embeddings(request, project.id);
     const latency = Date.now() - startTime;
 
