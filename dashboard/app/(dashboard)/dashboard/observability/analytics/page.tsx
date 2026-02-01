@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createAnalyticsClient } from '@/lib/analytics-api';
 import { createClient } from '@/lib/supabase/client';
 import { RequestCoalescing } from '@/components/dashboard/RequestCoalescing';
+import { StreamingCacheMetrics } from '@/components/dashboard/StreamingCacheMetrics';
 
 export default function AnalyticsPage() {
   const supabase = createClient();
@@ -191,6 +192,14 @@ export default function AnalyticsPage() {
       {/* Request Coalescing */}
       {selectedProject && selectedApiKey && (
         <RequestCoalescing 
+          projectId={selectedProject} 
+          apiKey={selectedApiKey} 
+        />
+      )}
+
+      {/* Streaming Cache Metrics */}
+      {selectedProject && selectedApiKey && (
+        <StreamingCacheMetrics 
           projectId={selectedProject} 
           apiKey={selectedApiKey} 
         />

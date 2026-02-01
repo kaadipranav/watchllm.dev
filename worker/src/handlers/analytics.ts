@@ -1441,4 +1441,58 @@ analyticsApp.get('/v1/analytics/coalescing', async (c) => {
   }
 });
 
+// ============================================================================
+// GET /v1/analytics/streaming - Streaming cache metrics
+// ============================================================================
+analyticsApp.get('/v1/analytics/streaming', async (c) => {
+  try {
+    const projectId = c.get('projectId');
+
+    if (!projectId) {
+      return c.json({ error: 'Project ID required' }, 400);
+    }
+
+    // Import Redis client and stream cache manager
+    const { createRedisClient } = await import('../lib/redis');
+    const { createStreamCacheManager } = await import('../lib/streamCache');
+    
+    const redis = createRedisClient(c.env);
+    const streamCache = createStreamCacheManager(redis, projectId);
+    
+    // Get streaming metrics
+    const metrics = await streamCache.getMetrics();
+    
+    // Calculate derived metrics
+    const totalStreamingReqs = metrics.streamingRequests + metrics.streamingCacheHits;
+    const streamingCacheHitRate = totalStreamingReqs > 0 
+      ? ((metrics.streamingCacheHits / totalStreamingReqs) * 100).toFixed(2)
+      : '0.00';
+    
+    const totalRequests = metrics.streamingRequests + metrics.nonStreamingRequests + metrics.streamingCacheHits;
+    const streamingUsagePercent = totalRequests > 0
+      ? (((metrics.streamingRequests + metrics.streamingCacheHits) / totalRequests) * 100).toFixed(2)
+      : '0.00';
+
+    return c.json({
+      project_id: projectId,
+      metrics: {
+        streaming_requests: metrics.streamingRequests,
+        non_streaming_requests: metrics.nonStreamingRequests,
+        streaming_cache_hits: metrics.streamingCacheHits,
+        streaming_cache_misses: metrics.streamingCacheMisses,
+        failed_streams: metrics.failedStreams,
+      },
+      derived: {
+        streaming_cache_hit_rate_percent: streamingCacheHitRate,
+        streaming_vs_total_percent: streamingUsagePercent,
+        estimated_tokens_saved: metrics.streamingCacheHits * 500, // Rough estimate
+      },
+      description: 'Streaming API cache performance metrics',
+    });
+  } catch (error) {
+    console.error('Streaming stats error:', error);
+    return c.json({ error: 'Failed to get streaming stats' }, 500);
+  }
+});
+
 export default analyticsApp;

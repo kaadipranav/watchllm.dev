@@ -34,6 +34,11 @@ import {
   hashRequest,
   type DeduplicationManager 
 } from '../lib/deduplication';
+import {
+  createStreamCacheManager,
+  type StreamCacheManager,
+  type CachedStream,
+} from '../lib/streamCache';
 
 /**
  * Validate request body
@@ -208,29 +213,90 @@ export async function handleChatCompletions(
 
     // Handle streaming requests
     if (request.stream) {
+      const streamCache = createStreamCacheManager(redis, project.id);
+      
+      // Check for cached stream first
+      const cachedStream = await streamCache.getCachedStream(request);
+      if (cachedStream) {
+        const latency = Date.now() - startTime;
+        
+        // Log cached streaming usage
+        const logProvider = getProviderForModel(request.model);
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: cachedStream.model,
+          provider: logProvider,
+          tokens_input: cachedStream.tokens.input,
+          tokens_output: cachedStream.tokens.output,
+          tokens_total: cachedStream.tokens.total,
+          cost_usd: 0, // No cost for cached
+          potential_cost_usd: calculateCost(
+            cachedStream.model,
+            cachedStream.tokens.input,
+            cachedStream.tokens.output
+          ),
+          cached: true,
+          latency_ms: latency,
+        });
+
+        // Replay cached stream with realistic timing
+        const replayStream = streamCache.createReplayStream(cachedStream, true);
+        
+        return new Response(replayStream, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            'X-WatchLLM-Cache': 'HIT-STREAM',
+            'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedStream.cachedAt) / 1000).toString(),
+            'X-WatchLLM-Latency-Ms': latency.toString(),
+            'X-WatchLLM-Tokens-Saved': cachedStream.tokens.total.toString(),
+          },
+        });
+      }
+
+      // No cache hit - forward to provider and buffer for caching
       const { stream, isFreeModel } = await provider.streamChatCompletion(request, project.id);
       const latency = Date.now() - startTime;
 
-      // Log usage (estimated for streaming)
-      const logProvider = getProviderForModel(request.model);
-      await supabase.logUsage({
-        project_id: project.id,
-        api_key_id: keyRecord.id,
-        model: request.model,
-        provider: logProvider,
-        tokens_input: 0,
-        tokens_output: 0,
-        tokens_total: 0,
-        cost_usd: 0,
-        potential_cost_usd: 0,
-        cached: false,
-        latency_ms: latency,
-      });
+      // Create buffering stream that caches while forwarding to client
+      const bufferingStream = streamCache.createBufferingStream(
+        stream,
+        request,
+        async (completedStream) => {
+          // Log usage when stream completes
+          const logProvider = getProviderForModel(request.model);
+          await supabase.logUsage({
+            project_id: project.id,
+            api_key_id: keyRecord.id,
+            model: completedStream.model,
+            provider: logProvider,
+            tokens_input: completedStream.tokens.input,
+            tokens_output: completedStream.tokens.output,
+            tokens_total: completedStream.tokens.total,
+            cost_usd: calculateCost(
+              completedStream.model,
+              completedStream.tokens.input,
+              completedStream.tokens.output
+            ),
+            potential_cost_usd: calculateCost(
+              completedStream.model,
+              completedStream.tokens.input,
+              completedStream.tokens.output
+            ),
+            cached: false,
+            latency_ms: completedStream.totalDurationMs,
+          });
+        }
+      );
 
       const headers: Record<string, string> = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
+        'X-WatchLLM-Cache': 'MISS-STREAM',
         'X-WatchLLM-Latency-Ms': latency.toString(),
       };
 
@@ -238,7 +304,7 @@ export async function handleChatCompletions(
         headers['X-WatchLLM-Fallback-Notice'] = 'Using shared Free model infrastructure. Bring your own key for paid models.';
       }
 
-      return new Response(stream, {
+      return new Response(bufferingStream, {
         status: 200,
         headers,
       });
