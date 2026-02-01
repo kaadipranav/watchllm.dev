@@ -1384,4 +1384,61 @@ analyticsApp.get('/v1/analytics/roi-report', async (c) => {
   }
 });
 
+// ============================================================================
+// GET /v1/analytics/coalescing - Request coalescing/deduplication stats
+// ============================================================================
+analyticsApp.get('/v1/analytics/coalescing', async (c) => {
+  try {
+    const apiKey = c.get('apiKey');
+    const projectId = c.get('projectId');
+
+    if (!projectId) {
+      return c.json({ error: 'Project ID required' }, 400);
+    }
+
+    // Import Redis client and deduplication manager
+    const { createRedisClient } = await import('../lib/redis');
+    const { createDeduplicationManager } = await import('../lib/deduplication');
+    
+    const redis = createRedisClient(c.env);
+    const dedup = createDeduplicationManager(redis, projectId);
+    
+    // Get coalescing stats
+    const stats = await dedup.getStats();
+    
+    // Get historical data from Supabase if available
+    const supabase = createSupabaseClient(c.env);
+    let historicalStats: any = null;
+    
+    try {
+      const { data } = await supabase.client
+        .from('coalescing_stats')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      
+      if (data && data.length > 0) {
+        historicalStats = data;
+      }
+    } catch (e) {
+      // Table might not exist yet
+    }
+
+    return c.json({
+      project_id: projectId,
+      current_month: {
+        coalesced_requests: stats.coalescedRequests,
+        peak_concurrent: stats.peakConcurrent,
+        estimated_savings_usd: (stats.coalescedRequests * 0.002).toFixed(4), // Rough estimate
+      },
+      historical: historicalStats,
+      description: 'Request coalescing prevents duplicate API calls when identical requests arrive simultaneously',
+    });
+  } catch (error) {
+    console.error('Coalescing stats error:', error);
+    return c.json({ error: 'Failed to get coalescing stats' }, 500);
+  }
+});
+
 export default analyticsApp;

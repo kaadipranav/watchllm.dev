@@ -28,6 +28,10 @@ import {
   flattenCompletionText,
   normalizePrompt,
 } from '../lib/semanticCache';
+import { 
+  createDeduplicationManager, 
+  hashRequest 
+} from '../lib/deduplication';
 
 /**
  * Validate request body
@@ -274,64 +278,137 @@ export async function handleCompletions(
       }
     }
 
-    // Make request to provider
-    const response = await provider.completion(request, project.id);
-    const latency = Date.now() - startTime;
-
-    // Calculate cost
-    const cost = calculateCost(
-      response.model,
-      response.usage.prompt_tokens,
-      response.usage.completion_tokens
+    // =========================================================================
+    // REQUEST DEDUPLICATION / COALESCING
+    // Prevent duplicate API calls when identical requests arrive simultaneously
+    // =========================================================================
+    const dedup = createDeduplicationManager(redis, project.id);
+    const requestId = c.get('requestId') || crypto.randomUUID();
+    const requestHash = await hashRequest(
+      project.id,
+      request.model,
+      textForEmbedding,
+      request.temperature
     );
 
-    // Cache the response
-    await cache.setCompletion(request, response);
+    const { isLeader, existingRequestId } = await dedup.tryAcquireLeadership(
+      requestHash,
+      requestId,
+      false
+    );
 
-    // Store semantic entry if embedding is available
-    if (textEmbedding) {
-      const entry: SemanticCacheEntry<CompletionResponse> = {
-        embedding: textEmbedding,
-        data: response,
-        model: response.model,
-        timestamp: Date.now(),
-        tokens: {
-          input: response.usage.prompt_tokens,
-          output: response.usage.completion_tokens,
-          total: response.usage.total_tokens,
-        },
-        text: textForEmbedding,
-      };
-      await semanticCache.put('completion', entry, '/v1/completions');
+    // If not the leader, wait for the leader's response
+    if (!isLeader) {
+      console.log(`[Dedup] Completion request ${requestId} waiting for leader ${existingRequestId}`);
+      
+      const coalescedResponse = await dedup.waitForResponse<CompletionResponse>(
+        requestHash,
+        requestId
+      );
+
+      if (coalescedResponse) {
+        const latency = Date.now() - startTime;
+
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: coalescedResponse.model,
+          provider: getProviderForModel(request.model),
+          tokens_input: coalescedResponse.usage.prompt_tokens,
+          tokens_output: coalescedResponse.usage.completion_tokens,
+          tokens_total: coalescedResponse.usage.total_tokens,
+          cost_usd: 0,
+          potential_cost_usd: calculateCost(
+            coalescedResponse.model,
+            coalescedResponse.usage.prompt_tokens,
+            coalescedResponse.usage.completion_tokens
+          ),
+          cached: true,
+          latency_ms: latency,
+        });
+
+        return new Response(JSON.stringify(coalescedResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WatchLLM-Cache': 'HIT-COALESCED',
+            'X-WatchLLM-Latency-Ms': latency.toString(),
+            'X-WatchLLM-Provider': getProviderForModel(request.model),
+            'X-WatchLLM-Tokens-Saved': coalescedResponse.usage.total_tokens.toString(),
+          },
+        });
+      }
+
+      // Leader failed - become new leader
+      await dedup.tryAcquireLeadership(requestHash, requestId, false);
     }
 
-    // Log usage
-    await supabase.logUsage({
-      project_id: project.id,
-      api_key_id: keyRecord.id,
-      model: response.model,
-      provider: getProviderForModel(request.model),
-      tokens_input: response.usage.prompt_tokens,
-      tokens_output: response.usage.completion_tokens,
-      tokens_total: response.usage.total_tokens,
-      cost_usd: cost,
-      potential_cost_usd: cost,
-      cached: false,
-      latency_ms: latency,
-    });
+    // Make request to provider
+    try {
+      const response = await provider.completion(request, project.id);
+      const latency = Date.now() - startTime;
 
-    await maybeSendUsageAlert(env, supabase, redis, project);
+      // Calculate cost
+      const cost = calculateCost(
+        response.model,
+        response.usage.prompt_tokens,
+        response.usage.completion_tokens
+      );
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-WatchLLM-Cache': 'MISS',
-        'X-WatchLLM-Latency-Ms': latency.toString(),
-        'X-WatchLLM-Cost-USD': cost.toFixed(6),
-        'X-WatchLLM-Provider': getProviderForModel(request.model),
-      },
-    });
+      // Cache the response
+      await cache.setCompletion(request, response);
+
+      // Store semantic entry if embedding is available
+      if (textEmbedding) {
+        const entry: SemanticCacheEntry<CompletionResponse> = {
+          embedding: textEmbedding,
+          data: response,
+          model: response.model,
+          timestamp: Date.now(),
+          tokens: {
+            input: response.usage.prompt_tokens,
+            output: response.usage.completion_tokens,
+            total: response.usage.total_tokens,
+          },
+          text: textForEmbedding,
+        };
+        await semanticCache.put('completion', entry, '/v1/completions');
+      }
+
+      // Store response for coalesced requests
+      await dedup.storeResponse(requestHash, response);
+
+      // Log usage
+      await supabase.logUsage({
+        project_id: project.id,
+        api_key_id: keyRecord.id,
+        model: response.model,
+        provider: getProviderForModel(request.model),
+        tokens_input: response.usage.prompt_tokens,
+        tokens_output: response.usage.completion_tokens,
+        tokens_total: response.usage.total_tokens,
+        cost_usd: cost,
+        potential_cost_usd: cost,
+        cached: false,
+        latency_ms: latency,
+      });
+
+      await maybeSendUsageAlert(env, supabase, redis, project);
+
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WatchLLM-Cache': 'MISS',
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Cost-USD': cost.toFixed(6),
+          'X-WatchLLM-Provider': getProviderForModel(request.model),
+        },
+      });
+    } catch (apiError) {
+      await dedup.releaseLeadership(requestHash);
+      throw apiError;
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Completion error:', errorMessage);

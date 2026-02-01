@@ -29,6 +29,11 @@ import {
   normalizePrompt,
   calculateContextHash
 } from '../lib/semanticCache';
+import { 
+  createDeduplicationManager, 
+  hashRequest,
+  type DeduplicationManager 
+} from '../lib/deduplication';
 
 /**
  * Validate request body
@@ -333,26 +338,99 @@ export async function handleChatCompletions(
       }
     }
 
+    // =========================================================================
+    // REQUEST DEDUPLICATION / COALESCING
+    // Prevent duplicate API calls when identical requests arrive simultaneously
+    // =========================================================================
+    const dedup = createDeduplicationManager(redis, project.id);
+    const requestId = c.get('requestId') || crypto.randomUUID();
+    const requestHash = await hashRequest(
+      project.id,
+      request.model,
+      textForEmbedding,
+      request.temperature,
+      request.seed
+    );
+
+    const { isLeader, existingRequestId } = await dedup.tryAcquireLeadership(
+      requestHash,
+      requestId,
+      false // not streaming
+    );
+
+    // If not the leader, wait for the leader's response
+    if (!isLeader) {
+      console.log(`[Dedup] Request ${requestId} waiting for leader ${existingRequestId}`);
+      
+      const coalescedResponse = await dedup.waitForResponse<ChatCompletionResponse>(
+        requestHash,
+        requestId
+      );
+
+      if (coalescedResponse) {
+        const latency = Date.now() - startTime;
+        console.log(`[Dedup] Request ${requestId} received coalesced response`);
+
+        // Log as cached (coalesced)
+        const logProvider = getProviderForModel(request.model);
+        await supabase.logUsage({
+          project_id: project.id,
+          api_key_id: keyRecord.id,
+          model: coalescedResponse.model,
+          provider: logProvider,
+          tokens_input: coalescedResponse.usage.prompt_tokens,
+          tokens_output: coalescedResponse.usage.completion_tokens,
+          tokens_total: coalescedResponse.usage.total_tokens,
+          cost_usd: 0, // No cost for coalesced responses
+          potential_cost_usd: calculateCost(
+            coalescedResponse.model,
+            coalescedResponse.usage.prompt_tokens,
+            coalescedResponse.usage.completion_tokens
+          ),
+          cached: true,
+          latency_ms: latency,
+        });
+
+        return new Response(JSON.stringify(coalescedResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WatchLLM-Cache': 'HIT-COALESCED',
+            'X-WatchLLM-Latency-Ms': latency.toString(),
+            'X-WatchLLM-Provider': getProviderForModel(request.model),
+            'X-WatchLLM-Tokens-Saved': coalescedResponse.usage.total_tokens.toString(),
+          },
+        });
+      }
+
+      // Leader failed or timed out - this request becomes the new leader
+      console.log(`[Dedup] Request ${requestId} taking over as leader (previous failed)`);
+      await dedup.tryAcquireLeadership(requestHash, requestId, false);
+    }
+
+    console.log(`[Dedup] Request ${requestId} is the leader, proceeding with API call`);
+
     // MOCK MODE FOR TESTING
     let response: ChatCompletionResponse & { _isFreeModel?: boolean };
 
-    if (request.model.startsWith('test/mock-model')) {
-       // Mock Provider for Testing
-       await new Promise(resolve => setTimeout(resolve, 200)); // Simulate latency
-       response = {
-         id: 'chatcmpl-mock-' + Date.now(),
-         object: 'chat.completion',
-         created: Math.floor(Date.now() / 1000),
-         model: request.model,
-         choices: [
-           {
-             index: 0,
-             message: {
-               role: 'assistant',
-               content: `Mock response for: ${flattenChatText(request.messages).substring(0, 30)}...`,
+    try {
+      if (request.model.startsWith('test/mock-model')) {
+         // Mock Provider for Testing
+         await new Promise(resolve => setTimeout(resolve, 200)); // Simulate latency
+         response = {
+           id: 'chatcmpl-mock-' + Date.now(),
+           object: 'chat.completion',
+           created: Math.floor(Date.now() / 1000),
+           model: request.model,
+           choices: [
+             {
+               index: 0,
+               message: {
+                 role: 'assistant',
+                 content: `Mock response for: ${flattenChatText(request.messages).substring(0, 30)}...`,
+               },
+               finish_reason: 'stop',
              },
-             finish_reason: 'stop',
-           },
          ],
          usage: {
            prompt_tokens: 10,
@@ -397,6 +475,9 @@ export async function handleChatCompletions(
       console.log('Semantic cache entry saved to D1');
     }
 
+    // Store response for coalesced requests (deduplication)
+    await dedup.storeResponse(requestHash, cleanResponse);
+
     // Log usage
     const logProvider = getProviderForModel(request.model);
     await supabase.logUsage({
@@ -431,6 +512,11 @@ export async function handleChatCompletions(
       status: 200,
       headers,
     });
+    } catch (apiError) {
+      // Release leadership if API call fails
+      await dedup.releaseLeadership(requestHash);
+      throw apiError;
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Chat completion error:', errorMessage);

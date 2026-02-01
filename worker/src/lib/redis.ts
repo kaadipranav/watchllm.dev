@@ -80,6 +80,73 @@ export class RedisClient {
   }
 
   /**
+   * Set a value only if it doesn't exist (atomic operation for locking)
+   * Returns true if the key was set, false if it already existed
+   */
+  async setNX(key: string, value: unknown, ttlSeconds?: number): Promise<boolean> {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    
+    const command = ttlSeconds
+      ? ['SET', key, stringValue, 'NX', 'EX', ttlSeconds.toString()]
+      : ['SET', key, stringValue, 'NX'];
+
+    const result = await this.execute<string>(command);
+    return result === 'OK';
+  }
+
+  /**
+   * Get a field from a hash
+   */
+  async hget<T>(key: string, field: string): Promise<T | null> {
+    const result = await this.execute<string>(['HGET', key, field]);
+    if (!result) return null;
+    
+    try {
+      return JSON.parse(result) as T;
+    } catch {
+      return result as T;
+    }
+  }
+
+  /**
+   * Set a field in a hash
+   */
+  async hset(key: string, field: string, value: unknown): Promise<boolean> {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    const result = await this.execute<number>(['HSET', key, field, stringValue]);
+    return result !== null;
+  }
+
+  /**
+   * Increment a field in a hash
+   */
+  async hincr(key: string, field: string, increment: number = 1): Promise<number> {
+    const result = await this.execute<number>(['HINCRBY', key, field, increment.toString()]);
+    return result ?? 0;
+  }
+
+  /**
+   * Get all fields from a hash
+   */
+  async hgetall<T extends Record<string, unknown>>(key: string): Promise<T | null> {
+    const result = await this.execute<string[]>(['HGETALL', key]);
+    if (!result || result.length === 0) return null;
+    
+    // Convert array to object [field1, value1, field2, value2, ...]
+    const obj: Record<string, unknown> = {};
+    for (let i = 0; i < result.length; i += 2) {
+      const field = result[i];
+      const value = result[i + 1];
+      try {
+        obj[field] = JSON.parse(value);
+      } catch {
+        obj[field] = value;
+      }
+    }
+    return obj as T;
+  }
+
+  /**
    * Delete a key from cache
    */
   async del(key: string): Promise<boolean> {
