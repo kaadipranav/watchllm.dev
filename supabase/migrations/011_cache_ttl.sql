@@ -80,40 +80,7 @@ CREATE POLICY "Users can insert cache invalidations"
     );
 
 -- ----------------------------------------------------------------------------
--- Step 4: Create cache age analytics view
--- Shows distribution of cache entry ages
--- ----------------------------------------------------------------------------
-CREATE OR REPLACE VIEW cache_age_analytics AS
-WITH ttl_config AS (
-    SELECT 
-        id as project_id,
-        COALESCE(cache_ttl_seconds, 0) as ttl_seconds
-    FROM projects
-)
-SELECT 
-    project_id,
-    -- Age buckets
-    COUNT(*) FILTER (WHERE age_hours < 1) as entries_under_1h,
-    COUNT(*) FILTER (WHERE age_hours >= 1 AND age_hours < 6) as entries_1h_to_6h,
-    COUNT(*) FILTER (WHERE age_hours >= 6 AND age_hours < 24) as entries_6h_to_24h,
-    COUNT(*) FILTER (WHERE age_hours >= 24 AND age_hours < 168) as entries_1d_to_7d,
-    COUNT(*) FILTER (WHERE age_hours >= 168 AND age_hours < 720) as entries_7d_to_30d,
-    COUNT(*) FILTER (WHERE age_hours >= 720) as entries_over_30d,
-    COUNT(*) as total_entries,
-    AVG(age_hours) as avg_age_hours,
-    MAX(age_hours) as max_age_hours
-FROM (
-    SELECT 
-        project_id,
-        EXTRACT(EPOCH FROM (NOW() - to_timestamp(timestamp/1000))) / 3600 as age_hours
-    FROM semantic_cache_stats
-) as cache_ages
-GROUP BY project_id;
-
-COMMENT ON VIEW cache_age_analytics IS 'Cache entry age distribution analytics per project';
-
--- ----------------------------------------------------------------------------
--- Step 5: Create semantic_cache_stats table for analytics
+-- Step 4: Create semantic_cache_stats table for analytics
 -- (This duplicates some info from D1 for Supabase-side analytics)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS semantic_cache_stats (
@@ -152,6 +119,39 @@ CREATE INDEX IF NOT EXISTS idx_cache_stats_expires_at
     ON semantic_cache_stats(expires_at) WHERE expires_at IS NOT NULL;
 
 COMMENT ON TABLE semantic_cache_stats IS 'Cache entry statistics for analytics and TTL management';
+
+-- ----------------------------------------------------------------------------
+-- Step 5: Create cache age analytics view
+-- Shows distribution of cache entry ages
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE VIEW cache_age_analytics AS
+WITH ttl_config AS (
+    SELECT 
+        id as project_id,
+        COALESCE(cache_ttl_seconds, 0) as ttl_seconds
+    FROM projects
+)
+SELECT 
+    project_id,
+    -- Age buckets
+    COUNT(*) FILTER (WHERE age_hours < 1) as entries_under_1h,
+    COUNT(*) FILTER (WHERE age_hours >= 1 AND age_hours < 6) as entries_1h_to_6h,
+    COUNT(*) FILTER (WHERE age_hours >= 6 AND age_hours < 24) as entries_6h_to_24h,
+    COUNT(*) FILTER (WHERE age_hours >= 24 AND age_hours < 168) as entries_1d_to_7d,
+    COUNT(*) FILTER (WHERE age_hours >= 168 AND age_hours < 720) as entries_7d_to_30d,
+    COUNT(*) FILTER (WHERE age_hours >= 720) as entries_over_30d,
+    COUNT(*) as total_entries,
+    AVG(age_hours) as avg_age_hours,
+    MAX(age_hours) as max_age_hours
+FROM (
+    SELECT 
+        project_id,
+        EXTRACT(EPOCH FROM (NOW() - to_timestamp(timestamp/1000))) / 3600 as age_hours
+    FROM semantic_cache_stats
+) as cache_ages
+GROUP BY project_id;
+
+COMMENT ON VIEW cache_age_analytics IS 'Cache entry age distribution analytics per project';
 
 -- ----------------------------------------------------------------------------
 -- Step 6: Row Level Security for semantic_cache_stats
