@@ -39,6 +39,10 @@ import {
   type StreamCacheManager,
   type CachedStream,
 } from '../lib/streamCache';
+import {
+  createAbuseDetector,
+  type AbuseDetector,
+} from '../lib/abuseDetection';
 
 /**
  * Validate request body
@@ -211,6 +215,51 @@ export async function handleChatCompletions(
       );
     }
 
+    // Abuse detection - check for suspicious patterns BEFORE serving requests
+    const abuseDetector = createAbuseDetector(redis);
+    const textForAbuseCheck = flattenChatText(request.messages);
+    const abuseCheckHash = await hashRequest(
+      project.id,
+      request.model,
+      textForAbuseCheck,
+      request.temperature,
+      request.seed
+    );
+    const abuseCheck = await abuseDetector.checkRequest(
+      project.id,
+      abuseCheckHash,
+      keyRecord.id
+    );
+
+    if (!abuseCheck.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            message: abuseCheck.reason || 'Request blocked due to abuse detection',
+            type: 'abuse_detected',
+            code: 'auto_throttled',
+            details: {
+              throttled: abuseCheck.throttled,
+              remaining_seconds: abuseCheck.remainingThrottleTime,
+            },
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WatchLLM-Abuse-Detection': 'triggered',
+            'Retry-After': (abuseCheck.remainingThrottleTime || 300).toString(),
+          },
+        }
+      );
+    }
+
+    // Log warning header if flagged but still allowed
+    const abuseWarningHeader = abuseCheck.flagged
+      ? 'High volume of identical requests detected'
+      : undefined;
+
     // Handle streaming requests
     if (request.stream) {
       const streamCache = createStreamCacheManager(redis, project.id);
@@ -243,17 +292,23 @@ export async function handleChatCompletions(
         // Replay cached stream with realistic timing
         const replayStream = streamCache.createReplayStream(cachedStream, true);
         
+        const streamHeaders: Record<string, string> = {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          'X-WatchLLM-Cache': 'HIT-STREAM',
+          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedStream.cachedAt) / 1000).toString(),
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Tokens-Saved': cachedStream.tokens.total.toString(),
+        };
+
+        if (abuseWarningHeader) {
+          streamHeaders['X-WatchLLM-Abuse-Warning'] = abuseWarningHeader;
+        }
+
         return new Response(replayStream, {
           status: 200,
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'X-WatchLLM-Cache': 'HIT-STREAM',
-            'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedStream.cachedAt) / 1000).toString(),
-            'X-WatchLLM-Latency-Ms': latency.toString(),
-            'X-WatchLLM-Tokens-Saved': cachedStream.tokens.total.toString(),
-          },
+          headers: streamHeaders,
         });
       }
 
@@ -335,16 +390,22 @@ export async function handleChatCompletions(
         latency_ms: latency,
       });
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-WatchLLM-Cache': 'HIT',
+        'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
+        'X-WatchLLM-Latency-Ms': latency.toString(),
+        'X-WatchLLM-Provider': getProviderForModel(request.model),
+        'X-WatchLLM-Tokens-Saved': cachedResponse.tokens.total.toString(),
+      };
+
+      if (abuseWarningHeader) {
+        headers['X-WatchLLM-Abuse-Warning'] = abuseWarningHeader;
+      }
+
       return new Response(JSON.stringify(cachedResponse.data), {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WatchLLM-Cache': 'HIT',
-          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - cachedResponse.timestamp) / 1000).toString(),
-          'X-WatchLLM-Latency-Ms': latency.toString(),
-          'X-WatchLLM-Provider': getProviderForModel(request.model),
-          'X-WatchLLM-Tokens-Saved': cachedResponse.tokens.total.toString(),
-        },
+        headers,
       });
     }
 
@@ -389,17 +450,23 @@ export async function handleChatCompletions(
           latency_ms: latency,
         });
 
+        const semanticHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-WatchLLM-Cache': 'HIT-SEMANTIC',
+          'X-WatchLLM-Cache-Similarity': semanticHit.similarity.toFixed(4),
+          'X-WatchLLM-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
+          'X-WatchLLM-Latency-Ms': latency.toString(),
+          'X-WatchLLM-Provider': getProviderForModel(request.model),
+          'X-WatchLLM-Tokens-Saved': semanticHit.entry.tokens.total.toString(),
+        };
+
+        if (abuseWarningHeader) {
+          semanticHeaders['X-WatchLLM-Abuse-Warning'] = abuseWarningHeader;
+        }
+
         return new Response(JSON.stringify(semanticHit.entry.data), {
           status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-WatchLLM-Cache': 'HIT-SEMANTIC',
-            'X-WatchLLM-Cache-Similarity': semanticHit.similarity.toFixed(4),
-            'X-WatchLLM-Cache-Age': Math.floor((Date.now() - semanticHit.entry.timestamp) / 1000).toString(),
-            'X-WatchLLM-Latency-Ms': latency.toString(),
-            'X-WatchLLM-Provider': getProviderForModel(request.model),
-            'X-WatchLLM-Tokens-Saved': semanticHit.entry.tokens.total.toString(),
-          },
+          headers: semanticHeaders,
         });
       }
     }

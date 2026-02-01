@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatNumber, formatRelativeTime } from "@/lib/utils";
+import { RateLimitDisplay } from "@/components/dashboard/RateLimitDisplay";
 
 const LazyUsageChart = dynamic(() => import("@/components/dashboard/usage-chart").then(mod => mod.UsageChart), {
   ssr: false,
@@ -44,6 +45,9 @@ export default function UsagePage() {
     totalCost: 0,
     totalSavings: 0
   });
+  const [userPlan, setUserPlan] = useState<'free' | 'starter' | 'pro'>('free');
+  const [monthlyRequestCount, setMonthlyRequestCount] = useState(0);
+  const [monthlyCacheHits, setMonthlyCacheHits] = useState(0);
 
   const supabase = createClient();
 
@@ -54,7 +58,33 @@ export default function UsagePage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Determine date range
+        // Fetch user's project to get plan
+        const { data: projects } = await supabase
+          .from("projects")
+          .select("plan")
+          .limit(1)
+          .single();
+        
+        if (projects?.plan) {
+          setUserPlan(projects.plan as 'free' | 'starter' | 'pro');
+        }
+
+        // Fetch current month's usage for rate limit display
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+
+        const { data: monthlyLogs } = await supabase
+          .from("usage_logs")
+          .select("cached")
+          .gte("created_at", monthStart.toISOString());
+
+        if (monthlyLogs) {
+          setMonthlyRequestCount(monthlyLogs.length);
+          setMonthlyCacheHits(monthlyLogs.filter((l: any) => l.cached).length);
+        }
+
+        // Determine date range for selected period
         const now = new Date();
         const past = new Date();
         const days = parseInt(timeRange);
@@ -207,6 +237,14 @@ export default function UsagePage() {
           </Select>
         </div>
       </header>
+
+      {/* Rate Limit Display */}
+      <RateLimitDisplay
+        plan={userPlan}
+        currentMonthRequests={monthlyRequestCount}
+        cacheHitCount={monthlyCacheHits}
+        apiForwardedCount={monthlyRequestCount - monthlyCacheHits}
+      />
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat) => (
