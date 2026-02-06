@@ -21,6 +21,7 @@ import { getSharedProviderClient } from './lib/providers';
 import { handleChatCompletions } from './handlers/chat';
 import { handleCompletions } from './handlers/completions';
 import { handleEmbeddings } from './handlers/embeddings';
+import { handleCacheInvalidate } from './handlers/cache-invalidate';
 import { log, maskApiKey } from './lib/logger';
 import observabilityApp from './observability/routes';
 import analyticsApp from './handlers/analytics';
@@ -219,9 +220,11 @@ app.use('/v1/*', async (c, next) => {
         user_id: 'test-user',
         name: 'Test Project',
         plan: 'free',
-        semantic_cache_threshold: 0.8,
+        semantic_cache_threshold: 0.95,
         ab_testing_enabled: false,
         ab_testing_config: null,
+        cache_ttl_seconds: 86400, // 24 hours
+        cache_ttl_endpoint_overrides: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -544,6 +547,16 @@ app.post('/v1/completions', async (c) => {
 app.post('/v1/embeddings', async (c) => {
   const validatedKey = c.get('validatedKey');
   return handleEmbeddings(c, validatedKey);
+});
+
+/**
+ * Cache Invalidation
+ * POST /v1/cache/invalidate
+ * Invalidates cached entries based on filters (model, date range, similarity)
+ */
+app.post('/v1/cache/invalidate', async (c) => {
+  const validatedKey = c.get('validatedKey');
+  return handleCacheInvalidate(c, validatedKey);
 });
 
 /**

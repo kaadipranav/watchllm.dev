@@ -1,0 +1,33 @@
+Streaming cache work (WatchLLM)
+--------------------------------
+- Added SSE streaming cache + replay in worker chat handler. First stream tees the upstream: one leg to client, one buffered; on completion, caches full ChatCompletionResponse and logs usage. Second identical stream replays from cache as SSE with ~50ms chunk pacing and replay headers.
+- Cache manager now allows caching streaming chat responses (removed stream guard).
+- New helper: chatStreamingCache.ts handles buffering SSE streams into full responses (skips partial/unfinished) and replays cached responses as SSE.
+- Usage logging now records is_streaming flag; new Supabase migration adds this column and index.
+
+Files touched
+- worker/src/handlers/chat.ts
+- worker/src/lib/cache.ts
+- worker/src/lib/chatStreamingCache.ts (new)
+- worker/src/types.ts
+- supabase/migrations/013_streaming_metrics.sql (new)
+
+What to do next
+1) Apply migration 013 to Supabase (adds is_streaming to usage_logs).
+2) Manually verify streaming cache:
+   - First streaming chat request: should stream live; ensure no errors.
+   - Second identical request: should replay from cache with X-WatchLLM-Cache: HIT and X-WatchLLM-Stream-Replay: true; pacing ~50ms per chunk.
+   - Confirm cached replay content and finish_reason match original.
+3) If needed, tune replay pacing in chatStreamingCache.ts (delayMs parameter).
+4) Add automated tests/Playwright checks for streaming replay and headers. (Vitest added: worker/tests/chatStreamingCache.test.ts)
+
+Rate limiting + abuse notes
+- All requests (hits + misses) now count toward per-minute limits; forwarded (upstream) calls have separate per-minute caps per plan.
+- Identical-request abuse throttle: blocks if >1000 identical requests/hour per project/key; adjust in worker/src/lib/abuseDetection.ts.
+- Pending: add dashboard clarity for “Requests vs Forwarded” and “Cache hits count toward limits”; add metrics to usage page.
+- Add tests for forward-limit headers and abuse throttle responses.
+
+Known limitations / notes
+- Partial/aborted streams are not cached.
+- Migration required for streaming metrics visibility.
+- Streaming replay currently only implemented for chat completions.

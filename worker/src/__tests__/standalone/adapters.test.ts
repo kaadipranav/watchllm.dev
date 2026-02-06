@@ -2,15 +2,18 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { createClient } from '@clickhouse/client';
-import { PostgresD1Adapter } from '../../adapters/database';
-import { IORedisAdapter } from '../../adapters/redis';
+import { createDatabaseAdapter, DatabaseAdapter } from '../../adapters/database';
+import { createRedisAdapter, RedisAdapter } from '../../adapters/redis';
 import { createClickHouseAdapter } from '../../adapters/clickhouse';
-import { InMemoryQueueAdapter } from '../../adapters/queue';
+import { createQueueAdapter, QueueAdapter } from '../../adapters/queue';
+
+const hasDB = !!process.env.DATABASE_URL;
+const hasRedis = !!process.env.REDIS_URL;
 
 describe('Standalone Adapters', () => {
-  describe('PostgresD1Adapter', () => {
+  describe.skipIf(!hasDB)('PostgresD1Adapter', () => {
     let pool: Pool;
-    let adapter: PostgresD1Adapter;
+    let adapter: DatabaseAdapter;
 
     beforeAll(async () => {
       // Use test database URL from environment
@@ -21,7 +24,7 @@ describe('Standalone Adapters', () => {
       }
 
       pool = new Pool({ connectionString: dbUrl, max: 5 });
-      adapter = new PostgresD1Adapter(pool);
+      adapter = createDatabaseAdapter(dbUrl);
 
       // Create test table
       await pool.query(`
@@ -91,27 +94,26 @@ describe('Standalone Adapters', () => {
     });
   });
 
-  describe('IORedisAdapter', () => {
-    let redis: Redis;
-    let adapter: IORedisAdapter;
+  describe.skipIf(!hasRedis)('IORedisAdapter', () => {
+    let adapter: RedisAdapter;
+    let redisUrl: string;
 
     beforeAll(async () => {
-      const redisUrl = process.env.TEST_REDIS_URL || process.env.REDIS_URL;
+      redisUrl = process.env.TEST_REDIS_URL || process.env.REDIS_URL || '';
       if (!redisUrl) {
         console.warn('Skipping Redis tests: REDIS_URL not set');
         return;
       }
 
-      redis = new Redis(redisUrl);
-      adapter = new IORedisAdapter(redis);
+      adapter = createRedisAdapter(redisUrl);
 
       // Wait for connection
       await new Promise(resolve => setTimeout(resolve, 100));
     });
 
     afterAll(async () => {
-      if (redis) {
-        await redis.quit();
+      if (adapter) {
+        await adapter.disconnect();
       }
     });
 
@@ -244,11 +246,11 @@ describe('Standalone Adapters', () => {
     it('should batch and process messages', async () => {
       const processedBatches: Array<Array<unknown>> = [];
 
-      const adapter = new InMemoryQueueAdapter(async (batch) => {
+      const adapter = createQueueAdapter(async (batch) => {
         processedBatches.push([...batch]);
       }, {
         batchSize: 3,
-        flushInterval: 100,
+        flushIntervalMs: 100,
       });
 
       // Send messages
@@ -262,17 +264,17 @@ describe('Standalone Adapters', () => {
       expect(processedBatches).toHaveLength(1);
       expect(processedBatches[0]).toHaveLength(3);
 
-      await adapter.close();
+      adapter.stop();
     });
 
     it('should flush on interval even if batch not full', async () => {
       const processedBatches: Array<Array<unknown>> = [];
 
-      const adapter = new InMemoryQueueAdapter(async (batch) => {
+      const adapter = createQueueAdapter(async (batch) => {
         processedBatches.push([...batch]);
       }, {
         batchSize: 10,
-        flushInterval: 100,
+        flushIntervalMs: 100,
       });
 
       // Send only 2 messages
@@ -285,17 +287,17 @@ describe('Standalone Adapters', () => {
       expect(processedBatches).toHaveLength(1);
       expect(processedBatches[0]).toHaveLength(2);
 
-      await adapter.close();
+      adapter.stop();
     });
 
     it('should handle sendBatch', async () => {
       const processedBatches: Array<Array<unknown>> = [];
 
-      const adapter = new InMemoryQueueAdapter(async (batch) => {
+      const adapter = createQueueAdapter(async (batch) => {
         processedBatches.push([...batch]);
       }, {
         batchSize: 5,
-        flushInterval: 1000,
+        flushIntervalMs: 1000,
       });
 
       await adapter.sendBatch([
@@ -309,19 +311,19 @@ describe('Standalone Adapters', () => {
       expect(processedBatches).toHaveLength(1);
       expect(processedBatches[0]).toHaveLength(3);
 
-      await adapter.close();
+      adapter.stop();
     });
 
     it('should retry failed processing', async () => {
       let attemptCount = 0;
-      const adapter = new InMemoryQueueAdapter(async () => {
+      const adapter = createQueueAdapter(async () => {
         attemptCount++;
         if (attemptCount < 3) {
           throw new Error('Processing failed');
         }
       }, {
         batchSize: 1,
-        flushInterval: 50,
+        flushIntervalMs: 50,
         maxRetries: 3,
       });
 
@@ -332,7 +334,7 @@ describe('Standalone Adapters', () => {
 
       expect(attemptCount).toBeGreaterThanOrEqual(3);
 
-      await adapter.close();
+      adapter.stop();
     });
   });
 });

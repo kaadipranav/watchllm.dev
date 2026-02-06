@@ -4,7 +4,7 @@
     "lib": ["ES2021"],
     "module": "ES2022",
     "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "node"],
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,
@@ -22,5 +22,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", ".wrangler", "src/node-dev.ts"]
+  "exclude": ["node_modules", "dist", ".wrangler", "src/node-dev.ts", "src/__tests__/**/*", "tests/**/*"]
 }

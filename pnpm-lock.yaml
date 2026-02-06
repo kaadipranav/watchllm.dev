@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@types/pg':
+        specifier: ^8.16.0
+        version: 8.16.0
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -4120,6 +4123,14 @@ packages:
       '@types/node': 20.19.26
       pg-protocol: 1.11.0
       pg-types: 2.2.0
+
+  /@types/pg@8.16.0:
+    resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
+    dependencies:
+      '@types/node': 20.19.26
+      pg-protocol: 1.11.0
+      pg-types: 2.2.0
+    dev: true
 
   /@types/phoenix@1.6.7:
     resolution: {integrity: sha512-oN9ive//QSBkf19rfDv45M7eZPi0eEXylht2OLEXicu5b4KoQ1OzXIw+xDSGWxSxe1JmepRR/ZH283vsu518/Q==}

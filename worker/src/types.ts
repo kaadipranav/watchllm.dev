@@ -74,6 +74,8 @@ export interface ProjectRecord {
   cache_ttl_overrides: CacheTTLOverrides | null; // Per-endpoint TTL overrides
   ab_testing_enabled: boolean;
   ab_testing_config: ABTestingConfig | null;
+  cache_ttl_seconds: number; // -1 for never, or seconds (3600-2592000)
+  cache_ttl_endpoint_overrides: CacheTTLEndpointOverrides | null;
   created_at: string;
   updated_at: string;
 }
@@ -94,6 +96,29 @@ export interface ABTestVariant {
   weight: number; // Percentage (0-100)
 }
 
+// Cache TTL configuration
+export const CACHE_TTL_PRESETS: Record<string, number> = {
+  '1h': 3600,
+  '6h': 21600,
+  '24h': 86400, // Default
+  '7d': 604800,
+  '30d': 2592000,
+  'never': -1, // Never expire
+};
+
+export const CACHE_TTL_LABELS: Record<number, string> = {
+  3600: '1 hour',
+  21600: '6 hours',
+  86400: '24 hours',
+  604800: '7 days',
+  2592000: '30 days',
+  '-1': 'Never expire',
+};
+
+export interface CacheTTLEndpointOverrides {
+  [endpoint: string]: number; // endpoint path -> TTL in seconds
+}
+
 // Provider key record from Supabase (BYOK)
 export interface ProviderKeyRecord {
   id: string;
@@ -112,21 +137,25 @@ export interface ProviderKeyRecord {
 // Plan limits configuration
 export interface PlanLimits {
   requestsPerMonth: number;
-  requestsPerMinute: number;
+  requestsPerMinute: number; // Total requests (cache hits + misses)
+  forwardedRequestsPerMinute: number; // Upstream-forwarded requests only
 }
 
 export const PLAN_LIMITS: Record<string, PlanLimits> = {
   free: {
     requestsPerMonth: 10_000,
     requestsPerMinute: 10,
+    forwardedRequestsPerMinute: 10,
   },
   starter: {
     requestsPerMonth: 100_000,
     requestsPerMinute: 50,
+    forwardedRequestsPerMinute: 50,
   },
   pro: {
     requestsPerMonth: 250_000,
-    requestsPerMinute: 10_000, // Effectively unlimited
+    requestsPerMinute: 10_000, // Effectively unlimited overall
+    forwardedRequestsPerMinute: 10_000,
   },
 };
 
@@ -275,6 +304,14 @@ export interface UsageLogEntry {
   potential_cost_usd: number; // What it would have cost without caching
   cached: boolean;
   latency_ms: number;
+  cache_decision?: 'none' | 'deterministic' | 'semantic';
+  cache_similarity?: number | null;
+  cache_flagged_incorrect?: boolean;
+  cache_review_note?: string | null;
+  cache_reviewed_at?: string | null;
+  coalesced?: boolean; // True if served via coalescing follower
+  coalesced_group_size?: number; // Followers satisfied by leader response
+  is_streaming?: boolean; // True if the request was streamed
 }
 
 // API Error response
