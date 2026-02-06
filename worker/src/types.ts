@@ -70,12 +70,19 @@ export interface ProjectRecord {
   name: string;
   plan: 'free' | 'starter' | 'pro';
   semantic_cache_threshold: number; // 0.50-0.99
+  cache_ttl_seconds: number | null; // TTL in seconds, null = never expire
+  cache_ttl_overrides: CacheTTLOverrides | null; // Per-endpoint TTL overrides
   ab_testing_enabled: boolean;
   ab_testing_config: ABTestingConfig | null;
   cache_ttl_seconds: number; // -1 for never, or seconds (3600-2592000)
   cache_ttl_endpoint_overrides: CacheTTLEndpointOverrides | null;
   created_at: string;
   updated_at: string;
+}
+
+// Cache TTL overrides per endpoint
+export interface CacheTTLOverrides {
+  [endpoint: string]: number | null; // TTL in seconds, null = never expire
 }
 
 // A/B Testing configuration
@@ -369,6 +376,7 @@ export const MODEL_PROVIDER_MAP: Record<string, Provider> = {
 export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   // OpenAI
   'gpt-4': { input: 0.03, output: 0.06 },
+  'gpt-4-32k': { input: 0.06, output: 0.12 }, // 32k context version
   'gpt-4-turbo': { input: 0.01, output: 0.03 },
   'gpt-4-turbo-preview': { input: 0.01, output: 0.03 },
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -392,7 +400,19 @@ export const MODEL_PRICING: Record<string, { input: number; output: number }> = 
   'gemma2-9b-it': { input: 0.0002, output: 0.0002 },
 };
 
-// Calculate cost for a request
+/**
+ * Calculate cost for a request (fast path - uses hardcoded fallback pricing)
+ * For database-driven pricing with staleness tracking, use PricingService from lib/pricing.ts
+ * 
+ * Verified against provider pricing pages 2026-02-01:
+ * - GPT-4:        $30/$60 per 1M tokens ✅
+ * - GPT-4 Turbo:  $10/$30 per 1M tokens ✅
+ * - GPT-3.5 Turbo: $0.50/$1.50 per 1M tokens ✅
+ * - Claude 3 Opus: $15/$75 per 1M tokens ✅
+ * - Claude 3 Sonnet: $3/$15 per 1M tokens ✅
+ * - Claude 3 Haiku: $0.25/$1.25 per 1M tokens ✅
+ * - Groq: Heavily subsidized, see MODEL_PRICING above ✅
+ */
 export function calculateCost(
   model: string,
   inputTokens: number,

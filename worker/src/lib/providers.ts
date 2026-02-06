@@ -13,6 +13,7 @@ import type {
   Provider,
 } from '../types';
 import { MODEL_PROVIDER_MAP } from '../types';
+import { createKeyLeakScanner } from './keyLeakScanner';
 
 // Provider API endpoints
 const PROVIDER_ENDPOINTS = {
@@ -78,12 +79,16 @@ async function getAPIKeyAndProvider(
   if (projectId) {
     const { createSupabaseClient } = await import('./supabase');
     const { decryptProviderKey } = await import('./crypto');
+    const { createKeyAccessAuditor } = await import('./keyAudit');
 
     const supabase = createSupabaseClient(env);
     const providerKeys = await supabase.getProviderKeys(projectId);
 
     // Find all keys for the requested provider (already sorted by priority)
     const userKeys = providerKeys.filter(k => k.provider === provider && k.is_active);
+
+    // Create audit logger
+    const auditor = createKeyAccessAuditor(supabase, projectId);
 
     // Try keys in priority order (1, 2, 3)
     for (const userKey of userKeys) {
@@ -97,6 +102,29 @@ async function getAPIKeyAndProvider(
           );
 
           console.log(`Using BYOK key for provider: ${provider} (Priority: ${userKey.priority}, Name: ${userKey.name || 'Unnamed'})`);
+          
+          // Log successful decryption
+          await auditor.logAccess(
+            userKey.id,
+            provider,
+            'decrypt',
+            true
+          );
+
+          // Update last_used_at
+          await auditor.updateLastUsed(userKey.id);
+
+          // Check for unusual access patterns
+          const pattern = await auditor.analyzeAccessPattern(userKey.id);
+          if (pattern.unusualPattern) {
+            console.warn(`[SECURITY] Unusual access pattern for key ${userKey.id}: ${pattern.reason}`);
+            // Update anomaly timestamp
+            await supabase.client
+              .from('provider_keys')
+              .update({ access_anomaly_detected_at: new Date().toISOString() })
+              .eq('id', userKey.id);
+          }
+
           return {
             apiKey: decryptedKey,
             effectiveProvider: provider,
@@ -104,7 +132,29 @@ async function getAPIKeyAndProvider(
             isFreeModel
           };
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           console.error(`Failed to decrypt user key for ${provider} (Priority: ${userKey.priority}):`, error);
+          
+          // SECURITY: Check if error message contains leaked API key
+          const leakScanner = createKeyLeakScanner(supabase.client);
+          const hasLeak = await leakScanner.checkKeyLeak(userKey.id, errorMessage);
+          
+          if (hasLeak) {
+            console.error(`[CRITICAL SECURITY] API key leak detected in error message for key ${userKey.id}`);
+            // Sanitize the error before logging
+            const sanitizedError = leakScanner.sanitizeErrorMessage(errorMessage);
+            console.error(`Sanitized error: ${sanitizedError}`);
+          }
+          
+          // Log failed decryption
+          await auditor.logAccess(
+            userKey.id,
+            provider,
+            'decrypt',
+            false,
+            { failureReason: hasLeak ? '[REDACTED - Key leak detected]' : errorMessage }
+          );
+          
           // Continue to next key if decryption fails
         }
       }

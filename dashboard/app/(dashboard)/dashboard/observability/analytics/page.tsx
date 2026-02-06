@@ -7,11 +7,14 @@ import { BarChart3, Activity, Clock, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { createAnalyticsClient } from '@/lib/analytics-api';
 import { createClient } from '@/lib/supabase/client';
+import { RequestCoalescing } from '@/components/dashboard/RequestCoalescing';
+import { StreamingCacheMetrics } from '@/components/dashboard/StreamingCacheMetrics';
 
 export default function AnalyticsPage() {
   const supabase = createClient();
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedApiKey, setSelectedApiKey] = useState<string>('');
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +60,12 @@ export default function AnalyticsPage() {
 
       if (!apiKeys?.key) {
         setError('No API key found for this project');
+        setSelectedApiKey('');
         setLoading(false);
         return;
       }
 
+      setSelectedApiKey(apiKeys.key);
       analyticsClient.setApiKey(apiKeys.key);
 
       const stats = await analyticsClient.getStatsLast7d(selectedProject);
@@ -183,6 +188,22 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Request Coalescing */}
+      {selectedProject && selectedApiKey && (
+        <RequestCoalescing 
+          projectId={selectedProject} 
+          apiKey={selectedApiKey} 
+        />
+      )}
+
+      {/* Streaming Cache Metrics */}
+      {selectedProject && selectedApiKey && (
+        <StreamingCacheMetrics 
+          projectId={selectedProject} 
+          apiKey={selectedApiKey} 
+        />
+      )}
 
       {/* Charts */}
       <Card>

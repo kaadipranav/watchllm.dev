@@ -2,9 +2,10 @@
  * Semantic cache backed by Cloudflare D1
  * - Embeds text with OpenAI embeddings
  * - Performs cosine similarity search over cached entries
+ * - Supports TTL-based cache expiration
  */
 
-import type { D1Client, D1CacheEntry } from './d1';
+import type { D1Client, D1CacheEntry, CacheQueryOptions } from './d1';
 import type {
   ChatCompletionResponse,
   CompletionResponse,
@@ -28,12 +29,26 @@ export interface SemanticCacheEntry<T> {
     total: number;
   };
   text: string;
+  expiresAt?: number | null; // Unix timestamp in ms, null = never expires
 }
 
 interface SemanticHit<T> {
   entry: SemanticCacheEntry<T>;
   similarity: number;
+  cacheAgeMs?: number; // Age of the cache entry in milliseconds
 }
+
+// TTL presets in seconds
+export const TTL_PRESETS = {
+  '1h': 3600,
+  '6h': 21600,
+  '24h': 86400,
+  '7d': 604800,
+  '30d': 2592000,
+  'never': null, // null = never expire
+} as const;
+
+export type TTLPreset = keyof typeof TTL_PRESETS;
 
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length || a.length === 0) return 0;
@@ -74,21 +89,46 @@ export async function calculateContextHash(request: any): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 12); // Short hash
 }
 
+export interface SemanticCacheOptions {
+  ttlSeconds?: number | null; // Default TTL for new entries
+  endpointTTLOverrides?: Record<string, number | null>; // Per-endpoint TTL overrides
+}
+
 export class SemanticCache {
   private db: D1Client | null;
   private projectId: string;
   private maxEntries: number;
+  private ttlSeconds: number | null;
+  private endpointTTLOverrides: Record<string, number | null>;
 
-  constructor(db: D1Client | null, projectId: string, maxEntries: number = MAX_ENTRIES) {
+  constructor(
+    db: D1Client | null, 
+    projectId: string, 
+    maxEntries: number = MAX_ENTRIES,
+    options: SemanticCacheOptions = {}
+  ) {
     this.db = db;
     this.projectId = projectId;
     this.maxEntries = maxEntries;
+    this.ttlSeconds = options.ttlSeconds ?? 86400; // Default 24 hours
+    this.endpointTTLOverrides = options.endpointTTLOverrides ?? {};
+  }
+
+  /**
+   * Get effective TTL for an endpoint
+   */
+  getEffectiveTTL(endpoint?: string): number | null {
+    if (endpoint && this.endpointTTLOverrides[endpoint] !== undefined) {
+      return this.endpointTTLOverrides[endpoint];
+    }
+    return this.ttlSeconds;
   }
 
   private async load<T>(kind: SemanticKind): Promise<SemanticCacheEntry<T>[]> {
     if (!this.db) return [];
     try {
-      const entries = await this.db.getEntries(this.projectId, kind);
+      // Only load non-expired entries
+      const entries = await this.db.getEntries(this.projectId, kind, { includeExpired: false });
       return entries.map(e => ({
         embedding: JSON.parse(e.embedding),
         data: JSON.parse(e.response) as T,
@@ -100,6 +140,7 @@ export class SemanticCache {
           total: e.tokens_total,
         },
         text: e.text,
+        expiresAt: e.expires_at,
       }));
     } catch (error) {
       console.error('Semantic cache load error:', error);
@@ -117,11 +158,16 @@ export class SemanticCache {
 
     try {
       const entries = await this.load<T>(kind);
-      // console.log(`Semantic cache: Comparing against ${entries.length} entries`); // Reduced logging
-
+      const now = Date.now();
+      
       let best: SemanticHit<T> | null = null;
 
       for (const entry of entries) {
+        // Skip expired entries (double check in case DB query didn't filter properly)
+        if (entry.expiresAt && entry.expiresAt < now) {
+          continue;
+        }
+        
         // Enforce strict model/context matching if provided
         if (filterModel && entry.model !== filterModel) {
           continue;
@@ -129,13 +175,14 @@ export class SemanticCache {
 
         const sim = cosineSimilarity(embedding, entry.embedding);
         if (sim >= threshold && (!best || sim > best.similarity)) {
-          best = { entry, similarity: sim };
+          best = { 
+            entry, 
+            similarity: sim,
+            cacheAgeMs: now - entry.timestamp 
+          };
         }
       }
 
-      if (best) {
-        // console.log(`Best match: similarity=${best.similarity.toFixed(4)}`);
-      }
       return best;
     } catch (error) {
       console.error('Semantic cache findSimilar error:', error);
@@ -143,11 +190,17 @@ export class SemanticCache {
     }
   }
 
-  async put<T>(kind: SemanticKind, entry: SemanticCacheEntry<T>): Promise<void> {
+  async put<T>(
+    kind: SemanticKind, 
+    entry: SemanticCacheEntry<T>,
+    endpoint?: string
+  ): Promise<void> {
     if (!this.db || !entry.embedding || entry.embedding.length === 0) return;
 
     try {
       const id = crypto.randomUUID();
+      const ttl = this.getEffectiveTTL(endpoint);
+      
       await this.db.saveEntry({
         id,
         project_id: this.projectId,
@@ -160,13 +213,56 @@ export class SemanticCache {
         tokens_output: entry.tokens.output,
         tokens_total: entry.tokens.total,
         timestamp: entry.timestamp,
-      });
+      }, ttl);
 
-      // Cleanup old entries
+      // Cleanup old entries (including expired ones)
       await this.db.cleanup(this.projectId, kind, this.maxEntries);
     } catch (error) {
       console.error('Semantic cache put error:', error);
     }
+  }
+  
+  /**
+   * Invalidate cache entries based on filters
+   */
+  async invalidate(filters: {
+    model?: string;
+    kind?: SemanticKind;
+    beforeTimestamp?: number;
+    afterTimestamp?: number;
+  }): Promise<number> {
+    if (!this.db) return 0;
+    
+    try {
+      return await this.db.invalidateEntries(this.projectId, filters);
+    } catch (error) {
+      console.error('Semantic cache invalidate error:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get cache age statistics
+   */
+  async getAgeStats(): Promise<{
+    total: number;
+    under1h: number;
+    oneToSixH: number;
+    sixTo24H: number;
+    oneTo7D: number;
+    sevenTo30D: number;
+    over30D: number;
+    avgAgeHours: number;
+    expiredCount: number;
+  }> {
+    if (!this.db) {
+      return {
+        total: 0, under1h: 0, oneToSixH: 0, sixTo24H: 0,
+        oneTo7D: 0, sevenTo30D: 0, over30D: 0, avgAgeHours: 0, expiredCount: 0
+      };
+    }
+    
+    return this.db.getCacheAgeStats(this.projectId);
   }
 }
 
